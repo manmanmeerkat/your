@@ -29,10 +29,11 @@ interface Article {
 
 // スライドショー用の画像データ
 const backgroundImages = [
-  "/images/hanami.png", // 京都の紅葉と寺院
+  "/images/mythology.png", // 京都の紅葉と寺院
   "/images/fujiyama.png", // 祭りの様子
   "/images/kimono.png", // 神社の鳥居
   "/images/ninja.png", // 伝統的な和食
+  "/images/sakura.png", // 伝統的な和食
 ];
 
 // 背景スライドショーコンポーネント
@@ -172,7 +173,7 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform group-hover:scale-105">
                 <div className="h-48 bg-slate-200 relative">
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                    日本文化
+                    <Image src="/images/culture-category.png" alt="culture-img" width={350} height={194}/>
                   </div>
                 </div>
                 <div className="p-4">
@@ -188,7 +189,7 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform group-hover:scale-105">
                 <div className="h-48 bg-slate-200 relative">
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                    日本神話
+                    <Image src="/images/mythology-category.png" alt="mythology-img" width={350} height={194}/>
                   </div>
                 </div>
                 <div className="p-4">
@@ -204,7 +205,7 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform group-hover:scale-105">
                 <div className="h-48 bg-slate-200 relative">
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                    日本の伝統
+                    <Image src="/images/tradition-category.png" alt="tradition-img" width={350} height={194}/>
                   </div>
                 </div>
                 <div className="p-4">
@@ -220,7 +221,7 @@ export default function Home() {
               <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform group-hover:scale-105">
                 <div className="h-48 bg-slate-200 relative">
                   <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-                    日本の祭り
+                    <Image src="/images/festival-category.png" alt="festival-img" width={350} height={194}/>
                   </div>
                 </div>
                 <div className="p-4">

@@ -9,7 +9,7 @@ export default function Header() {
 
   return (
     <header className="bg-slate-50 shadow-sm">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-16 py-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="text-2xl font-bold text-slate-900">
             Your Secret Japan

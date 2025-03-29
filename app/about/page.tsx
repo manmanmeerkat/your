@@ -1,7 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function AboutPage() {
   return (
@@ -10,10 +9,12 @@ export default function AboutPage() {
       <section className="relative bg-slate-900 text-white py-20">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 overflow-hidden">
-            <img
+            <Image
               src="/images/kimono.png"
               alt="日本の伝統"
               className="w-full h-full object-cover"
+              width={1024}
+              height={280}
               style={{ objectPosition: "center" }}
             />
           </div>
@@ -54,7 +55,7 @@ export default function AboutPage() {
       </section>
 
       {/* コンテンツセクション */}
-      <section className="py-12 bg-slate-50">
+      <section className="pt-8 pb-24 bg-slate-50">
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <h2 className="text-3xl font-bold mb-6">コンテンツ</h2>
           <p className="text-lg mb-8">
