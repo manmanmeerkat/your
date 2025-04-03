@@ -41,7 +41,9 @@ export default function EditArticlePage({
 
         const { data: sessionData } = await supabase.auth.getSession();
 
-        const response = await fetch(`/api/articles/${params.slug}`);
+        // スラッグをエンコード
+        const encodedSlug = encodeURIComponent(params.slug);
+        const response = await fetch(`/api/articles/${encodedSlug}`);
 
         if (!response.ok) {
           throw new Error("記事の取得に失敗しました");
@@ -214,8 +216,11 @@ export default function EditArticlePage({
 
       console.log("Updating article with data:", updateData);
 
-      // 記事を更新 - params.slugを使用
-      const response = await fetch(`/api/articles/${params.slug}`, {
+      // 記事を更新 - スラッグをエンコードして使用
+      const encodedSlug = encodeURIComponent(params.slug);
+      console.log("Encoded slug for API call:", encodedSlug);
+
+      const response = await fetch(`/api/articles/${encodedSlug}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -223,13 +228,20 @@ export default function EditArticlePage({
         body: JSON.stringify(updateData),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(
-          data.error || data.details || "記事の更新に失敗しました"
-        );
+        let errorMessage = "記事の更新に失敗しました";
+        try {
+          const data = await response.json();
+          errorMessage = data.error || data.details || errorMessage;
+          console.error("APIエラーデータ:", data);
+        } catch (e) {
+          console.error("APIエラーのパースに失敗:", e);
+        }
+        throw new Error(errorMessage);
       }
+
+      const data = await response.json();
+      console.log("Update successful:", data);
 
       // 成功したら管理画面にリダイレクト
       router.push("/admin");
@@ -249,7 +261,9 @@ export default function EditArticlePage({
     }
 
     try {
-      const response = await fetch(`/api/articles/${params.slug}`, {
+      // スラッグをエンコード
+      const encodedSlug = encodeURIComponent(params.slug);
+      const response = await fetch(`/api/articles/${encodedSlug}`, {
         method: "DELETE",
       });
 
@@ -368,15 +382,19 @@ export default function EditArticlePage({
             <label className="text-sm font-medium">画像</label>
 
             {/* 現在の画像表示 */}
+            {/* 現在の画像表示 */}
             {image && !preview && (
               <div className="mt-2 relative">
-                <div className="relative h-40 w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
-                  <Image
-                    src={image.url}
-                    alt={image.altText || "記事画像"}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
+                <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
+                  <div className="w-full pb-[56.25%] relative">
+                    <Image
+                      src={image.url}
+                      alt={image.altText || "記事画像"}
+                      fill
+                      style={{ objectFit: "contain" }}
+                      className="absolute inset-0"
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -393,13 +411,16 @@ export default function EditArticlePage({
             {/* 新しい画像プレビュー */}
             {preview && (
               <div className="mt-2 relative">
-                <div className="relative h-40 w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
-                  <Image
-                    src={preview}
-                    alt="画像プレビュー"
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
+                <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
+                  <div className="w-full pb-[56.25%] relative">
+                    <Image
+                      src={preview}
+                      alt="画像プレビュー"
+                      fill
+                      style={{ objectFit: "contain" }}
+                      className="absolute inset-0"
+                    />
+                  </div>
                 </div>
                 <Button
                   type="button"

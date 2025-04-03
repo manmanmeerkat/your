@@ -9,18 +9,95 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    console.log('記事詳細API: スラッグ =', params.slug);
+    // デバッグ用にすべてのスラッグ形式を出力
+    const rawSlug = params.slug;
+    const decodedSlug = decodeURIComponent(params.slug);
     
-    const article = await prisma.article.findUnique({
-      where: { slug: params.slug },
+    console.log('記事詳細API: 処理開始');
+    console.log('- 元のスラッグ:', rawSlug);
+    console.log('- デコードされたスラッグ:', decodedSlug);
+    
+    // すべての記事を取得
+    const allArticles = await prisma.article.findMany({
+      select: { id: true, slug: true, title: true }
+    });
+    
+    console.log('データベース内の全記事:', allArticles.map(a => ({ id: a.id, slug: a.slug, title: a.title })));
+    
+    // 1. 完全一致
+    let article = await prisma.article.findUnique({
+      where: { slug: decodedSlug },
       include: { images: true },
     });
     
-    if (!article) {
-      return NextResponse.json({ error: 'Article not found' }, { status: 404 });
+    if (article) {
+      console.log('完全一致で記事が見つかりました:', article.slug);
+      return NextResponse.json(article);
     }
     
-    return NextResponse.json(article);
+    // 2. 大文字小文字を無視した一致
+    const articlesIgnoreCase = await prisma.article.findMany({
+      where: {
+        slug: {
+          equals: decodedSlug,
+          mode: 'insensitive',
+        },
+      },
+      include: { images: true },
+    });
+    
+    if (articlesIgnoreCase.length > 0) {
+      article = articlesIgnoreCase[0];
+      console.log('大文字小文字を無視して記事が見つかりました:', article.slug);
+      return NextResponse.json(article);
+    }
+    
+    // 3. スラッグ内のハイフンとスペースを置き換えた一致
+    const hyphenSlug = decodedSlug.replace(/\s+/g, '-');
+    const spaceSlug = decodedSlug.replace(/-+/g, ' ');
+    
+    console.log('- ハイフン化したスラッグ:', hyphenSlug);
+    console.log('- スペース化したスラッグ:', spaceSlug);
+    
+    let possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
+    
+    for (const possibleSlug of possibleSlugs) {
+      article = await prisma.article.findFirst({
+        where: { 
+          OR: [
+            { slug: possibleSlug },
+            { slug: possibleSlug.toLowerCase() },
+            { slug: { contains: possibleSlug, mode: 'insensitive' } }
+          ]
+        },
+        include: { images: true },
+      });
+      
+      if (article) {
+        console.log('変換されたスラッグで記事が見つかりました:', article.slug);
+        return NextResponse.json(article);
+      }
+    }
+    
+    // 4. タイトルで検索
+    article = await prisma.article.findFirst({
+      where: {
+        title: {
+          contains: decodedSlug.replace(/-/g, ' '),
+          mode: 'insensitive',
+        },
+      },
+      include: { images: true },
+    });
+    
+    if (article) {
+      console.log('タイトルで記事が見つかりました:', article.slug);
+      return NextResponse.json(article);
+    }
+    
+    // 記事が見つからない場合
+    console.log('記事が見つかりませんでした');
+    return NextResponse.json({ error: 'Article not found' }, { status: 404 });
   } catch (error) {
     console.error('記事取得エラー:', error);
     return NextResponse.json({ 
@@ -35,14 +112,87 @@ export async function PUT(
   { params }: { params: { slug: string } }
 ) {
   try {
-    console.log('記事更新API: スラッグ =', params.slug);
+    // デバッグ用にすべてのスラッグ形式を出力
+    const rawSlug = params.slug;
+    const decodedSlug = decodeURIComponent(params.slug);
     
-    // 記事の存在確認
-    const existingArticle = await prisma.article.findUnique({
-      where: { slug: params.slug },
+    console.log('記事更新API: 処理開始');
+    console.log('- 元のスラッグ:', rawSlug);
+    console.log('- デコードされたスラッグ:', decodedSlug);
+    
+    // 記事を様々な方法で検索
+    let existingArticle = null;
+    
+    // 1. 完全一致
+    existingArticle = await prisma.article.findUnique({
+      where: { slug: decodedSlug },
     });
     
+    if (existingArticle) {
+      console.log('完全一致で記事が見つかりました:', existingArticle.slug);
+    } else {
+      // 2. 大文字小文字を無視した一致
+      const articlesIgnoreCase = await prisma.article.findMany({
+        where: {
+          slug: {
+            equals: decodedSlug,
+            mode: 'insensitive',
+          },
+        },
+      });
+      
+      if (articlesIgnoreCase.length > 0) {
+        existingArticle = articlesIgnoreCase[0];
+        console.log('大文字小文字を無視して記事が見つかりました:', existingArticle.slug);
+      } else {
+        // 3. スラッグ内のハイフンとスペースを置き換えた一致
+        const hyphenSlug = decodedSlug.replace(/\s+/g, '-');
+        const spaceSlug = decodedSlug.replace(/-+/g, ' ');
+        
+        console.log('- ハイフン化したスラッグ:', hyphenSlug);
+        console.log('- スペース化したスラッグ:', spaceSlug);
+        
+        let possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
+        
+        for (const possibleSlug of possibleSlugs) {
+          const foundArticle = await prisma.article.findFirst({
+            where: { 
+              OR: [
+                { slug: possibleSlug },
+                { slug: possibleSlug.toLowerCase() },
+                { slug: { contains: possibleSlug, mode: 'insensitive' } }
+              ]
+            },
+          });
+          
+          if (foundArticle) {
+            existingArticle = foundArticle;
+            console.log('変換されたスラッグで記事が見つかりました:', existingArticle.slug);
+            break;
+          }
+        }
+        
+        // 4. タイトルで検索
+        if (!existingArticle) {
+          const foundArticle = await prisma.article.findFirst({
+            where: {
+              title: {
+                contains: decodedSlug.replace(/-/g, ' '),
+                mode: 'insensitive',
+              },
+            },
+          });
+          
+          if (foundArticle) {
+            existingArticle = foundArticle;
+            console.log('タイトルで記事が見つかりました:', existingArticle.slug);
+          }
+        }
+      }
+    }
+    
     if (!existingArticle) {
+      console.log('記事が見つかりませんでした');
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
     
@@ -65,7 +215,7 @@ export async function PUT(
     console.log('受信データ（抜粋）:', { title, slug, category, published });
     
     // 新しいスラッグが別の記事と重複していないか確認
-    if (slug !== params.slug) {
+    if (slug !== existingArticle.slug) {
       const duplicateSlug = await prisma.article.findFirst({
         where: {
           slug,
@@ -146,14 +296,87 @@ export async function DELETE(
   { params }: { params: { slug: string } }
 ) {
   try {
-    console.log('記事削除API: スラッグ =', params.slug);
+    // デバッグ用にすべてのスラッグ形式を出力
+    const rawSlug = params.slug;
+    const decodedSlug = decodeURIComponent(params.slug);
     
-    // 記事の存在確認
-    const existingArticle = await prisma.article.findUnique({
-      where: { slug: params.slug },
+    console.log('記事削除API: 処理開始');
+    console.log('- 元のスラッグ:', rawSlug);
+    console.log('- デコードされたスラッグ:', decodedSlug);
+    
+    // 記事を様々な方法で検索
+    let existingArticle = null;
+    
+    // 1. 完全一致
+    existingArticle = await prisma.article.findUnique({
+      where: { slug: decodedSlug },
     });
     
+    if (existingArticle) {
+      console.log('完全一致で記事が見つかりました:', existingArticle.slug);
+    } else {
+      // 2. 大文字小文字を無視した一致
+      const articlesIgnoreCase = await prisma.article.findMany({
+        where: {
+          slug: {
+            equals: decodedSlug,
+            mode: 'insensitive',
+          },
+        },
+      });
+      
+      if (articlesIgnoreCase.length > 0) {
+        existingArticle = articlesIgnoreCase[0];
+        console.log('大文字小文字を無視して記事が見つかりました:', existingArticle.slug);
+      } else {
+        // 3. スラッグ内のハイフンとスペースを置き換えた一致
+        const hyphenSlug = decodedSlug.replace(/\s+/g, '-');
+        const spaceSlug = decodedSlug.replace(/-+/g, ' ');
+        
+        console.log('- ハイフン化したスラッグ:', hyphenSlug);
+        console.log('- スペース化したスラッグ:', spaceSlug);
+        
+        let possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
+        
+        for (const possibleSlug of possibleSlugs) {
+          const foundArticle = await prisma.article.findFirst({
+            where: { 
+              OR: [
+                { slug: possibleSlug },
+                { slug: possibleSlug.toLowerCase() },
+                { slug: { contains: possibleSlug, mode: 'insensitive' } }
+              ]
+            },
+          });
+          
+          if (foundArticle) {
+            existingArticle = foundArticle;
+            console.log('変換されたスラッグで記事が見つかりました:', existingArticle.slug);
+            break;
+          }
+        }
+        
+        // 4. タイトルで検索
+        if (!existingArticle) {
+          const foundArticle = await prisma.article.findFirst({
+            where: {
+              title: {
+                contains: decodedSlug.replace(/-/g, ' '),
+                mode: 'insensitive',
+              },
+            },
+          });
+          
+          if (foundArticle) {
+            existingArticle = foundArticle;
+            console.log('タイトルで記事が見つかりました:', existingArticle.slug);
+          }
+        }
+      }
+    }
+    
     if (!existingArticle) {
+      console.log('記事が見つかりませんでした');
       return NextResponse.json({ error: 'Article not found' }, { status: 404 });
     }
     

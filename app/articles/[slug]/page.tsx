@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { marked } from "marked";
 
 // 記事の型定義
 type Image = {
@@ -31,6 +32,18 @@ export default function ArticleClientPage() {
   const [article, setArticle] = useState<Article | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMarkdown, setIsMarkdown] = useState(false);
+
+  // マークダウンをHTMLに変換する関数
+  const renderMarkdown = (content: string) => {
+    // マークダウンのパーサーを設定
+    marked.setOptions({
+      gfm: true, // GitHub Flavored Markdown
+      breaks: true, // 改行をbrタグに変換
+    });
+
+    return marked.parse(content);
+  };
 
   // useEffectでの非同期処理の正しい実装
   useEffect(() => {
@@ -40,15 +53,52 @@ export default function ArticleClientPage() {
         setIsLoading(true);
         setError(null);
 
-        const response = await fetch(`/api/articles/${slug}`);
+        // デバッグ情報
+        console.log("記事取得開始 - スラッグ:", slug);
+
+        const encodedSlug = encodeURIComponent(slug);
+        console.log("エンコードされたスラッグ:", encodedSlug);
+
+        const apiUrl = `/api/articles/${encodedSlug}`;
+        console.log("API URL:", apiUrl);
+
+        const response = await fetch(apiUrl);
+
+        console.log("API レスポンスステータス:", response.status);
 
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "記事の取得に失敗しました");
+          let errorMessage = "記事の取得に失敗しました";
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+            console.error("APIエラーデータ:", errorData);
+          } catch (e) {
+            console.error("APIエラーのパースに失敗:", e);
+          }
+          throw new Error(errorMessage);
         }
 
         const data = await response.json();
+        console.log("取得した記事データ:", data);
         setArticle(data);
+
+        // マークダウン形式かどうかを判断
+        // 簡易的な判定: マークダウンのよくある記号が含まれているかをチェック
+        const mdPatterns = [
+          /^#\s+.+$/m, // 見出し
+          /\*\*.+\*\*/, // 太字
+          /\*.+\*/, // 斜体
+          /^\s*-\s+.+$/m, // リスト
+          /^\s*\d+\.\s+.+$/m, // 番号付きリスト
+          /\[.+\]\(.+\)/, // リンク
+          /!\[.+\]\(.+\)/, // 画像
+        ];
+
+        const contentIsMarkdown = mdPatterns.some((pattern) =>
+          pattern.test(data.content)
+        );
+
+        setIsMarkdown(contentIsMarkdown);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "不明なエラーが発生しました"
@@ -101,8 +151,7 @@ export default function ArticleClientPage() {
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1
-                0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293
                 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10
                 8.586 8.707 7.293z"
                   clipRule="evenodd"
@@ -176,9 +225,18 @@ export default function ArticleClientPage() {
             </div>
           </header>
 
-          {/* 記事本文 */}
-          <div className="prose prose-lg max-w-none mb-12">
-            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+          {/* 記事本文 - マークダウン形式かHTMLに応じて表示方法を変更 */}
+          <div className="prose prose-lg max-w-none mb-12 article-content">
+            {isMarkdown ? (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: renderMarkdown(article.content),
+                }}
+                className="markdown-content"
+              />
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            )}
           </div>
 
           {/* 関連画像セクション */}
