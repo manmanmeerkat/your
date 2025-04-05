@@ -29,7 +29,7 @@ interface Article {
 
 // スライドショー用の画像データ
 const backgroundImages = [
-  "/images/hanami.png", // 京都の紅  "/images/mythology.png", // 京都の紅葉と寺院
+  "/images/mythology.png", // 京都の紅
   "/images/fujiyama.png", // 祭りの様子
   "/images/kimono.png", // 神社の鳥居
   "/images/ninja.png", // 伝統的な和食
