@@ -1,4 +1,4 @@
-// app/tradition/page.tsx
+// app/customs/page.tsx
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -25,7 +25,7 @@ interface Article {
   }>;
 }
 
-async function getTraditionArticles() {
+async function getCustomsArticles() {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
@@ -34,7 +34,7 @@ async function getTraditionArticles() {
         : "https://yourwebsite.com");
 
     const res = await fetch(
-      `${baseUrl}/api/articles?category=tradition&published=true`,
+      `${baseUrl}/api/articles?category=customs&published=true`,
       {
         cache: "no-cache",
       }
@@ -45,19 +45,19 @@ async function getTraditionArticles() {
     const data = await res.json();
     if (data.articles && Array.isArray(data.articles)) {
       data.articles = data.articles.filter(
-        (article: Article) => article.category === "tradition"
+        (article: Article) => article.category === "customs"
       );
     }
 
     return data;
   } catch (error) {
-    console.error("Failed to fetch tradition articles:", error);
+    console.error("Failed to fetch customs articles:", error);
     return { articles: [] };
   }
 }
 
-export default async function TraditionPage() {
-  const { articles = [] } = await getTraditionArticles();
+export default async function CustomsPage() {
+  const { articles = [] } = await getCustomsArticles();
 
   return (
     <div>
@@ -66,7 +66,7 @@ export default async function TraditionPage() {
         <div className="absolute inset-0 z-0 opacity-30">
           {/* 背景画像を使用する場合はコメントを外す */}
           {/* <Image
-            src="/images/tradition-header.jpg"
+            src="/images/customs-header.jpg"
             alt="日本の伝統"
             fill
             style={{ objectFit: "cover" }}

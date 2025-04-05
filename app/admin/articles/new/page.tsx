@@ -268,11 +268,10 @@ export default function NewArticlePage() {
               className="w-full rounded-md border border-gray-300 p-2"
               required
             >
-              <option value="culture">文化</option>
+              <option value="culture">文化・伝統</option>
               <option value="mythology">神話</option>
-              <option value="tradition">伝統</option>
+              <option value="customs">習慣</option>
               <option value="festivals">祭り</option>
-              <option value="places">場所</option>
             </select>
           </div>
 
