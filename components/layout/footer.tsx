@@ -1,65 +1,65 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { CATEGORY_LINKS } from '@/constants/constants';
+import { INFO_LINKS } from '@/constants/constants';
+import { linksType } from '@/types/types';
+
+const LinkSection = ({
+  title,
+  links,
+}: {
+  title: string;
+  links: linksType[];
+}) => (
+  <div>
+    <h4 className="text-lg font-semibold mb-4">{title}</h4>
+    <ul className="space-y-2 text-slate-300">
+      {links.map(({ href, label, img }) => (
+        <li key={href}>
+          <Link
+            href={href}
+            className="flex items-center space-x-2 group transition-colors"
+            target={href.startsWith('http') ? '_blank' : undefined}
+            rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+          >
+            {img && (
+              <Image
+                src={img}
+                alt={label}
+                width={20}
+                height={20}
+                className="object-contain"
+              />
+            )}
+            <span className="relative block text-slate-300 group-hover:text-white transition-colors">
+              {label}
+              <span
+                className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-400 transition-all duration-300 group-hover:w-full"
+                />
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 text-white py-12">
-      <div className="container mx-auto px-4">
+    <footer className="bg-slate-950 text-white py-12">
+      <div className="container mx-auto px-6 md:px-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <h3 className="text-xl font-bold mb-4">Your Secret Japan</h3>
             <p className="text-slate-300">
-              日本の文化、風習、神話、伝統を探索する旅へようこそ。
+              Welcome to a journey exploring Japanese culture, customs, myths and traditions.
             </p>
           </div>
-          
-          <div>
-            <h4 className="text-lg font-semibold mb-4">カテゴリー</h4>
-            <ul className="space-y-2 text-slate-300">
-              <li>
-                <Link href="/culture" className="hover:text-white">
-                  文化
-                </Link>
-              </li>
-              <li>
-                <Link href="/mythology" className="hover:text-white">
-                  神話
-                </Link>
-              </li>
-              <li>
-                <Link href="/tradition" className="hover:text-white">
-                  伝統
-                </Link>
-              </li>
-              <li>
-                <Link href="/festivals" className="hover:text-white">
-                  祭り
-                </Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-lg font-semibold mb-4">リンク</h4>
-            <ul className="space-y-2 text-slate-300">
-              <li>
-                <Link href="/about" className="hover:text-white">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="hover:text-white">
-                  プライバシーポリシー
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-white">
-                  お問い合わせ
-                </Link>
-              </li>
-            </ul>
-          </div>
+
+          <LinkSection title="Category" links={CATEGORY_LINKS} />
+          <LinkSection title="Others" links={INFO_LINKS} />
         </div>
-        
+
         <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
           <p>&copy; {new Date().getFullYear()} Your Secret Japan. All rights reserved.</p>
         </div>
