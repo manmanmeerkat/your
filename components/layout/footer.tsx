@@ -1,15 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { CATEGORY_LINKS } from '@/constants/constants';
-import { INFO_LINKS } from '@/constants/constants';
-import { linksType } from '@/types/types';
+import { CATEGORY_LINKS, INFO_LINKS, SNS_LINKS } from '@/constants/constants';
+import { linksType, SNSLinkType } from '@/types/types';
 
 const LinkSection = ({
   title,
   links,
 }: {
   title: string;
-  links: linksType[];
+  links: linksType[] | SNSLinkType[];
 }) => (
   <div>
     <h4 className="text-lg font-semibold mb-4">{title}</h4>
@@ -45,20 +44,24 @@ const LinkSection = ({
 );
 
 export default function Footer() {
+
+  const filteredSNSLinks = SNS_LINKS.filter(link => link.img !== "/images/icon/x-black.png");
+
   return (
     <footer className="bg-slate-950 text-white py-12">
       <div className="container mx-auto px-6 md:px-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="text-xl font-bold mb-4">Your Secret Japan</h3>
-            <p className="text-slate-300">
-              Welcome to a journey exploring Japanese culture, customs, myths and traditions.
-            </p>
-          </div>
-
-          <LinkSection title="Category" links={CATEGORY_LINKS} />
-          <LinkSection title="Others" links={INFO_LINKS} />
+        <div className="grid gap-8 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+        <div>
+          <h3 className="text-xl font-bold mb-4">Your Secret Japan</h3>
+          <p className="text-slate-300">
+            Welcome to a journey exploring Japanese culture, customs, myths and traditions.
+          </p>
         </div>
+
+        <LinkSection title="Category" links={CATEGORY_LINKS} />
+        <LinkSection title="Others" links={INFO_LINKS} />
+        <LinkSection title="SNS" links={filteredSNSLinks} />
+      </div>
 
         <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
           <p>&copy; {new Date().getFullYear()} Your Secret Japan. All rights reserved.</p>

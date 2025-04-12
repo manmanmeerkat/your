@@ -218,12 +218,6 @@ export default function ArticleClientPage() {
       />
     </div>
     <WhiteLine/>
-    {/* ✅ ここにタイトルを追加 */}
-    <div className="text-center px-4">
-      <h1 className="text-3xl md:text-4xl font-bold text-white">
-        {article.title}
-      </h1>
-    </div>
   </div>
 ) : null}
 
@@ -232,7 +226,7 @@ export default function ArticleClientPage() {
         <div className="max-w-4xl mx-auto">
           {/* 記事ヘッダー */}
           <header className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               {article.title}
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">

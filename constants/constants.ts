@@ -5,6 +5,7 @@ import type { categoryImgType } from "@/types/types";
 import type { seasonFestivalsType } from "@/types/types";
 import type { threeFestivalsType } from "@/types/types";
 import type { wayOfLifeType } from "@/types/types";
+import type { SNSLinkType } from "@/types/types";
 
 export const NAVI_LINKS: linksType[] = [
     { href: '/mythology', label: 'Mythology' },
@@ -22,11 +23,17 @@ export const CATEGORY_LINKS: linksType[] = [
 ];
 
 export const INFO_LINKS: linksType[] = [
+    { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
     { href: '/privacy', label: 'Privacy Policy' },
-    { img: '/images/icon/redbubble.png', href: 'https://www.redbubble.com/people/manmanmeerkat/shop?asc=u',label: 'REDBUBBLE' },
-    { img: '/images/icon/pinterest.png', href: 'https://jp.pinterest.com/enokidesign/',label: 'Pinterest' },
-    { href: '/contact', label: 'Contact Us' }
+    { href: '/#get-in-touch', label: 'Contact Us' } 
+];
+
+export const SNS_LINKS: SNSLinkType[] = [
+  { img: "/images/icon/redbubble.png", label: "REDBUBBLE", href: "https://www.redbubble.com/people/manmanmeerkat/shop?asc=u" },
+  { img: "/images/icon/pinterest.png", label: "Pinterest", href: "https://jp.pinterest.com/enokidesign/" },
+  { img: "/images/icon/x-black.png", label: "X", href: "https://x.com/youraccount" },
+  { img: "/images/icon/x-white.png", label: "X", href: "https://x.com/youraccount" },
 ];
 
 export const SLIDE_IMAGES: slideImgType[] = [

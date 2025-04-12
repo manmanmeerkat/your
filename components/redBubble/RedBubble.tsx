@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 
-export default function RedbubbleEmbed() {
+export default function Redbubble() {
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://www.redbubble.com/assets/external_portfolio.js";
@@ -56,7 +56,7 @@ export default function RedbubbleEmbed() {
   return (
     <div className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
-            <h2 className="text-3xl font-bold mb-8 text-center text-white">My Redbubble Products</h2>
+            <h2 className="text-3xl font-bold mb-8 text-center text-white">Our Redbubble Products</h2>
             <p className="text-center text-lg mb-8 max-w-2xl mx-auto text-white">
             Discover unique items inspired by the beauty and spirit of Japan—from ancient traditions to everyday wonders. <br />
             Bring a little piece of Japan into your life.
