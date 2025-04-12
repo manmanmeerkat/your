@@ -1,16 +1,14 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { GetInTouch } from "@/components/getInTouch/GetInTouch";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_ITEMS } from "@/constants/constants";
 import CategoryCard from "@/components/top/categoryCard/categoryCard";
+import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
 
 export default function AboutPage() {
   return (
     <div>
       {/* ヘッダーセクション */}
-      <section className="relative bg-slate-950 text-white py-20">
+      <section className="relative bg-slate-950 text-white pt-40 pb-40">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 overflow-hidden">
             <Image
@@ -36,7 +34,7 @@ export default function AboutPage() {
       </section>
 
       {/* ミッションセクション */}
-      <section className="py-16 md:px-16">
+      <section className="pt-16 md:px-16 ">
         <div className="container mx-auto px-4 max-w-3xl">
           <h2 className="text-3xl font-bold mb-8 text-center text-white">
             Our mission
@@ -80,7 +78,8 @@ export default function AboutPage() {
   
       </section>
       <WhiteLine/>
-      <GetInTouch/>
+      {/* <GetInTouch/> */}
+      <SimpleContact/>
       <WhiteLine/>
     </div>
   );

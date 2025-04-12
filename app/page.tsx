@@ -8,7 +8,9 @@ import ArticleCard from "../components/articleCard/articleCard";
 import CategoryCard from "../components/top/categoryCard/categoryCard";
 import { articleType } from "@/types/types";
 import { CATEGORY_ITEMS } from "@/constants/constants";
-import { GetInTouch } from "@/components/getInTouch/GetInTouch";
+import Redbubble from "@/components/redBubble/RedBubble";
+import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
 
 export default function Home() {
   const [articles, setArticles] = useState<articleType[]>([]);
@@ -86,10 +88,10 @@ export default function Home() {
       </section>
 
       {/* カテゴリーセクション */}
-      <section id="categories" className="py-16 bg-slate-950">
-        <div className="container mx-auto px-4">
+      <section id="categories" className="py-16 bg-slate-950 md:px-16">
+        <div className="container mx-auto px-4 max-w-3xl text-center">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">Categories to Explore</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:px-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {CATEGORY_ITEMS.map((item) => (
               <CategoryCard
                 key={item.href}
@@ -103,9 +105,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="container mx-auto px-8 bg-slate-900">
-        <hr className="border-t border-white opacity-60 my-0.1" />
-      </div>
+      <WhiteLine/>
 
       {/* 最新記事セクション */}
       <section id="latest-articles" className="py-16 md:px-16 bg-slate-950">
@@ -140,16 +140,17 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="container mx-auto px-8 bg-slate-900">
-        <hr className="border-t border-white opacity-60 my-0.1" />
-      </div>
+      <WhiteLine/>
+
+      <Redbubble/>
+
+      <WhiteLine/>
 
       {/* お問い合わせ */}
-      <GetInTouch/>
+      {/* <GetInTouch/> */}
+      <SimpleContact/>
 
-      <div className="container mx-auto px-8 bg-slate-900">
-        <hr className="border-t border-white opacity-60 my-0.1" />
-      </div>
+      <WhiteLine/>
     </div>
   );
 }

@@ -54,7 +54,7 @@ export default async function CustomsPage() {
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Japanese Customs</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
             Japanese customs offer a glimpse into the country’s unique sense of harmony, respect, and seasonal awareness. We will explore everyday traditions such as bowing, removing shoes, and celebrating seasonal events that reflect the values and rhythms of Japanese life.
           </p>
         </div>

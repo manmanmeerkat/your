@@ -53,3 +53,9 @@ export type wayOfLifeType = {
     label: string;
     img: string;
 }
+
+export type SNSLinkType = {
+    img: string;
+    label: string;
+    href: string;
+}
