@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { marked } from "marked";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import { CATEGORY_LABELS } from "@/constants/constants";
 
 // 記事の型定義
 type Image = {
@@ -53,33 +57,51 @@ export default function ArticleClientPage() {
         setIsLoading(true);
         setError(null);
 
-        // デバッグ情報
+      // デバッグ情報（開発環境のみ）
+      if (process.env.NODE_ENV === "development") {
         console.log("記事取得開始 - スラッグ:", slug);
+      }
 
-        const encodedSlug = encodeURIComponent(slug);
+      const encodedSlug = encodeURIComponent(slug);
+
+      if (process.env.NODE_ENV === "development") {
         console.log("エンコードされたスラッグ:", encodedSlug);
+      }
 
-        const apiUrl = `/api/articles/${encodedSlug}`;
+      const apiUrl = `/api/articles/${encodedSlug}`;
+
+      if (process.env.NODE_ENV === "development") {
         console.log("API URL:", apiUrl);
+      }
 
-        const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl);
 
+      if (process.env.NODE_ENV === "development") {
         console.log("API レスポンスステータス:", response.status);
+      }
 
-        if (!response.ok) {
-          let errorMessage = "記事の取得に失敗しました";
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.error || errorMessage;
-            console.error("APIエラーデータ:", errorData);
-          } catch (e) {
-            console.error("APIエラーのパースに失敗:", e);
+      if (!response.ok) {
+        let errorMessage = "Failed to retrieve article";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+
+          if (process.env.NODE_ENV === "development") {
+            console.error("API error data:", errorData);
           }
-          throw new Error(errorMessage);
+        } catch (e) {
+          if (process.env.NODE_ENV === "development") {
+            console.error("Failed to parse API error:", e);
+          }
         }
+        throw new Error(errorMessage);
+      }
 
-        const data = await response.json();
+      const data = await response.json();
+
+      if (process.env.NODE_ENV === "development") {
         console.log("取得した記事データ:", data);
+      }
         setArticle(data);
 
         // マークダウン形式かどうかを判断
@@ -97,16 +119,19 @@ export default function ArticleClientPage() {
         const contentIsMarkdown = mdPatterns.some((pattern) =>
           pattern.test(data.content)
         );
-
+        
         setIsMarkdown(contentIsMarkdown);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "不明なエラーが発生しました"
-        );
-        console.error("記事取得エラー:", err);
-      } finally {
-        setIsLoading(false);
-      }
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : "不明なエラーが発生しました"
+          );
+        
+          if (process.env.NODE_ENV === "development") {
+            console.error("記事取得エラー:", err);
+          }
+        } finally {
+          setIsLoading(false);
+        }
     };
 
     // 関数を呼び出す（async関数を直接useEffectの第一引数にしないこと）
@@ -116,11 +141,10 @@ export default function ArticleClientPage() {
   // カテゴリーの日本語名を取得
   const getCategoryName = (category: string) => {
     const categories: { [key: string]: string } = {
-      culture: "文化",
-      mythology: "神話",
-      tradition: "伝統",
-      festivals: "祭り",
-      places: "場所",
+      culture: "culture",
+      mythology: "mythology",
+      festivals: "festivals",
+      customs: "customs",
     };
     return categories[category] || category;
   };
@@ -132,7 +156,7 @@ export default function ArticleClientPage() {
         <div className="flex justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
         </div>
-        <p className="text-center mt-4">記事を読み込んでいます...</p>
+        <p className="text-center mt-4">Loading article...</p>
       </div>
     );
   }
@@ -160,7 +184,7 @@ export default function ArticleClientPage() {
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">
-                エラーが発生しました
+                Something went wrong.
               </h3>
               <p className="mt-2 text-sm text-red-700">{error}</p>
             </div>
@@ -174,27 +198,34 @@ export default function ArticleClientPage() {
   if (!article) {
     return (
       <div className="container mx-auto py-10 px-4">
-        <h1 className="text-2xl font-bold">記事が見つかりませんでした</h1>
-        <p>指定された記事は存在しないか、非公開になっています。</p>
+        <h1 className="text-2xl font-bold">Article not found.</h1>
+        <p>The article you're looking for may not exist or is not publicly available.</p>
       </div>
     );
   }
 
   // 記事表示
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-slate-950 min-h-screen">
       {/* ヒーローセクション：アイキャッチ画像 */}
       {article.images && article.images.some((img) => img.isFeatured) ? (
-        <div className="w-full bg-gray-100 overflow-hidden">
-          <div className="relative max-h-[400px] w-full flex justify-center">
-            <img
-              src={article.images.find((img) => img.isFeatured)?.url}
-              alt={article.title}
-              className="h-auto max-h-[400px] object-contain"
-            />
-          </div>
-        </div>
-      ) : null}
+  <div className="w-full bg-slate-950 overflow-hidden pt-8">
+    <div className="relative max-h-[400px] w-full flex justify-center">
+      <img
+        src={article.images.find((img) => img.isFeatured)?.url}
+        alt={article.title}
+        className="h-auto max-h-[400px] object-contain rounded-[5px]"
+      />
+    </div>
+    <WhiteLine/>
+    {/* ✅ ここにタイトルを追加 */}
+    <div className="text-center px-4">
+      <h1 className="text-3xl md:text-4xl font-bold text-white">
+        {article.title}
+      </h1>
+    </div>
+  </div>
+) : null}
 
       {/* 記事コンテンツ */}
       <div className="container mx-auto px-4 py-8">
@@ -205,10 +236,10 @@ export default function ArticleClientPage() {
               {article.title}
             </h1>
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+              <span className="bg-blue-50 text-slate-950 px-3 py-1 rounded-full">
                 {getCategoryName(article.category)}
               </span>
-              <time dateTime={article.updatedAt} className="flex items-center">
+              {/* <time dateTime={article.updatedAt} className="flex items-center text-white">
                 <svg
                   className="w-4 h-4 mr-1"
                   fill="currentColor"
@@ -221,12 +252,12 @@ export default function ArticleClientPage() {
                   />
                 </svg>
                 {new Date(article.updatedAt).toLocaleDateString("ja-JP")}
-              </time>
+              </time> */}
             </div>
           </header>
 
           {/* 記事本文 - マークダウン形式かHTMLに応じて表示方法を変更 */}
-          <div className="prose prose-lg max-w-none mb-12 article-content">
+          <div className="prose prose-lg max-w-none mb-12 article-content text-white text-justify">
             {isMarkdown ? (
               <div
                 dangerouslySetInnerHTML={{
@@ -240,7 +271,7 @@ export default function ArticleClientPage() {
           </div>
 
           {/* 関連画像セクション */}
-          {article.images &&
+          {/* {article.images &&
             article.images.length > 0 &&
             article.images.some((img) => !img.isFeatured) && (
               <div className="mt-12 pt-8 border-t border-gray-200">
@@ -266,9 +297,23 @@ export default function ArticleClientPage() {
                     ))}
                 </div>
               </div>
-            )}
+            )} */}
         </div>
       </div>
+      <div className="flex justify-center mt-8">
+        <Link href={`/${article.category}`}>
+          <Button
+            size="lg"
+            className="w-[320px] font-normal
+                      border border-rose-700 bg-rose-700 text-white
+                      hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                      shadow hover:shadow-lg"
+          >
+            Back to {CATEGORY_LABELS[article.category]} Posts ≫
+          </Button>
+        </Link>
+      </div>
+      <WhiteLine/>
     </div>
   );
 }

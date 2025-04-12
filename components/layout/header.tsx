@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { naviItems } from '@/constants/constants';
+import { NAVI_LINKS } from '@/constants/constants';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function Header() {
   }, [isMenuOpen]);
 
   const renderNavLinks = (isMobile: boolean = false) =>
-    naviItems.map(({ href, label }) => (
+    NAVI_LINKS.map(({ href, label }) => (
       <li key={href}>
         <Link href={href} onClick={isMobile ? () => setIsMenuOpen(false) : undefined}>
           <span
@@ -48,7 +48,7 @@ export default function Header() {
     ));
 
   return (
-    <header className="bg-black shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950 shadow-sm">
       <div className="container mx-auto px-6 md:px-16 py-4">
         <div className="flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold text-white">
@@ -68,7 +68,7 @@ export default function Header() {
             height="24"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="white" // デフォルトは黒
+            stroke="white"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
