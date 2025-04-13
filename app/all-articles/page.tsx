@@ -58,7 +58,7 @@ export default function AllArticlesPage() {
 
           // 全カテゴリーの合計を計算
           if (data.counts) {
-            const total = Object.values(data.counts).reduce(
+            const total = (Object.values(data.counts) as number[]).reduce(
               (sum: number, count: number) => sum + count,
               0
             );
