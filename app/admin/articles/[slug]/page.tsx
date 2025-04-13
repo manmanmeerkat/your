@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +28,15 @@ export default function EditArticlePage({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // 戻り先ページの状態を取得
+  const returnPath = searchParams.get("returnPath") || "/admin";
+  const returnCategory = searchParams.get("category") || "";
+  const returnSearch = searchParams.get("search") || "";
+  const returnPage = searchParams.get("page") || "1";
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -156,6 +164,39 @@ export default function EditArticlePage({
     }
   };
 
+  // フィルタリング状態を保持して元のページに戻る関数
+  const navigateBack = () => {
+    // セッションストレージのリセット（ダッシュボード再初期化のため）
+    sessionStorage.removeItem("dashboardInitialized");
+
+    // 戻り先のURLを構築
+    let url = returnPath;
+
+    // クエリパラメータを追加
+    const params = new URLSearchParams();
+    if (returnCategory) params.append("category", returnCategory);
+    if (returnSearch) params.append("search", returnSearch);
+    if (returnPage && returnPage !== "1") params.append("page", returnPage);
+
+    // パラメータがある場合は追加
+    const queryString = params.toString();
+    if (queryString) {
+      url = `${url}?${queryString}`;
+    }
+
+    console.log("戻り先URL:", url);
+
+    // 遷移先で強制的に初期化を実行するために、タイムスタンプパラメータを追加
+    // これによりNext.jsのルーターキャッシュを防止する
+    if (url.includes("?")) {
+      url += `&_ts=${Date.now()}`;
+    } else {
+      url += `?_ts=${Date.now()}`;
+    }
+
+    router.push(url);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -243,9 +284,8 @@ export default function EditArticlePage({
       const data = await response.json();
       console.log("Update successful:", data);
 
-      // 成功したら管理画面にリダイレクト
-      router.push("/admin");
-      router.refresh();
+      // 成功したら保持していたフィルター状態で元のページに戻る
+      navigateBack();
     } catch (error: any) {
       console.error("Article save error:", error);
       setError(error.message || "不明なエラーが発生しました");
@@ -274,8 +314,8 @@ export default function EditArticlePage({
         );
       }
 
-      router.push("/admin");
-      router.refresh();
+      // 削除成功後も元のページに戻る
+      navigateBack();
     } catch (error: any) {
       console.error("Article delete error:", error);
       setError(error.message || "不明なエラーが発生しました");
@@ -304,7 +344,11 @@ export default function EditArticlePage({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && (
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+              <p>{error}</p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-medium">
@@ -381,7 +425,6 @@ export default function EditArticlePage({
           <div className="space-y-2">
             <label className="text-sm font-medium">画像</label>
 
-            {/* 現在の画像表示 */}
             {/* 現在の画像表示 */}
             {image && !preview && (
               <div className="mt-2 relative">
@@ -478,11 +521,7 @@ export default function EditArticlePage({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
+            <Button type="button" variant="outline" onClick={navigateBack}>
               キャンセル
             </Button>
             <Button type="submit" disabled={saving || uploading}>

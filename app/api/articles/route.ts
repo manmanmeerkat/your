@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     
     const publishedParam = searchParams.get('published');
     const categoryParam = searchParams.get('category');
+    const searchQuery = searchParams.get('search'); // キーワード検索パラメータの追加
     
     // ページネーション用パラメータ
     let page = 1;
@@ -56,6 +57,14 @@ export async function GET(request: NextRequest) {
     // カテゴリが指定されている場合
     if (categoryParam) {
       where.category = categoryParam;
+    }
+    
+    // キーワード検索が指定されている場合
+    if (searchQuery && searchQuery.trim() !== '') {
+      where.title = {
+        contains: searchQuery.trim(),
+        mode: 'insensitive' // 大文字小文字を区別しない
+      };
     }
     
     console.log('検索条件:', where);

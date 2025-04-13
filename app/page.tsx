@@ -125,7 +125,7 @@ export default function Home() {
             <p className="text-slate-500 text-white">No posts yet.</p>
           )}
           <div className="mt-20">
-            <Link href="/articles">
+          <Link href="/all-articles">
               <Button
                 size="lg"
                 className="w-[220px] font-normal
