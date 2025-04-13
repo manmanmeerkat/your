@@ -22,6 +22,8 @@ export default function AllArticlesPage() {
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
     {}
   );
+  // 全記事の総数
+  const [totalArticleCount, setTotalArticleCount] = useState<number>(0);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -53,6 +55,15 @@ export default function AllArticlesPage() {
         if (res.ok) {
           const data = await res.json();
           setCategoryCounts(data.counts || {});
+
+          // 全カテゴリーの合計を計算
+          if (data.counts) {
+            const total = Object.values(data.counts).reduce(
+              (sum: number, count: number) => sum + count,
+              0
+            );
+            setTotalArticleCount(total);
+          }
         }
       } catch (e) {
         console.error("カテゴリー集計エラー:", e);
@@ -102,6 +113,11 @@ export default function AllArticlesPage() {
         if (data.pagination) {
           setPagination(data.pagination);
         }
+
+        // カテゴリーが指定されていない場合は、API からの総記事数を更新
+        if (!currentCategory && data.pagination) {
+          setTotalArticleCount(data.pagination.total);
+        }
       } catch (e) {
         console.error("記事取得エラー:", e);
       } finally {
@@ -150,7 +166,7 @@ export default function AllArticlesPage() {
             </p>
           ) : (
             <p className="text-xl text-gray-300">
-              Total: {pagination.total} articles
+              Total: {totalArticleCount} articles
             </p>
           )}
         </div>
@@ -170,7 +186,7 @@ export default function AllArticlesPage() {
             }
             onClick={() => handleCategoryChange("")}
           >
-            All ({pagination.total})
+            All ({totalArticleCount})
           </Button>
 
           {categories.map((category) => (
