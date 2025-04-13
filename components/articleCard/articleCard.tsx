@@ -26,11 +26,11 @@ export default function ArticleCard({ article }: { article: articleType }) {
                 p-4 md:p-0 md:pl-4 md:pt-0 overflow-hidden rounded-[5px] md:rounded-none">
                 {images?.[0] ? (
                     <Image
-                    src={images[0].url}
-                    alt={images[0].altText || title}
-                    width={300}
-                    height={230}
-                    className="w-full h-52 object-contain md:object-cover"
+                        src={images[0].url}
+                        alt={images[0].altText || title}
+                        width={300}
+                        height={230}
+                        className="w-full h-52 object-contain md:object-cover"
                     />
                 ) : (
                     <div className="text-slate-400 h-52 w-full flex items-center justify-center">
