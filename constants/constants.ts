@@ -25,7 +25,7 @@ export const CATEGORY_LINKS: linksType[] = [
 export const INFO_LINKS: linksType[] = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
-    { href: '/privacy', label: 'Privacy Policy' },
+    { href: '/privacy-policy', label: 'Privacy Policy' },
     { href: '/#get-in-touch', label: 'Contact Us' } 
 ];
 
