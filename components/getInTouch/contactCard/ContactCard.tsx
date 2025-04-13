@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { SNS_LINKS } from "@/constants/constants";
+import Link from "next/link";
 
 export function ContactCard({
   title,
@@ -20,26 +21,34 @@ export function ContactCard({
       {detail && <p className="text-red-600 mb-4">{detail}</p>}
 
       <p className="text-xl font-bold mb-3">Follow us:</p>
-      <div className="flex flex-col items-center space-y-4">
-        {filteredSNSLinks.map((sns) => (
-          <a
-            key={sns.label}
-            href={sns.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center space-x-2 text-slate-600 hover:text-red-600"
-          >
-            <Image
-              src={sns.img}
-              alt={`${sns.label} icon`}
-              width={24}
-              height={24}
-              className="object-contain"
-            />
-            <span>{sns.label}</span>
-          </a>
-        ))}
-      </div>
+        <div className="flex justify-center items-center flex-wrap gap-2">
+          {filteredSNSLinks.map((sns, index) => (
+            <div key={sns.label} className="flex items-center">
+              <Link
+                href={sns.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1 text-slate-600 hover:text-red-600 group"
+              >
+                <Image
+                  src={sns.img}
+                  alt={`${sns.label} icon`}
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
+                <span className="relative block">
+                  {sns.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-400 transition-all duration-300 group-hover:w-full"></span>
+                </span>
+              </Link>
+              {/* 区切り線 ｜ を最後の要素以外に表示 */}
+              {index < filteredSNSLinks.length - 1 && (
+                <span className="mx-2 text-slate-400">|</span>
+              )}
+            </div>
+          ))}
+        </div>
     </div>
   );
 }

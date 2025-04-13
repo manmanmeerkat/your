@@ -2,274 +2,164 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/articleCard/articleCard";
 import { articleType } from "@/types/types";
 import { Pagination } from "@/components/pagination/Pagination";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import Image from "next/image";
+import { CATEGORIES } from "@/constants/constants";
+import Redbubble from "@/components/redBubble/RedBubble";
 
 export default function AllArticlesPage() {
   const [articles, setArticles] = useState<articleType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    pageSize: 12,
-    pageCount: 1,
-  });
-  // カテゴリーごとの記事数
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>(
-    {}
-  );
-  // 全記事の総数
-  const [totalArticleCount, setTotalArticleCount] = useState<number>(0);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, pageSize: 12, pageCount: 1 });
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [totalCount, setTotalCount] = useState(0);
 
   const searchParams = useSearchParams();
   const router = useRouter();
   const currentPage = Number(searchParams.get("page") || "1");
   const currentCategory = searchParams.get("category") || "";
 
-  // カテゴリーリスト
-  const categories = [
-    { id: "culture", name: "Culture" },
-    { id: "mythology", name: "Mythology" },
-    { id: "customs", name: "Customs" },
-    { id: "festivals", name: "Festivals" },
-  ];
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://yourwebsite.com");
 
-  // カテゴリーごとの記事数を取得
   useEffect(() => {
-    const fetchCategoryCounts = async () => {
+    const fetchCounts = async () => {
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          (process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : "https://yourwebsite.com");
-
-        const res = await fetch(`${baseUrl}/api/article-counts`, {
-          cache: "no-cache",
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setCategoryCounts(data.counts || {});
-
-          // 全カテゴリーの合計を計算
-          if (data.counts) {
-            const total = (Object.values(data.counts) as number[]).reduce(
-              (sum: number, count: number) => sum + count,
-              0
-            );
-            setTotalArticleCount(total);
-          }
-        }
-      } catch (e) {
-        console.error("カテゴリー集計エラー:", e);
+        const res = await fetch(`${baseUrl}/api/article-counts`, { cache: "no-cache" });
+        if (!res.ok) throw new Error("Failed to fetch category counts");
+        const { counts } = await res.json();
+        setCategoryCounts(counts);
+        setTotalCount(
+          Object.values(counts as Record<string, number>).reduce((sum, count) => sum + count, 0)
+        );
+      } catch (err) {
+        console.error("Error fetching counts:", err);
       }
     };
-
-    fetchCategoryCounts();
+    fetchCounts();
   }, []);
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
+        const params = new URLSearchParams({
+          published: "true",
+          page: currentPage.toString(),
+          pageSize: pagination.pageSize.toString(),
+        });
+        if (currentCategory) params.append("category", currentCategory);
 
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          (process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : "https://yourwebsite.com");
+        const res = await fetch(`${baseUrl}/api/articles?${params}`, { cache: "no-cache" });
+        if (!res.ok) throw new Error("Failed to fetch articles");
 
-        // クエリパラメータの構築
-        const queryParams = new URLSearchParams();
-        queryParams.append("published", "true");
-        queryParams.append("page", currentPage.toString());
-        queryParams.append("pageSize", pagination.pageSize.toString());
-
-        // カテゴリーフィルターが指定されている場合
-        if (currentCategory) {
-          queryParams.append("category", currentCategory);
-        }
-
-        const res = await fetch(
-          `${baseUrl}/api/articles?${queryParams.toString()}`,
-          {
-            cache: "no-cache",
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error(`API error: ${res.status}`);
-        }
-
-        const data = await res.json();
-        setArticles(data.articles || []);
-
-        // ページネーション情報の更新
-        if (data.pagination) {
-          setPagination(data.pagination);
-        }
-
-        // カテゴリーが指定されていない場合は、API からの総記事数を更新
-        if (!currentCategory && data.pagination) {
-          setTotalArticleCount(data.pagination.total);
-        }
-      } catch (e) {
-        console.error("記事取得エラー:", e);
+        const { articles, pagination: pageInfo } = await res.json();
+        setArticles(articles);
+        setPagination(pageInfo);
+        if (!currentCategory) setTotalCount(pageInfo.total);
+      } catch (err) {
+        console.error("Error fetching articles:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchArticles();
   }, [currentPage, currentCategory, pagination.pageSize]);
 
-  // ページ変更ハンドラー
-  const handlePageChange = (page: number) => {
+  const updateQuery = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
-    router.push(`/all-articles?${params.toString()}`);
-  };
-
-  // カテゴリー変更ハンドラー
-  const handleCategoryChange = (category: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (category) {
-      params.set("category", category);
-    } else {
-      params.delete("category");
-    }
-
-    // カテゴリー変更時はページを1に戻す
-    params.set("page", "1");
-
+    if (value) params.set(key, value); else params.delete(key);
+    if (key !== "page") params.set("page", "1");
     router.push(`/all-articles?${params.toString()}`);
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen pb-16">
-      {/* ヘッダーバナー */}
-      <div className="bg-slate-800 py-16 text-center text-white">
+    <div>
+      <section className="relative bg-slate-950 text-white pt-16 pb-16">
+        <div className="absolute inset-0 z-0 opacity-30">
+          <Image src="/images/category-top/all-posts.jpg" alt="Japanese Customs" fill style={{ objectFit: "cover" }} />
+        </div>
+        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">All Posts</h1>
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+            Browse all articles and discover stories from Japanese mythology, culture, festivals, and customs.
+          </p>
+        </div>
+      </section>
+
+      <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">All Articles</h1>
-          {currentCategory ? (
-            <p className="text-xl text-gray-300">
-              Browsing{" "}
-              {categories.find((c) => c.id === currentCategory)?.name ||
-                currentCategory}{" "}
-              articles
-            </p>
-          ) : (
-            <p className="text-xl text-gray-300">
-              Total: {totalArticleCount} articles
-            </p>
-          )}
-        </div>
-      </div>
-
-      <WhiteLine />
-
-      {/* カテゴリーフィルター */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
-          <Button
-            variant={!currentCategory ? "default" : "outline"}
-            className={
-              !currentCategory
-                ? "bg-rose-700 text-white hover:bg-rose-800"
-                : "text-white border-white hover:bg-white hover:text-slate-900"
-            }
-            onClick={() => handleCategoryChange("")}
-          >
-            All ({totalArticleCount})
-          </Button>
-
-          {categories.map((category) => (
+          <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
             <Button
-              key={category.id}
-              variant={currentCategory === category.id ? "default" : "outline"}
-              className={
-                currentCategory === category.id
-                  ? "bg-rose-700 text-white hover:bg-rose-800"
-                  : "text-white border-white hover:bg-white hover:text-slate-900"
-              }
-              onClick={() => handleCategoryChange(category.id)}
+              variant={!currentCategory ? "default" : "outline"}
+              className={!currentCategory ? "bg-rose-700 text-white hover:bg-rose-800" : "text-white border-white hover:bg-white hover:text-slate-900"}
+              onClick={() => updateQuery("category", "")}
             >
-              {category.name} ({categoryCounts[category.id] || 0})
+              All ({totalCount})
             </Button>
-          ))}
-        </div>
-
-        {/* 記事一覧 */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
-          </div>
-        ) : articles.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {articles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
+            {CATEGORIES.map(({ id, name }) => (
+              <Button
+                key={id}
+                variant={currentCategory === id ? "default" : "outline"}
+                className={currentCategory === id ? "bg-rose-700 text-white hover:bg-rose-800" : "text-white border-white hover:bg-white hover:text-slate-900"}
+                onClick={() => updateQuery("category", id)}
+              >
+                {name} ({categoryCounts[id] || 0})
+              </Button>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-white text-xl">
-              {currentCategory
-                ? `No articles found in the "${
-                    categories.find((c) => c.id === currentCategory)?.name
-                  }" category.`
-                : "No articles found."}
-            </p>
-            {currentCategory && (
-              <Button
-                className="mt-4 bg-rose-700 hover:bg-rose-800 text-white"
-                onClick={() => handleCategoryChange("")}
-              >
-                View all articles
-              </Button>
+          
+          <div className="flex-1 overflow-y-auto px-4 py-8">
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+              </div>
+            ) : articles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {articles.map(article => <ArticleCard key={article.id} article={article} />)}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-white text-xl">
+                  {currentCategory
+                    ? `No articles found in the "${CATEGORIES.find(c => c.id === currentCategory)?.name}" category.`
+                    : "No articles found."}
+                </p>
+                {currentCategory && (
+                  <Button className="mt-4 bg-rose-700 hover:bg-rose-800 text-white" onClick={() => updateQuery("category", "")}>
+                    View all articles
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {articles.length > 0 && (
+              <div className="mt-8 text-center text-white">
+                Showing {(currentPage - 1) * pagination.pageSize + 1} -
+                {Math.min(currentPage * pagination.pageSize, pagination.total)} of {pagination.total} articles
+              </div>
+            )}
+
+            {pagination.pageCount > 1 && (
+              <div className="mt-12 flex justify-center">
+                <Pagination currentPage={currentPage} totalPages={pagination.pageCount} onPageChange={page => updateQuery("page", page.toString())} />
+              </div>
             )}
           </div>
-        )}
-
-        {/* 現在のページ情報 */}
-        {articles.length > 0 && (
-          <div className="mt-8 text-center text-slate-400">
-            Showing {(currentPage - 1) * pagination.pageSize + 1} -{" "}
-            {Math.min(currentPage * pagination.pageSize, pagination.total)} of{" "}
-            {pagination.total} articles
-          </div>
-        )}
-
-        {/* ページネーション */}
-        {pagination.pageCount > 1 && (
-          <div className="mt-12 flex justify-center">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={pagination.pageCount}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        )}
-      </div>
+        </div>
+      </section>
 
       <WhiteLine />
 
-      {/* バックリンク */}
-      <div className="container mx-auto px-4 py-8 text-center">
-        <Link href="/">
-          <Button
-            variant="outline"
-            className="text-white border-white hover:bg-white hover:text-slate-900"
-          >
-            ← Back to Home
-          </Button>
-        </Link>
-      </div>
+      <Redbubble/>
+
+      <WhiteLine/>
     </div>
   );
 }
