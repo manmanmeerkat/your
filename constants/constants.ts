@@ -6,6 +6,7 @@ import type { seasonFestivalsType } from "@/types/types";
 import type { threeFestivalsType } from "@/types/types";
 import type { wayOfLifeType } from "@/types/types";
 import type { SNSLinkType } from "@/types/types";
+import type { categoriesType } from "@/types/types";
 
 export const NAVI_LINKS: linksType[] = [
     { href: '/mythology', label: 'Mythology' },
@@ -217,3 +218,10 @@ export const CATEGORY_LABELS: Record<string, string> = {
   festivals: "Festivals",
   customs: "Customs",
 };
+
+export const CATEGORIES: categoriesType[] = [
+  { id: "culture", name: "Culture" },
+  { id: "mythology", name: "Mythology" },
+  { id: "customs", name: "Customs" },
+  { id: "festivals", name: "Festivals" },
+];

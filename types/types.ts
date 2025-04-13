@@ -59,3 +59,8 @@ export type SNSLinkType = {
     label: string;
     href: string;
 }
+
+export type categoriesType = {
+    id: string;
+    name: string;
+}

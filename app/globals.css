@@ -104,7 +104,8 @@
 }
 
 .markdown-content table th {
-  background-color: #f9fafb; /* gray-50 */
+  background-color: #9CA3AF; /* gray-50 */
+  color: #020617;
   font-weight: 600;
 }
 
