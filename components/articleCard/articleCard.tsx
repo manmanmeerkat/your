@@ -2,6 +2,7 @@ import { articleType } from "@/types/types";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
+import Image from "next/image";
 
 export default function ArticleCard({ article }: { article: articleType }) {
   const { id, slug, title, category, content, summary, createdAt, images } = article;
@@ -24,9 +25,11 @@ export default function ArticleCard({ article }: { article: articleType }) {
             <div className="w-full md:w-2/5 min-h-[208px] bg-slate-100 flex items-center justify-center 
                 p-4 md:p-0 md:pl-4 md:pt-0 overflow-hidden rounded-[5px] md:rounded-none">
                 {images?.[0] ? (
-                    <img
+                    <Image
                     src={images[0].url}
                     alt={images[0].altText || title}
+                    width={300}
+                    height={230}
                     className="w-full h-52 object-contain md:object-cover"
                     />
                 ) : (
@@ -62,7 +65,6 @@ export default function ArticleCard({ article }: { article: articleType }) {
                     >
                     Read more ≫
                     </Button>
-            
                 </div>
             </div>
         </Card>
