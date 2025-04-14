@@ -3,25 +3,32 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import Image from "next/image";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="bg-slate-900 min-h-screen pb-16">
-      {/* ヘッダーバナー */}
-      <div className="bg-slate-800 py-16 text-center text-white">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+    <>
+      <section className="relative bg-slate-950 text-white pt-24 pb-24">
+        <div className="absolute inset-0 z-0 opacity-30">
+          <Image
+            src="/images/category-top/privacy-policy.jpg"
+            alt="Japanese Customs"
+            fill
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justifyr">
             Our commitment to your privacy
           </p>
         </div>
-      </div>
-
-      <WhiteLine />
+      </section>
 
       {/* プライバシーポリシーコンテンツ */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto bg-slate-800/40 rounded-lg p-8 text-white">
+      <div className="container mx-auto px-4 pt-32 pb-8">
+        <div className="max-w-4xl mx-auto bg-slate-800/40 rounded-lg p-8 text-white text-justify">
           <section className="mb-10">
             <h2 className="text-2xl font-semibold mb-4 text-rose-500">
               Introduction
@@ -146,20 +153,9 @@ export default function PrivacyPolicyPage() {
           </section>
         </div>
       </div>
+      <BackToHomeBtn/>
 
       <WhiteLine />
-
-      {/* バックリンク */}
-      <div className="container mx-auto px-4 py-8 text-center">
-        <Link href="/">
-          <Button
-            variant="outline"
-            className="text-white border-white hover:bg-white hover:text-slate-900"
-          >
-            ← Back to Home
-          </Button>
-        </Link>
-      </div>
-    </div>
+    </>
   );
 }

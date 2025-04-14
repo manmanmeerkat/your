@@ -46,9 +46,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="bg-slate-900 scroll-smooth">
+    <div className="scroll-smooth">
       {/* Hero セクション */}
-      <section className="relative bg-slate-900 text-white md:px-16">
+      <section className="relative text-white md:px-16">
         <div className="absolute inset-0 z-0">
           <Slider />
         </div>

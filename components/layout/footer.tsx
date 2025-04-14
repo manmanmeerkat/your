@@ -60,7 +60,7 @@ export default function Footer() {
 
         <LinkSection title="Category" links={CATEGORY_LINKS} />
         <LinkSection title="Others" links={INFO_LINKS} />
-        <LinkSection title="SNS" links={filteredSNSLinks} />
+        <LinkSection title="Social Media" links={filteredSNSLinks} />
       </div>
 
         <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
