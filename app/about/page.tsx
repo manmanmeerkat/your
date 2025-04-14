@@ -4,6 +4,7 @@ import { CATEGORY_ITEMS } from "@/constants/constants";
 import CategoryCard from "@/components/top/categoryCard/categoryCard";
 import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
 import Redbubble from "@/components/redBubble/RedBubble";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 export default function AboutPage() {
   return (
@@ -83,6 +84,7 @@ export default function AboutPage() {
       <WhiteLine/>
       {/* <GetInTouch/> */}
       <SimpleContact/>
+      <BackToHomeBtn/>
       <WhiteLine/>
     </div>
   );
