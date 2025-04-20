@@ -1,8 +1,8 @@
 // app/api/articles/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
