@@ -1,6 +1,6 @@
 // app/api/categories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/prisma/prisma';  // 共通のPrismaインスタンスをインポート
+import { prisma } from '@/lib/prisma';  // 共通のPrismaインスタンスをインポート
 
 export async function GET(request: NextRequest) {
   try {

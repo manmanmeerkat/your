@@ -1,6 +1,6 @@
 // app/api/articles/[slug]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/prisma/prisma';
+import { prisma } from '../../../lib/prisma';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
