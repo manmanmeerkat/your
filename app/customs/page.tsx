@@ -5,8 +5,12 @@ import ArticleCard from "@/components/articleCard/articleCard";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { WAY_OF_LIFE } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
+import PaginationWrapper from "@/components/pagination-wrapper";
 
-async function getCustomsArticles() {
+// ページごとの記事数
+const ARTICLES_PER_PAGE = 6;
+
+async function getCustomsArticles(page = 1) {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
@@ -15,30 +19,70 @@ async function getCustomsArticles() {
         : "https://yourwebsite.com");
 
     const res = await fetch(
-      `${baseUrl}/api/articles?category=customs&published=true`,
+      `${baseUrl}/api/articles?category=customs&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
         cache: "no-cache",
       }
     );
 
-    if (!res.ok) return { articles: [] };
+    if (!res.ok)
+      return {
+        articles: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          pageSize: ARTICLES_PER_PAGE,
+          pageCount: 1,
+        },
+      };
 
     const data = await res.json();
+
     if (data.articles && Array.isArray(data.articles)) {
       data.articles = data.articles.filter(
         (article: articleType) => article.category === "customs"
       );
     }
 
+    // paginationが返されていない場合のデフォルト値を設定
+    if (!data.pagination) {
+      data.pagination = {
+        total: data.articles?.length || 0,
+        page: 1,
+        pageSize: ARTICLES_PER_PAGE,
+        pageCount:
+          Math.ceil((data.articles?.length || 0) / ARTICLES_PER_PAGE) || 1,
+      };
+    }
+
     return data;
   } catch (error) {
     console.error("Failed to fetch customs articles:", error);
-    return { articles: [] };
+    return {
+      articles: [],
+      pagination: {
+        total: 0,
+        page: 1,
+        pageSize: ARTICLES_PER_PAGE,
+        pageCount: 1,
+      },
+    };
   }
 }
 
-export default async function CustomsPage() {
-  const { articles = [] } = await getCustomsArticles();
+export default async function CustomsPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
+  // クエリパラメータからページ番号を取得
+  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
+
+  // 記事データを取得
+  const { articles = [], pagination } = await getCustomsArticles(currentPage);
+
+  // 総ページ数
+  const totalPages = pagination.pageCount;
 
   return (
     <div>
@@ -53,14 +97,19 @@ export default async function CustomsPage() {
           />
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Japanese Customs</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Japanese Customs
+          </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
-            Japanese customs offer a glimpse into the country’s unique sense of harmony, respect, and seasonal awareness. We will explore everyday traditions such as bowing, removing shoes, and celebrating seasonal events that reflect the values and rhythms of Japanese life.
+            Japanese customs offer a glimpse into the country's unique sense of
+            harmony, respect, and seasonal awareness. We will explore everyday
+            traditions such as bowing, removing shoes, and celebrating seasonal
+            events that reflect the values and rhythms of Japanese life.
           </p>
         </div>
       </section>
 
-      {/* 記事一覧 */}
+      {/* 記事一覧 (ページネーション追加) */}
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -68,11 +117,24 @@ export default async function CustomsPage() {
           </h2>
 
           {articles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map((article: articleType) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {articles.map((article: articleType) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+
+              {/* ページネーションコンポーネント */}
+              {totalPages > 1 && (
+                <div className="mt-8">
+                  <PaginationWrapper
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    basePath="/customs"
+                  />
+                </div>
+              )}
+            </>
           ) : (
             <p className="text-center text-white">
               Customs posts will be available soon.
@@ -81,9 +143,9 @@ export default async function CustomsPage() {
         </div>
       </section>
 
-      <WhiteLine/>
+      <WhiteLine />
 
-      {/* サブカテゴリ */}
+      {/* サブカテゴリ (変更なし) */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -114,12 +176,11 @@ export default async function CustomsPage() {
         </div>
       </section>
 
-      <WhiteLine/>
+      <WhiteLine />
 
-      <Redbubble/>
+      <Redbubble />
 
-      <WhiteLine/>
-
+      <WhiteLine />
     </div>
   );
 }
