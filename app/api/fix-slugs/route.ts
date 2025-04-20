@@ -1,6 +1,6 @@
 // app/api/fix-slugs/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../articles/route';
+import { prisma } from '@/prisma/prisma';
 
 export async function GET(req: NextRequest) {
   try {

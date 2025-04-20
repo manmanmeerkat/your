@@ -1,18 +1,6 @@
 // app/api/articles/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-
-// Prisma クライアントをグローバルに保持（hot reload 対策）
-import { PrismaClient } from '@prisma/client';
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: ['error', 'warn'],
-  });
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+import { prisma } from '@/prisma/prisma';
 
 export async function GET(request: NextRequest) {
   try {
