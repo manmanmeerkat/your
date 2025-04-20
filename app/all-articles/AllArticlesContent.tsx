@@ -34,23 +34,22 @@ export default function AllArticlesContent() {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        // 重要な変更: 相対パスを使用
-        const res = await fetch("/api/article-counts", {
-          cache: "no-store",
-        });
+        // シンプルな相対パスを使用
+        const res = await fetch("/api/article-counts");
 
-        if (!res.ok) throw new Error("Failed to fetch category counts");
+        if (!res.ok) {
+          console.error(`Error status: ${res.status}`);
+          throw new Error("Failed to fetch category counts");
+        }
 
         const data = await res.json();
-        if (data && data.counts) {
-          setCategoryCounts(data.counts);
-          setTotalCount(
-            Object.values(data.counts as Record<string, number>).reduce(
-              (sum, count) => sum + count,
-              0
-            )
-          );
-        }
+        setCategoryCounts(data.counts || {});
+        setTotalCount(
+          Object.values(data.counts || {}).reduce(
+            (sum: number, count) => sum + (count as number),
+            0 as number
+          )
+        );
       } catch (err) {
         console.error("Error fetching counts:", err);
       }
@@ -70,19 +69,19 @@ export default function AllArticlesContent() {
         });
         if (currentCategory) params.append("category", currentCategory);
 
-        // 重要な変更: 相対パスを使用
-        const res = await fetch(`/api/articles?${params}`, {
-          cache: "no-store",
-        });
+        // シンプルな相対パスを使用
+        const res = await fetch(`/api/articles?${params}`);
 
-        if (!res.ok) throw new Error("Failed to fetch articles");
+        if (!res.ok) {
+          console.error(`Error status: ${res.status}`);
+          throw new Error("Failed to fetch articles");
+        }
 
         const data = await res.json();
-        if (data && data.articles) {
-          setArticles(data.articles);
-          setPagination(data.pagination || pagination);
-          if (!currentCategory && data.pagination)
-            setTotalCount(data.pagination.total);
+        setArticles(data.articles || []);
+        if (data.pagination) {
+          setPagination(data.pagination);
+          if (!currentCategory) setTotalCount(data.pagination.total);
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
