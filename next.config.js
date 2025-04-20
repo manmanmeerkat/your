@@ -8,6 +8,10 @@ const nextConfig = {
       // 必要に応じて他のドメインも追加できます
     ],
   },
+  experimental: {
+    // 特定のページをプリレンダリングから除外
+    excludePages: ['/admin/**', '/all-articles'],
+  },
   // 他の設定があればそのまま残してください
 }
 
