@@ -1,11 +1,16 @@
+// app/culture/page.tsx
 import Image from "next/image";
 import { articleType } from "@/types/types";
-import ArticleCard from "../../components/articleCard/articleCard"; 
+import ArticleCard from "../../components/articleCard/articleCard";
 import { CULTURE_CATEGORIES } from "@/constants/constants";
 import RedBubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import PaginationWrapper from "@/components/pagination-wrapper";
 
-async function getCultureArticles(): Promise<{ articles: articleType[] }> {
+// ページごとの記事数
+const ARTICLES_PER_PAGE = 6;
+
+async function getCultureArticles(page = 1) {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
@@ -14,26 +19,70 @@ async function getCultureArticles(): Promise<{ articles: articleType[] }> {
         : "https://yourwebsite.com");
 
     const res = await fetch(
-      `${baseUrl}/api/articles?category=culture&published=true`,
+      `${baseUrl}/api/articles?category=culture&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       { cache: "no-cache" }
     );
 
-    if (!res.ok) return { articles: [] };
+    if (!res.ok)
+      return {
+        articles: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          pageSize: ARTICLES_PER_PAGE,
+          pageCount: 1,
+        },
+      };
 
     const data = await res.json();
+
+    // 記事データを抽出してフィルタリング
+    const filteredArticles = Array.isArray(data.articles)
+      ? data.articles.filter((a: articleType) => a.category === "culture")
+      : [];
+
+    // paginationが返されていない場合のデフォルト値を設定
+    if (!data.pagination) {
+      data.pagination = {
+        total: filteredArticles.length || 0,
+        page: 1,
+        pageSize: ARTICLES_PER_PAGE,
+        pageCount:
+          Math.ceil((filteredArticles.length || 0) / ARTICLES_PER_PAGE) || 1,
+      };
+    }
+
     return {
-      articles: Array.isArray(data.articles)
-        ? data.articles.filter((a: articleType) => a.category === "culture")
-        : [],
+      articles: filteredArticles,
+      pagination: data.pagination,
     };
   } catch (error) {
     console.error("Failed to fetch culture articles:", error);
-    return { articles: [] };
+    return {
+      articles: [],
+      pagination: {
+        total: 0,
+        page: 1,
+        pageSize: ARTICLES_PER_PAGE,
+        pageCount: 1,
+      },
+    };
   }
 }
 
-export default async function CulturePage() {
-  const { articles = [] } = await getCultureArticles();
+export default async function CulturePage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
+  // クエリパラメータからページ番号を取得
+  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
+
+  // 記事データを取得
+  const { articles = [], pagination } = await getCultureArticles(currentPage);
+
+  // 総ページ数
+  const totalPages = pagination.pageCount;
 
   return (
     <div>
@@ -48,14 +97,20 @@ export default async function CulturePage() {
           />
         </div>
         <div className="container mx-auto px-6 py-36 relative z-10 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Japanese Culture</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            Japanese Culture
+          </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
-            Japan has cultivated a rich cultural heritage for over a thousand years, blending refined traditions, craftsmanship, and everyday practices. We will explore the depth and beauty of Japanese culture through arts such as the tea ceremony, ceramics, kimono, and ukiyo-e.
+            Japan has cultivated a rich cultural heritage for over a thousand
+            years, blending refined traditions, craftsmanship, and everyday
+            practices. We will explore the depth and beauty of Japanese culture
+            through arts such as the tea ceremony, ceramics, kimono, and
+            ukiyo-e.
           </p>
         </div>
       </section>
 
-      {/* 文化記事一覧 */}
+      {/* 文化記事一覧 (ページネーション追加) */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -63,22 +118,35 @@ export default async function CulturePage() {
           </h2>
 
           {articles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
-              {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
+                {articles.map((article: articleType) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+
+              {/* ページネーションコンポーネント */}
+              {totalPages > 1 && (
+                <div className="mt-8">
+                  <PaginationWrapper
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    basePath="/culture"
+                  />
+                </div>
+              )}
+            </>
           ) : (
-            <p className="text-center text-slate-500 text-white">
+            <p className="text-center text-white">
               Culture posts will be available soon.
             </p>
           )}
         </div>
       </section>
 
-      <WhiteLine/>
+      <WhiteLine />
 
-      {/* 文化カテゴリー */}
+      {/* 文化カテゴリー (変更なし) */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -109,28 +177,12 @@ export default async function CulturePage() {
         </div>
       </section>
 
-      <WhiteLine/>
+      <WhiteLine />
 
-       {/* Redbubble商品紹介セクション */}
-       <RedBubble/>
+      {/* Redbubble商品紹介セクション (変更なし) */}
+      <RedBubble />
 
-      <WhiteLine/>
-
-      {/* 文化体験セクション */}
-      {/* <section className="py-16 bg-white">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-8 text-center">文化体験を探す</h2>
-          <p className="text-center text-lg mb-10 max-w-2xl mx-auto">
-            日本滞在中に伝統文化を体験してみませんか？茶道、着物着付け、和食作りなど、
-            さまざまな日本文化体験があなたを待っています。
-          </p>
-          <div className="flex justify-center">
-            <Button size="lg" className="px-8">
-              体験を探す
-            </Button>
-          </div>
-        </div>
-      </section> */}
+      <WhiteLine />
     </div>
   );
 }
