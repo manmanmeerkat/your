@@ -34,24 +34,28 @@ export default function AllArticlesContent() {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        // 必ず絶対パスを使用
-        const fullUrl = `${window.location.origin}/api/article-counts`;
-        const res = await fetch(fullUrl, {
-          cache: "no-cache",
+        // 重要な変更: 相対パスを使用
+        const res = await fetch("/api/article-counts", {
+          cache: "no-store",
         });
+
         if (!res.ok) throw new Error("Failed to fetch category counts");
-        const { counts } = await res.json();
-        setCategoryCounts(counts);
-        setTotalCount(
-          Object.values(counts as Record<string, number>).reduce(
-            (sum, count) => sum + count,
-            0
-          )
-        );
+
+        const data = await res.json();
+        if (data && data.counts) {
+          setCategoryCounts(data.counts);
+          setTotalCount(
+            Object.values(data.counts as Record<string, number>).reduce(
+              (sum, count) => sum + count,
+              0
+            )
+          );
+        }
       } catch (err) {
         console.error("Error fetching counts:", err);
       }
     };
+
     fetchCounts();
   }, []);
 
@@ -66,23 +70,27 @@ export default function AllArticlesContent() {
         });
         if (currentCategory) params.append("category", currentCategory);
 
-        // 必ず絶対パスを使用
-        const fullUrl = `${window.location.origin}/api/articles?${params}`;
-        const res = await fetch(fullUrl, {
-          cache: "no-cache",
+        // 重要な変更: 相対パスを使用
+        const res = await fetch(`/api/articles?${params}`, {
+          cache: "no-store",
         });
+
         if (!res.ok) throw new Error("Failed to fetch articles");
 
-        const { articles, pagination: pageInfo } = await res.json();
-        setArticles(articles);
-        setPagination(pageInfo);
-        if (!currentCategory) setTotalCount(pageInfo.total);
+        const data = await res.json();
+        if (data && data.articles) {
+          setArticles(data.articles);
+          setPagination(data.pagination || pagination);
+          if (!currentCategory && data.pagination)
+            setTotalCount(data.pagination.total);
+        }
       } catch (err) {
         console.error("Error fetching articles:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchArticles();
   }, [currentPage, currentCategory, pagination.pageSize]);
 
