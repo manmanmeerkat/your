@@ -1,4 +1,4 @@
-// app/all-articles/AllArticlesContent.tsx (現在のファイルをリネーム)
+// app/all-articles/AllArticlesContent.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -13,7 +13,6 @@ import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
 
 export default function AllArticlesContent() {
-  // 現在のコードをそのまま使用（関数名だけ変更）
   const [articles, setArticles] = useState<articleType[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
@@ -32,17 +31,11 @@ export default function AllArticlesContent() {
   const currentPage = Number(searchParams.get("page") || "1");
   const currentCategory = searchParams.get("category") || "";
 
-  // 以下、元のコードをそのまま使用
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "https://yourwebsite.com");
-
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const res = await fetch(`${baseUrl}/api/article-counts`, {
+        // 絶対パスを使用
+        const res = await fetch(`/api/article-counts`, {
           cache: "no-cache",
         });
         if (!res.ok) throw new Error("Failed to fetch category counts");
@@ -72,7 +65,8 @@ export default function AllArticlesContent() {
         });
         if (currentCategory) params.append("category", currentCategory);
 
-        const res = await fetch(`${baseUrl}/api/articles?${params}`, {
+        // 絶対パスを使用
+        const res = await fetch(`/api/articles?${params}`, {
           cache: "no-cache",
         });
         if (!res.ok) throw new Error("Failed to fetch articles");

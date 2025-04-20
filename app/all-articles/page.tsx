@@ -1,4 +1,4 @@
-// app/all-articles/page.tsx (新しく作成)
+// app/all-articles/page.tsx
 import { Suspense } from "react";
 import AllArticlesContent from "./AllArticlesContent";
 
