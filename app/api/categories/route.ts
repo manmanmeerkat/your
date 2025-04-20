@@ -1,6 +1,9 @@
 // app/api/categories/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';  // 共通のPrismaインスタンスをインポート
+import { PrismaClient } from '@prisma/client';
+
+// Prismaクライアントのインスタンスを作成
+const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   try {
