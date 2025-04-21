@@ -1,13 +1,18 @@
 // lib/prisma.ts
 import { PrismaClient } from '@prisma/client';
 
-// Prisma クライアントをグローバルに保持（hot reload 対策）
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const globalForPrisma = global as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-export const prisma =
-  globalForPrisma.prisma ||
+export const prisma = globalForPrisma.prisma ?? 
   new PrismaClient({
-    log: ['error', 'warn'],
+    log: ['query', 'error', 'warn'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
