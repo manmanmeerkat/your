@@ -19,19 +19,22 @@ export default function Home() {
   useEffect(() => {
     const load = async () => {
       try {
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          (process.env.NODE_ENV === "development"
-            ? "http://localhost:3000"
-            : "https://yourwebsite.com");
-
-        const res = await fetch(`${baseUrl}/api/articles?published=true`, {
+        // 相対パスを使用
+        const res = await fetch("/api/articles?published=true", {
           cache: "no-cache",
         });
 
+        if (!res.ok) {
+          console.error(`Error status: ${res.status}`);
+          throw new Error("Failed to fetch articles");
+        }
+
         const data = await res.json();
         const sorted = [...(data.articles || [])]
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
           .slice(0, 6);
 
         setArticles(sorted);
@@ -57,8 +60,10 @@ export default function Home() {
             Explore Japan's hidden charms
           </h1>
           <p className="text-xl mb-8 drop-shadow-md">
-            Ancient myths, seasonal festivals, and rich traditional culture.<br></br>
-            We will introduce you to a side of Japan you may not have known before.
+            Ancient myths, seasonal festivals, and rich traditional culture.
+            <br></br>
+            We will introduce you to a side of Japan you may not have known
+            before.
           </p>
           <div className="flex gap-4 flex-wrap">
             <Link href="#categories" scroll={true}>
@@ -90,7 +95,9 @@ export default function Home() {
       {/* カテゴリーセクション */}
       <section id="categories" className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">Categories to Explore</h2>
+          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+            Categories to Explore
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {CATEGORY_ITEMS.map((item) => (
               <CategoryCard
@@ -105,7 +112,7 @@ export default function Home() {
         </div>
       </section>
 
-      <WhiteLine/>
+      <WhiteLine />
 
       {/* 最新記事セクション */}
       <section id="latest-articles" className="py-16 md:px-16 bg-slate-950">
@@ -125,7 +132,7 @@ export default function Home() {
             <p className="text-slate-500 text-white">No posts yet.</p>
           )}
           <div className="mt-20">
-          <Link href="/all-articles">
+            <Link href="/all-articles">
               <Button
                 size="lg"
                 className="w-[220px] font-normal
@@ -140,17 +147,17 @@ export default function Home() {
         </div>
       </section>
 
-      <WhiteLine/>
+      <WhiteLine />
 
-      <Redbubble/>
+      <Redbubble />
 
-      <WhiteLine/>
+      <WhiteLine />
 
       {/* お問い合わせ */}
       {/* <GetInTouch/> */}
-      <SimpleContact/>
+      <SimpleContact />
 
-      <WhiteLine/>
+      <WhiteLine />
     </div>
   );
 }
