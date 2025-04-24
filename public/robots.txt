@@ -1,6 +1,7 @@
 # *
 User-agent: *
 Allow: /
+Sitemap: https://your-usrb.vercel.app/sitemap.xml
 
 # Host
 Host: https://your-usrb.vercel.app
