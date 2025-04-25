@@ -104,8 +104,9 @@ export default function Home() {
                 key={item.href}
                 href={item.href}
                 title={item.title}
-                image={item.img}
+                img={item.img}
                 description={item.description}
+                dataset={item.dataset}
               />
             ))}
           </div>
