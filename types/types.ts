@@ -27,7 +27,6 @@ export type categoryItemType = {
     title: string;
     img: string;
     description: string;
-    dataset: string;
 };
 
 export type categoryImgType = {

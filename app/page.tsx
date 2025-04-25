@@ -106,7 +106,6 @@ export default function Home() {
                 title={item.title}
                 img={item.img}
                 description={item.description}
-                dataset={item.dataset}
               />
             ))}
           </div>

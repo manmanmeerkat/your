@@ -8,10 +8,9 @@ export default function CategoryCard({
   title,
   img,
   description,
-  dataset,
 }: categoryItemType) {
   return (
-    <Link href={href} className="block group h-full" data-gtm={dataset}>
+    <Link href={href} className="block group h-full">
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform group-hover:scale-105 flex flex-col h-full p-4 pt-6">
         <div className="relative flex items-center justify-center">
           <Image

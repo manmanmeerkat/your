@@ -73,7 +73,6 @@ export default function AboutPage() {
                 title={item.title}
                 img={item.img}
                 description={item.description}
-                dataset={item.dataset}
               />
             ))}
           </div>
