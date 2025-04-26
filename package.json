@@ -7,7 +7,6 @@
     "postinstall": "prisma generate",
     "build": "npx prisma generate && next build",
     "start": "next start",
-
     "lint": "next lint",
     "postbuild": "next-sitemap"
   },
@@ -53,6 +52,7 @@
     "postcss": "^8.4.0",
     "prisma": "^6.5.0",
     "tailwindcss": "^3.3.0",
+    "terser-webpack-plugin": "^5.3.14",
     "typescript": "^5.0.0"
   }
 }
