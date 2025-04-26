@@ -15,7 +15,7 @@ export default function ArticleCard({ article }: { article: articleType }) {
   }[category] || "Article";
 
   return (
-    <Link href={`/articles/${slug}`}>
+    <Link href={`/articles/${slug}`}  data-gtm="post-read" data-title={title}>
         <Card
             key={id}
             className="flex flex-col md:flex-row h-full min-h-[260px] rounded-xl shadow-md overflow-hidden bg-white 
