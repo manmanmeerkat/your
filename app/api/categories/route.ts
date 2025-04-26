@@ -1,11 +1,11 @@
 // app/api/categories/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 // Prismaクライアントのインスタンスを作成
 const prisma = new PrismaClient();
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('カテゴリー一覧API: リクエスト受信');
     

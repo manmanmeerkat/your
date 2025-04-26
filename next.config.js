@@ -12,7 +12,27 @@ const nextConfig = {
     // 特定のページをプリレンダリングから除外
     excludePages: ['/admin/**', '/all-articles'],
   },
+  webpack(config, { dev }) {
+    if (!dev) {
+      // 本番ビルドの場合、importを使ってTerserPluginをインポート
+      import('terser-webpack-plugin').then(TerserPlugin => {
+        config.optimization.minimizer.push(
+          new TerserPlugin({
+            terserOptions: {
+              compress: {
+                drop_console: true, // console.log などを削除
+              },
+            },
+          })
+        );
+
+        return config;
+      });
+    } else {
+      return config;
+    }
+  },
   // 他の設定があればそのまま残してください
 }
 
-module.exports = nextConfig
+module.exports = nextConfig;

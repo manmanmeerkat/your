@@ -31,7 +31,7 @@ export async function GET(
     }
     
     return NextResponse.json({ article: data });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : '予期せぬエラーが発生しました' }, { status: 500 });
   }
 }

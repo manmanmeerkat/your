@@ -294,9 +294,13 @@ export default function AdminDashboardContent() {
       }
 
       setError(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("データ取得エラー:", error);
-      setError(error.message || "データの読み込みに失敗しました");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "データの読み込みに失敗しました"
+      );
       setArticles([]);
     } finally {
       setLoading(false);
@@ -466,7 +470,7 @@ export default function AdminDashboardContent() {
 
               {searchQuery && (
                 <div className="bg-blue-100 px-3 py-1 rounded-full flex items-center gap-1">
-                  <span>検索: "{searchQuery}"</span>
+                  <span>検索: &quot;{searchQuery}&quot;</span>
                   <button
                     onClick={resetSearch}
                     className="text-blue-500 hover:text-blue-700 ml-1"
