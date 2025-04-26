@@ -71,7 +71,7 @@ export default function AboutPage() {
                 key={item.href}
                 href={item.href}
                 title={item.title}
-                image={item.img}
+                img={item.img}
                 description={item.description}
               />
             ))}

@@ -46,30 +46,30 @@ export const SLIDE_IMAGES: slideImgType[] = [
 ];
 
 export const CATEGORY_ITEMS: categoryItemType[] = [
-    {
-        href: "/mythology",
-        title: "Japanese Mythology",
-        img: "/images/category-img/mythology.jpg",
-        description: "Stories and gods from Japanese mythology, such as Amaterasu Omikami, Susanoo, and Yamata no Orochi.",
+  {
+      href: "/mythology",
+      title: "Japanese Mythology",
+      img: "/images/category-img/mythology.jpg",
+      description: "Stories and gods from Japanese mythology, such as Amaterasu Omikami, Susanoo, and Yamata no Orochi.",
+  },
+  {
+    href: "/culture",
+    title: "Japanese Culture",
+    img: "/images/category-img/culture.jpg",
+    description: "Unique Japanese culture and its background, such as tea ceremony, flower arranging, and kimono.",
+  },
+  {
+      href: "/festivals",
+      title: "Japanese Festivals",
+      img: "/images/category-img/festival.jpg",
+      description: "Traditional festivals across the country, such as the Gion Festival and the Nebuta Festival, and their origins.",
     },
-    {
-      href: "/culture",
-      title: "Japanese Culture",
-      img: "/images/category-img/culture.jpg",
-      description: "Unique Japanese culture and its background, such as tea ceremony, flower arranging, and kimono.",
-    },
-    {
-        href: "/festivals",
-        title: "Japanese Festivals",
-        img: "/images/category-img/festival.jpg",
-        description: "Traditional festivals across the country, such as the Gion Festival and the Nebuta Festival, and their origins.",
-    },
-    {
-      href: "/customs",
-      title: "Japanese Customs",
-      img: "/images/category-img/custom.jpg",
-      description: "Simple customs and everyday manners in Japan, like bowing, removing shoes, and saying “itadakimasu.”",
-    }
+  {
+    href: "/customs",
+    title: "Japanese Customs",
+    img: "/images/category-img/custom.jpg",
+    description: "Simple customs and everyday manners in Japan, like bowing, removing shoes, and saying “itadakimasu.”",
+  }
 ];
 
 export const JAPANESE_GODS: categoryImgType[] = [
