@@ -294,7 +294,7 @@ export default function ArticleClientPage() {
             )} */}
         </div>
       </div>
-      <div className="flex justify-center mt-8">
+      <div className="flex flex-col justify-center items-center mt-8 gap-8">
         <Link href={`/${article.category}`}>
           <Button
             size="lg"
@@ -304,6 +304,17 @@ export default function ArticleClientPage() {
                       shadow hover:shadow-lg"
           >
             Back to {CATEGORY_LABELS[article.category]} Posts ≫
+          </Button>
+        </Link>
+        <Link href="/all-articles">
+          <Button
+            size="lg"
+            className="w-[220px] font-normal
+                      border border-rose-700 bg-rose-700 text-white
+                      hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                      shadow hover:shadow-lg"
+          >
+            View all posts ≫
           </Button>
         </Link>
       </div>

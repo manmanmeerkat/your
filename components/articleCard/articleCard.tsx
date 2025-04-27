@@ -15,14 +15,14 @@ export default function ArticleCard({ article }: { article: articleType }) {
   }[category] || "Article";
 
   return (
-    <Link href={`/articles/${slug}`}  data-gtm="post-read" data-title={title}>
+    <Link href={`/articles/${slug}`} data-gtm="post-read" data-title={title}>
         <Card
             key={id}
             className="flex flex-col md:flex-row h-full min-h-[260px] rounded-xl shadow-md overflow-hidden bg-white 
                         transition-transform duration-300 ease-in-out hover:scale-[1.03]"
         >
             {/* Image area */}
-            <div className="w-full md:w-2/5 min-h-[208px] bg-slate-100 flex items-center justify-center 
+            <div className="w-full md:w-[220px] min-h-[208px] bg-slate-100 flex items-center justify-center 
                 p-4 md:p-0 md:pl-4 md:pt-0 overflow-hidden rounded-[5px] md:rounded-none">
                 {images?.[0] ? (
                     <Image
