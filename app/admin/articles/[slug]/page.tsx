@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +33,9 @@ export default function EditArticlePage({
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
 
-  const router = useRouter();
+  // 進行中のリクエストを追跡するref
+  const activeRequestRef = useRef<AbortController | null>(null);
+
   const searchParams = useSearchParams();
 
   // 戻り先ページの状態を取得
@@ -41,6 +43,50 @@ export default function EditArticlePage({
   const returnCategory = searchParams.get("category") || "";
   const returnSearch = searchParams.get("search") || "";
   const returnPage = searchParams.get("page") || "1";
+
+  // コンポーネントのアンマウント時にリクエストを中止
+  useEffect(() => {
+    return () => {
+      if (activeRequestRef.current) {
+        activeRequestRef.current.abort();
+      }
+    };
+  }, []);
+
+  // タイムアウト付きのフェッチ関数
+  const fetchWithTimeout = async (
+    url: string,
+    options: RequestInit = {},
+    timeout = 30000
+  ) => {
+    // 前のリクエストがあればキャンセル
+    if (activeRequestRef.current) {
+      activeRequestRef.current.abort();
+    }
+
+    // 新しいコントローラーを作成
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
+
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(id);
+      return response;
+    } catch (error) {
+      clearTimeout(id);
+      throw error;
+    } finally {
+      // リクエストが完了したらrefをクリア
+      if (activeRequestRef.current === controller) {
+        activeRequestRef.current = null;
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -55,10 +101,17 @@ export default function EditArticlePage({
 
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
-        const response = await fetch(`/api/articles/${encodedSlug}`);
+
+        // タイムアウト付きのフェッチを使用
+        const response = await fetchWithTimeout(
+          `/api/articles/${encodedSlug}`,
+          {},
+          30000
+        );
 
         if (!response.ok) {
-          throw new Error("記事の取得に失敗しました");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "記事の取得に失敗しました");
         }
 
         const article = await response.json();
@@ -132,11 +185,15 @@ export default function EditArticlePage({
       const formData = new FormData();
       formData.append("file", newFile);
 
-      // アップロードリクエスト送信
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      // アップロードリクエスト送信（タイムアウト付き）
+      const response = await fetchWithTimeout(
+        "/api/upload",
+        {
+          method: "POST",
+          body: formData,
+        },
+        60000
+      ); // 画像アップロードは長めのタイムアウトを設定
 
       console.log("Upload response status:", response.status);
       const data = await response.json();
@@ -151,11 +208,17 @@ export default function EditArticlePage({
       return data.url;
     } catch (error: unknown) {
       console.error("Image upload error:", error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : "画像のアップロードに失敗しました"
-      );
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          setError(
+            "画像アップロードがタイムアウトしました。ネットワーク接続を確認してください。"
+          );
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError("画像のアップロードに失敗しました");
+      }
       return null;
     } finally {
       setUploading(false);
@@ -180,41 +243,54 @@ export default function EditArticlePage({
 
   // フィルタリング状態を保持して元のページに戻る関数
   const navigateBack = () => {
-    // セッションストレージのリセット（ダッシュボード再初期化のため）
-    sessionStorage.removeItem("dashboardInitialized");
+    try {
+      // セッションストレージのリセット（ダッシュボード再初期化のため）
+      sessionStorage.removeItem("dashboardInitialized");
 
-    // 戻り先のURLを構築
-    let url = returnPath;
+      // 戻り先のURLを構築
+      let url = returnPath;
 
-    // クエリパラメータを追加
-    const params = new URLSearchParams();
-    if (returnCategory) params.append("category", returnCategory);
-    if (returnSearch) params.append("search", returnSearch);
-    if (returnPage && returnPage !== "1") params.append("page", returnPage);
+      // クエリパラメータを追加
+      const params = new URLSearchParams();
+      if (returnCategory) params.append("category", returnCategory);
+      if (returnSearch) params.append("search", returnSearch);
+      if (returnPage && returnPage !== "1") params.append("page", returnPage);
 
-    // パラメータがある場合は追加
-    const queryString = params.toString();
-    if (queryString) {
-      url = `${url}?${queryString}`;
+      // パラメータがある場合は追加
+      const queryString = params.toString();
+      if (queryString) {
+        url = `${url}?${queryString}`;
+      }
+
+      console.log("戻り先URL:", url);
+
+      // 遷移先で強制的に初期化を実行するためにタイムスタンプパラメータを追加
+      if (url.includes("?")) {
+        url += `&_ts=${Date.now()}`;
+      } else {
+        url += `?_ts=${Date.now()}`;
+      }
+
+      // Next.jsのルーターを使用する代わりに、強制的にURL遷移を実行
+      window.location.href = url;
+    } catch (error) {
+      console.error("ナビゲーションエラー:", error);
+      setError("ページ遷移に失敗しました。再度お試しください。");
+      setSaving(false);
     }
-
-    console.log("戻り先URL:", url);
-
-    // 遷移先で強制的に初期化を実行するために、タイムスタンプパラメータを追加
-    // これによりNext.jsのルーターキャッシュを防止する
-    if (url.includes("?")) {
-      url += `&_ts=${Date.now()}`;
-    } else {
-      url += `?_ts=${Date.now()}`;
-    }
-
-    router.push(url);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // すでに保存中なら処理しない
+    if (saving) return;
+
     setSaving(true);
     setError("");
+
+    // 送信ボタンをロックするためにステート更新を確実に反映させる
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     try {
       // 必須フィールドの検証
@@ -289,13 +365,18 @@ export default function EditArticlePage({
       const encodedSlug = encodeURIComponent(params.slug);
       console.log("Encoded slug for API call:", encodedSlug);
 
-      const response = await fetch(`/api/articles/${encodedSlug}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
+      // タイムアウト付きでリクエスト実行
+      const response = await fetchWithTimeout(
+        `/api/articles/${encodedSlug}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updateData),
         },
-        body: JSON.stringify(updateData),
-      });
+        30000 // 30秒タイムアウト
+      );
 
       if (!response.ok) {
         let errorMessage = "記事の更新に失敗しました";
@@ -316,10 +397,18 @@ export default function EditArticlePage({
       navigateBack();
     } catch (error: unknown) {
       console.error("Article save error:", error);
-      setError(
-        error instanceof Error ? error.message : "不明なエラーが発生しました"
-      );
-    } finally {
+      // エラーメッセージをより詳細に表示
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          setError(
+            "リクエストがタイムアウトしました。データベース接続に問題がある可能性があります。"
+          );
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError("不明なエラーが発生しました");
+      }
       setSaving(false);
     }
   };
@@ -330,12 +419,22 @@ export default function EditArticlePage({
       return;
     }
 
+    // 既に処理中なら重複実行しない
+    if (saving) return;
+
+    setSaving(true);
+    setError("");
+
     try {
       // スラッグをエンコード
       const encodedSlug = encodeURIComponent(params.slug);
-      const response = await fetch(`/api/articles/${encodedSlug}`, {
-        method: "DELETE",
-      });
+
+      // タイムアウト付きのリクエスト
+      const response = await fetchWithTimeout(
+        `/api/articles/${encodedSlug}`,
+        { method: "DELETE" },
+        30000
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -348,16 +447,26 @@ export default function EditArticlePage({
       navigateBack();
     } catch (error: unknown) {
       console.error("Article delete error:", error);
-      setError(
-        error instanceof Error ? error.message : "不明なエラーが発生しました"
-      );
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          setError(
+            "削除リクエストがタイムアウトしました。データベース接続に問題がある可能性があります。"
+          );
+        } else {
+          setError(error.message);
+        }
+      } else {
+        setError("不明なエラーが発生しました");
+      }
+      setSaving(false);
     }
   };
 
+  // ローディング中の表示を固定
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p>読み込み中...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -370,8 +479,9 @@ export default function EditArticlePage({
           variant="outline"
           className="text-red-600 hover:bg-red-50"
           onClick={handleDelete}
+          disabled={saving}
         >
-          削除
+          {saving ? "処理中..." : "削除"}
         </Button>
       </CardHeader>
       <CardContent>
@@ -392,6 +502,7 @@ export default function EditArticlePage({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="記事のタイトル"
               required
+              disabled={saving}
             />
           </div>
 
@@ -405,6 +516,7 @@ export default function EditArticlePage({
               onChange={(e) => setSlug(e.target.value)}
               placeholder="article-slug"
               required
+              disabled={saving}
             />
           </div>
 
@@ -418,6 +530,7 @@ export default function EditArticlePage({
               onChange={(e) => setSummary(e.target.value)}
               placeholder="記事の要約..."
               className="h-20"
+              disabled={saving}
             />
           </div>
 
@@ -432,6 +545,7 @@ export default function EditArticlePage({
               placeholder="記事の本文..."
               className="h-40"
               required
+              disabled={saving}
             />
           </div>
 
@@ -445,6 +559,7 @@ export default function EditArticlePage({
               onChange={(e) => setCategory(e.target.value)}
               className="w-full rounded-md border border-gray-300 p-2"
               required
+              disabled={saving}
             >
               <option value="culture">文化</option>
               <option value="mythology">神話</option>
@@ -477,6 +592,7 @@ export default function EditArticlePage({
                   size="sm"
                   className="absolute top-2 right-2 text-red-600 hover:bg-red-50"
                   onClick={handleDeleteImage}
+                  disabled={saving}
                 >
                   削除
                 </Button>
@@ -506,6 +622,7 @@ export default function EditArticlePage({
                     setFile(null);
                     setPreview(null);
                   }}
+                  disabled={saving}
                 >
                   キャンセル
                 </Button>
@@ -520,6 +637,7 @@ export default function EditArticlePage({
                 accept="image/*"
                 onChange={handleFileChange}
                 className="mt-2"
+                disabled={saving}
               />
             )}
           </div>
@@ -535,6 +653,7 @@ export default function EditArticlePage({
                 value={altText}
                 onChange={(e) => setAltText(e.target.value)}
                 placeholder="画像の説明"
+                disabled={saving}
               />
             </div>
           )}
@@ -546,6 +665,7 @@ export default function EditArticlePage({
               checked={published}
               onChange={(e) => setPublished(e.target.checked)}
               className="rounded border-gray-300"
+              disabled={saving}
             />
             <label htmlFor="published" className="text-sm font-medium">
               公開する
@@ -553,11 +673,27 @@ export default function EditArticlePage({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={navigateBack}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={navigateBack}
+              disabled={saving}
+            >
               キャンセル
             </Button>
-            <Button type="submit" disabled={saving || uploading}>
-              {saving || uploading ? "保存中..." : "保存"}
+            <Button
+              type="submit"
+              disabled={saving || uploading}
+              className={saving ? "bg-gray-500" : ""}
+            >
+              {saving ? (
+                <div className="flex items-center">
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  保存中...
+                </div>
+              ) : (
+                "保存"
+              )}
             </Button>
           </div>
         </form>
