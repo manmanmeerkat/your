@@ -29,12 +29,15 @@ export default function EditArticlePage({
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
 
   // 進行中のリクエストを追跡するref
   const activeRequestRef = useRef<AbortController | null>(null);
+  // ローディングタイマーを追跡するref
+  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const searchParams = useSearchParams();
 
@@ -44,11 +47,14 @@ export default function EditArticlePage({
   const returnSearch = searchParams.get("search") || "";
   const returnPage = searchParams.get("page") || "1";
 
-  // コンポーネントのアンマウント時にリクエストを中止
+  // タイマーやリクエストをクリーンアップ
   useEffect(() => {
     return () => {
       if (activeRequestRef.current) {
         activeRequestRef.current.abort();
+      }
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
       }
     };
   }, []);
@@ -57,7 +63,7 @@ export default function EditArticlePage({
   const fetchWithTimeout = async (
     url: string,
     options: RequestInit = {},
-    timeout = 30000
+    timeout = 15000
   ) => {
     // 前のリクエストがあればキャンセル
     if (activeRequestRef.current) {
@@ -88,6 +94,26 @@ export default function EditArticlePage({
     }
   };
 
+  // 記事読み込みの最大待機時間を設定
+  useEffect(() => {
+    // 15秒後にローディング失敗とみなす
+    loadingTimerRef.current = setTimeout(() => {
+      if (loading) {
+        setLoadFailed(true);
+        setLoading(false);
+        setError(
+          "記事の読み込みがタイムアウトしました。ネットワーク接続やデータベース接続を確認してください。"
+        );
+      }
+    }, 15000);
+
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, [loading]);
+
   useEffect(() => {
     const fetchArticle = async () => {
       try {
@@ -102,11 +128,11 @@ export default function EditArticlePage({
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
 
-        // タイムアウト付きのフェッチを使用
+        // タイムアウト付きのフェッチを使用（時間短縮）
         const response = await fetchWithTimeout(
           `/api/articles/${encodedSlug}`,
           {},
-          30000
+          10000
         );
 
         if (!response.ok) {
@@ -135,6 +161,7 @@ export default function EditArticlePage({
         }
       } catch (error: unknown) {
         console.error("記事取得エラー:", error);
+        setLoadFailed(true);
         setError(
           error instanceof Error
             ? error.message
@@ -171,9 +198,9 @@ export default function EditArticlePage({
     try {
       // ファイル名を安全な形式に変換
       const safeFileName = file.name
-        .replace(/[^a-zA-Z0-9.-]/g, "_") // 特殊文字をアンダースコアに置換
-        .replace(/_+/g, "_") // 連続するアンダースコアを1つに
-        .toLowerCase(); // 小文字に変換
+        .replace(/[^a-zA-Z0-9.-]/g, "_")
+        .replace(/_+/g, "_")
+        .toLowerCase();
 
       // 新しいファイル名でファイルを作成
       const newFile = new File([file], safeFileName, {
@@ -192,8 +219,8 @@ export default function EditArticlePage({
           method: "POST",
           body: formData,
         },
-        60000
-      ); // 画像アップロードは長めのタイムアウトを設定
+        30000
+      ); // 画像アップロードは30秒タイムアウト
 
       console.log("Upload response status:", response.status);
       const data = await response.json();
@@ -264,14 +291,14 @@ export default function EditArticlePage({
 
       console.log("戻り先URL:", url);
 
-      // 遷移先で強制的に初期化を実行するためにタイムスタンプパラメータを追加
+      // タイムスタンプパラメータを追加
       if (url.includes("?")) {
         url += `&_ts=${Date.now()}`;
       } else {
         url += `?_ts=${Date.now()}`;
       }
 
-      // Next.jsのルーターを使用する代わりに、強制的にURL遷移を実行
+      // 通常のブラウザナビゲーションを使用（Next.jsのルーターではなく）
       window.location.href = url;
     } catch (error) {
       console.error("ナビゲーションエラー:", error);
@@ -288,9 +315,6 @@ export default function EditArticlePage({
 
     setSaving(true);
     setError("");
-
-    // 送信ボタンをロックするためにステート更新を確実に反映させる
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
     try {
       // 必須フィールドの検証
@@ -331,7 +355,7 @@ export default function EditArticlePage({
         content,
         category,
         published,
-        updateImages: true, // 画像の更新フラグを追加
+        updateImages: true,
       };
 
       // 画像の更新処理
@@ -348,7 +372,7 @@ export default function EditArticlePage({
         // 既存の画像を維持する場合
         updateData.images = [
           {
-            id: image.id, // 既存の画像IDを保持
+            id: image.id,
             url: image.url,
             altText: altText,
             isFeatured: true,
@@ -375,7 +399,7 @@ export default function EditArticlePage({
           },
           body: JSON.stringify(updateData),
         },
-        30000 // 30秒タイムアウト
+        15000 // 15秒タイムアウト（短縮）
       );
 
       if (!response.ok) {
@@ -393,11 +417,10 @@ export default function EditArticlePage({
       const data = await response.json();
       console.log("Update successful:", data);
 
-      // 成功したら保持していたフィルター状態で元のページに戻る
+      // 速やかにページ遷移
       navigateBack();
     } catch (error: unknown) {
       console.error("Article save error:", error);
-      // エラーメッセージをより詳細に表示
       if (error instanceof Error) {
         if (error.name === "AbortError") {
           setError(
@@ -419,21 +442,18 @@ export default function EditArticlePage({
       return;
     }
 
-    // 既に処理中なら重複実行しない
     if (saving) return;
 
     setSaving(true);
     setError("");
 
     try {
-      // スラッグをエンコード
       const encodedSlug = encodeURIComponent(params.slug);
 
-      // タイムアウト付きのリクエスト
       const response = await fetchWithTimeout(
         `/api/articles/${encodedSlug}`,
         { method: "DELETE" },
-        30000
+        15000 // 15秒タイムアウト（短縮）
       );
 
       if (!response.ok) {
@@ -443,7 +463,7 @@ export default function EditArticlePage({
         );
       }
 
-      // 削除成功後も元のページに戻る
+      // 速やかに遷移
       navigateBack();
     } catch (error: unknown) {
       console.error("Article delete error:", error);
@@ -462,12 +482,57 @@ export default function EditArticlePage({
     }
   };
 
-  // ローディング中の表示を固定
+  // ページ遷移を強制する関数
+  const forceNavigateBack = () => {
+    const url = returnPath || "/admin";
+    window.location.href = url;
+  };
+
+  // 読み込みエラー表示
+  if (loadFailed) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>記事読み込みエラー</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+            <p>
+              {error ||
+                "記事の読み込みに失敗しました。データベース接続に問題がある可能性があります。"}
+            </p>
+          </div>
+          <div className="flex justify-end space-x-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => window.location.reload()}
+            >
+              再読み込み
+            </Button>
+            <Button type="button" onClick={forceNavigateBack}>
+              管理画面に戻る
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ローディング中の表示
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>読み込み中...</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4" />
+            <p className="text-gray-500">記事データを読み込んでいます</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -676,7 +741,7 @@ export default function EditArticlePage({
             <Button
               type="button"
               variant="outline"
-              onClick={navigateBack}
+              onClick={forceNavigateBack}
               disabled={saving}
             >
               キャンセル
