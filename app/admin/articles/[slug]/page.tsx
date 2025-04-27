@@ -21,7 +21,11 @@ export default function EditArticlePage({
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [image, setImage] = useState<any | null>(null);
+  const [image, setImage] = useState<{
+    id: string;
+    url: string;
+    altText?: string;
+  } | null>(null);
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -47,7 +51,7 @@ export default function EditArticlePage({
           throw new Error("スラッグが指定されていません");
         }
 
-        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.auth.getSession();
 
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
@@ -76,9 +80,13 @@ export default function EditArticlePage({
         if (featuredImage) {
           setAltText(featuredImage.altText || "");
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("記事取得エラー:", error);
-        setError(error.message);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "予期せぬエラーが発生しました"
+        );
       } finally {
         setLoading(false);
       }
@@ -141,9 +149,13 @@ export default function EditArticlePage({
 
       console.log("Image uploaded successfully:", data.url);
       return data.url;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Image upload error:", error);
-      setError(error.message || "画像のアップロードに失敗しました");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "画像のアップロードに失敗しました"
+      );
       return null;
     } finally {
       setUploading(false);
@@ -158,9 +170,11 @@ export default function EditArticlePage({
       setImage(null);
       setAltText("");
       setPreview(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Image delete error:", error);
-      setError(error.message);
+      setError(
+        error instanceof Error ? error.message : "予期せぬエラーが発生しました"
+      );
     }
   };
 
@@ -220,7 +234,21 @@ export default function EditArticlePage({
       }
 
       // 記事データの準備
-      const updateData: any = {
+      const updateData: {
+        title: string;
+        slug: string;
+        summary: string;
+        content: string;
+        category: string;
+        published: boolean;
+        updateImages: boolean;
+        images?: Array<{
+          id?: string;
+          url: string;
+          altText: string;
+          isFeatured: boolean;
+        }>;
+      } = {
         title,
         slug,
         summary,
@@ -286,9 +314,11 @@ export default function EditArticlePage({
 
       // 成功したら保持していたフィルター状態で元のページに戻る
       navigateBack();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Article save error:", error);
-      setError(error.message || "不明なエラーが発生しました");
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
     } finally {
       setSaving(false);
     }
@@ -316,9 +346,11 @@ export default function EditArticlePage({
 
       // 削除成功後も元のページに戻る
       navigateBack();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Article delete error:", error);
-      setError(error.message || "不明なエラーが発生しました");
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
     }
   };
 
