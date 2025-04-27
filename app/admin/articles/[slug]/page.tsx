@@ -9,11 +9,44 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import Image from "next/image";
 
-export default function EditArticlePage({
-  params,
-}: {
-  params: { slug: string };
-}) {
+type PageProps = {
+  params: {
+    slug: string;
+  };
+};
+
+export default function EditArticlePage({ params }: PageProps) {
+  const searchParams = useSearchParams();
+  const returnPath = searchParams.get("returnPath") || "/admin";
+  const returnCategory = searchParams.get("category") || "";
+  const returnSearch = searchParams.get("search") || "";
+  const returnPage = searchParams.get("page") || "1";
+
+  // ローカルストレージからデータを取得する関数
+  const getLocalArticleData = () => {
+    try {
+      const savedData = localStorage.getItem(`article_draft_${params.slug}`);
+      if (savedData) {
+        return JSON.parse(savedData);
+      }
+    } catch (e) {
+      console.error("ローカルストレージからのデータ取得に失敗:", e);
+    }
+    return null;
+  };
+
+  // ローカルストレージにデータを保存する関数
+  const saveLocalArticleData = (data: Record<string, unknown>) => {
+    try {
+      localStorage.setItem(
+        `article_draft_${params.slug}`,
+        JSON.stringify(data)
+      );
+    } catch (e) {
+      console.error("ローカルストレージへのデータ保存に失敗:", e);
+    }
+  };
+
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
@@ -29,32 +62,19 @@ export default function EditArticlePage({
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // 進行中のリクエストを追跡するref
   const activeRequestRef = useRef<AbortController | null>(null);
-  // ローディングタイマーを追跡するref
-  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchParams = useSearchParams();
-
-  // 戻り先ページの状態を取得
-  const returnPath = searchParams.get("returnPath") || "/admin";
-  const returnCategory = searchParams.get("category") || "";
-  const returnSearch = searchParams.get("search") || "";
-  const returnPage = searchParams.get("page") || "1";
-
-  // タイマーやリクエストをクリーンアップ
+  // コンポーネントのアンマウント時にリクエストを中止
   useEffect(() => {
     return () => {
       if (activeRequestRef.current) {
         activeRequestRef.current.abort();
-      }
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
       }
     };
   }, []);
@@ -63,7 +83,7 @@ export default function EditArticlePage({
   const fetchWithTimeout = async (
     url: string,
     options: RequestInit = {},
-    timeout = 15000
+    timeout = 30000
   ) => {
     // 前のリクエストがあればキャンセル
     if (activeRequestRef.current) {
@@ -94,26 +114,6 @@ export default function EditArticlePage({
     }
   };
 
-  // 記事読み込みの最大待機時間を設定
-  useEffect(() => {
-    // 15秒後にローディング失敗とみなす
-    loadingTimerRef.current = setTimeout(() => {
-      if (loading) {
-        setLoadFailed(true);
-        setLoading(false);
-        setError(
-          "記事の読み込みがタイムアウトしました。ネットワーク接続やデータベース接続を確認してください。"
-        );
-      }
-    }, 15000);
-
-    return () => {
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
-      }
-    };
-  }, [loading]);
-
   useEffect(() => {
     const fetchArticle = async () => {
       try {
@@ -125,14 +125,39 @@ export default function EditArticlePage({
 
         await supabase.auth.getSession();
 
+        // ローカルデータの確認
+        const localData = getLocalArticleData();
+        if (
+          localData &&
+          localData.timestamp &&
+          Date.now() - localData.timestamp < 3600000
+        ) {
+          // 1時間以内のデータがあればそれを使用
+          console.log("Using local cached data");
+          setTitle(localData.title);
+          setSlug(localData.slug);
+          setSummary(localData.summary || "");
+          setContent(localData.content);
+          setCategory(localData.category);
+          setPublished(localData.published);
+
+          if (localData.image) {
+            setImage(localData.image);
+            setAltText(localData.image.altText || "");
+          }
+
+          setLoading(false);
+          return;
+        }
+
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
 
-        // タイムアウト付きのフェッチを使用（時間短縮）
+        // タイムアウト付きのフェッチを使用
         const response = await fetchWithTimeout(
           `/api/articles/${encodedSlug}`,
           {},
-          10000
+          30000
         );
 
         if (!response.ok) {
@@ -159,14 +184,47 @@ export default function EditArticlePage({
         if (featuredImage) {
           setAltText(featuredImage.altText || "");
         }
+
+        // ローカルストレージにキャッシュ
+        saveLocalArticleData({
+          title: article.title,
+          slug: article.slug,
+          summary: article.summary || "",
+          content: article.content,
+          category: article.category,
+          published: article.published,
+          image: featuredImage,
+          timestamp: Date.now(),
+        });
       } catch (error: unknown) {
         console.error("記事取得エラー:", error);
-        setLoadFailed(true);
-        setError(
-          error instanceof Error
-            ? error.message
-            : "予期せぬエラーが発生しました"
-        );
+
+        // ローカルデータがあれば最終手段としてそれを使用
+        const localData = getLocalArticleData();
+        if (localData) {
+          console.log("Using local cached data as fallback after fetch error");
+          setTitle(localData.title);
+          setSlug(localData.slug);
+          setSummary(localData.summary || "");
+          setContent(localData.content);
+          setCategory(localData.category);
+          setPublished(localData.published);
+
+          if (localData.image) {
+            setImage(localData.image);
+            setAltText(localData.image.altText || "");
+          }
+
+          setError(
+            "APIからのデータ取得に失敗しましたが、ローカルデータを復元しました。保存前にデータを確認してください。"
+          );
+        } else {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "予期せぬエラーが発生しました"
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -198,9 +256,9 @@ export default function EditArticlePage({
     try {
       // ファイル名を安全な形式に変換
       const safeFileName = file.name
-        .replace(/[^a-zA-Z0-9.-]/g, "_")
-        .replace(/_+/g, "_")
-        .toLowerCase();
+        .replace(/[^a-zA-Z0-9.-]/g, "_") // 特殊文字をアンダースコアに置換
+        .replace(/_+/g, "_") // 連続するアンダースコアを1つに
+        .toLowerCase(); // 小文字に変換
 
       // 新しいファイル名でファイルを作成
       const newFile = new File([file], safeFileName, {
@@ -219,8 +277,8 @@ export default function EditArticlePage({
           method: "POST",
           body: formData,
         },
-        30000
-      ); // 画像アップロードは30秒タイムアウト
+        60000
+      ); // 画像アップロードは長めのタイムアウトを設定
 
       console.log("Upload response status:", response.status);
       const data = await response.json();
@@ -274,14 +332,25 @@ export default function EditArticlePage({
       // セッションストレージのリセット（ダッシュボード再初期化のため）
       sessionStorage.removeItem("dashboardInitialized");
 
+      // 保存成功時はローカルストレージのドラフトをクリア
+      if (saveSuccess) {
+        localStorage.removeItem(`article_draft_${slug}`);
+      }
+
       // 戻り先のURLを構築
       let url = returnPath;
 
       // クエリパラメータを追加
       const params = new URLSearchParams();
+
+      // 特に注意：returnPageの処理を強化
       if (returnCategory) params.append("category", returnCategory);
       if (returnSearch) params.append("search", returnSearch);
-      if (returnPage && returnPage !== "1") params.append("page", returnPage);
+
+      // returnPageが存在し、空でなければ追加
+      if (returnPage && returnPage !== "") {
+        params.append("page", returnPage);
+      }
 
       // パラメータがある場合は追加
       const queryString = params.toString();
@@ -291,14 +360,14 @@ export default function EditArticlePage({
 
       console.log("戻り先URL:", url);
 
-      // タイムスタンプパラメータを追加
+      // 強制的にキャッシュ回避のためにタイムスタンプを追加
       if (url.includes("?")) {
         url += `&_ts=${Date.now()}`;
       } else {
         url += `?_ts=${Date.now()}`;
       }
 
-      // 通常のブラウザナビゲーションを使用（Next.jsのルーターではなく）
+      // 直接ブラウザの遷移を使用
       window.location.href = url;
     } catch (error) {
       console.error("ナビゲーションエラー:", error);
@@ -314,6 +383,7 @@ export default function EditArticlePage({
     if (saving) return;
 
     setSaving(true);
+    setSaveSuccess(false);
     setError("");
 
     try {
@@ -355,7 +425,7 @@ export default function EditArticlePage({
         content,
         category,
         published,
-        updateImages: true,
+        updateImages: true, // 画像の更新フラグを追加
       };
 
       // 画像の更新処理
@@ -372,7 +442,7 @@ export default function EditArticlePage({
         // 既存の画像を維持する場合
         updateData.images = [
           {
-            id: image.id,
+            id: image.id, // 既存の画像IDを保持
             url: image.url,
             altText: altText,
             isFeatured: true,
@@ -386,7 +456,7 @@ export default function EditArticlePage({
       console.log("Updating article with data:", updateData);
 
       // 記事を更新 - スラッグをエンコードして使用
-      const encodedSlug = encodeURIComponent(params.slug);
+      const encodedSlug = encodeURIComponent(slug);
       console.log("Encoded slug for API call:", encodedSlug);
 
       // タイムアウト付きでリクエスト実行
@@ -399,7 +469,7 @@ export default function EditArticlePage({
           },
           body: JSON.stringify(updateData),
         },
-        15000 // 15秒タイムアウト（短縮）
+        30000 // 30秒タイムアウト
       );
 
       if (!response.ok) {
@@ -417,10 +487,17 @@ export default function EditArticlePage({
       const data = await response.json();
       console.log("Update successful:", data);
 
-      // 速やかにページ遷移
-      navigateBack();
+      // 保存成功フラグをセット
+      setSaveSuccess(true);
+
+      // 少し待機してから遷移
+      setTimeout(() => {
+        // 成功したら保持していたフィルター状態で元のページに戻る
+        navigateBack();
+      }, 100);
     } catch (error: unknown) {
       console.error("Article save error:", error);
+      // エラーメッセージをより詳細に表示
       if (error instanceof Error) {
         if (error.name === "AbortError") {
           setError(
@@ -442,18 +519,21 @@ export default function EditArticlePage({
       return;
     }
 
+    // 既に処理中なら重複実行しない
     if (saving) return;
 
     setSaving(true);
     setError("");
 
     try {
-      const encodedSlug = encodeURIComponent(params.slug);
+      // スラッグをエンコード
+      const encodedSlug = encodeURIComponent(slug);
 
+      // タイムアウト付きのリクエスト
       const response = await fetchWithTimeout(
         `/api/articles/${encodedSlug}`,
         { method: "DELETE" },
-        15000 // 15秒タイムアウト（短縮）
+        30000
       );
 
       if (!response.ok) {
@@ -463,8 +543,16 @@ export default function EditArticlePage({
         );
       }
 
-      // 速やかに遷移
-      navigateBack();
+      setSaveSuccess(true);
+
+      // ローカルストレージのドラフトをクリア
+      localStorage.removeItem(`article_draft_${slug}`);
+
+      // 少し待機してから遷移
+      setTimeout(() => {
+        // 削除成功後も元のページに戻る
+        navigateBack();
+      }, 100);
     } catch (error: unknown) {
       console.error("Article delete error:", error);
       if (error instanceof Error) {
@@ -482,57 +570,12 @@ export default function EditArticlePage({
     }
   };
 
-  // ページ遷移を強制する関数
-  const forceNavigateBack = () => {
-    const url = returnPath || "/admin";
-    window.location.href = url;
-  };
-
-  // 読み込みエラー表示
-  if (loadFailed) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>記事読み込みエラー</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
-            <p>
-              {error ||
-                "記事の読み込みに失敗しました。データベース接続に問題がある可能性があります。"}
-            </p>
-          </div>
-          <div className="flex justify-end space-x-2 mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.location.reload()}
-            >
-              再読み込み
-            </Button>
-            <Button type="button" onClick={forceNavigateBack}>
-              管理画面に戻る
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // ローディング中の表示
+  // ローディング中の表示を固定
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>読み込み中...</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-4" />
-            <p className="text-gray-500">記事データを読み込んでいます</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
+      </div>
     );
   }
 
@@ -554,6 +597,12 @@ export default function EditArticlePage({
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
               <p>{error}</p>
+            </div>
+          )}
+
+          {saveSuccess && (
+            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+              <p>保存が完了しました。ページ遷移中...</p>
             </div>
           )}
 
@@ -737,11 +786,22 @@ export default function EditArticlePage({
             </label>
           </div>
 
+          {/* デバッグ情報 */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="text-xs text-gray-500 border p-2 mt-4">
+              <p>デバッグ情報:</p>
+              <p>戻り先パス: {returnPath}</p>
+              <p>カテゴリ: {returnCategory}</p>
+              <p>検索: {returnSearch}</p>
+              <p>ページ: {returnPage}</p>
+            </div>
+          )}
+
           <div className="flex justify-end space-x-2">
             <Button
               type="button"
               variant="outline"
-              onClick={forceNavigateBack}
+              onClick={navigateBack}
               disabled={saving}
             >
               キャンセル
