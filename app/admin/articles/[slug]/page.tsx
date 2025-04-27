@@ -9,18 +9,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import Image from "next/image";
 
-type PageProps = {
-  params: {
-    slug: string;
-  };
-};
+export default function EditArticlePage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [summary, setSummary] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("");
+  const [published, setPublished] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [image, setImage] = useState<{
+    id: string;
+    url: string;
+    altText?: string;
+  } | null>(null);
+  const [altText, setAltText] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [preview, setPreview] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-export default function EditArticlePage({ params }: PageProps) {
+  // AbortControllerを使用せずに通常のfetchを使用する
+  const isMountedRef = useRef(true);
+
   const searchParams = useSearchParams();
+
+  // 戻り先ページの状態を取得
   const returnPath = searchParams.get("returnPath") || "/admin";
   const returnCategory = searchParams.get("category") || "";
   const returnSearch = searchParams.get("search") || "";
   const returnPage = searchParams.get("page") || "1";
+
+  // マウント状態の管理
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // ローカルストレージからデータを取得する関数
   const getLocalArticleData = () => {
@@ -47,75 +79,10 @@ export default function EditArticlePage({ params }: PageProps) {
     }
   };
 
-  const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
-  const [summary, setSummary] = useState("");
-  const [content, setContent] = useState("");
-  const [category, setCategory] = useState("");
-  const [published, setPublished] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [image, setImage] = useState<{
-    id: string;
-    url: string;
-    altText?: string;
-  } | null>(null);
-  const [altText, setAltText] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // 進行中のリクエストを追跡するref
-  const activeRequestRef = useRef<AbortController | null>(null);
-
-  // コンポーネントのアンマウント時にリクエストを中止
-  useEffect(() => {
-    return () => {
-      if (activeRequestRef.current) {
-        activeRequestRef.current.abort();
-      }
-    };
-  }, []);
-
-  // タイムアウト付きのフェッチ関数
-  const fetchWithTimeout = async (
-    url: string,
-    options: RequestInit = {},
-    timeout = 30000
-  ) => {
-    // 前のリクエストがあればキャンセル
-    if (activeRequestRef.current) {
-      activeRequestRef.current.abort();
-    }
-
-    // 新しいコントローラーを作成
-    const controller = new AbortController();
-    activeRequestRef.current = controller;
-
-    const id = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-      });
-      clearTimeout(id);
-      return response;
-    } catch (error) {
-      clearTimeout(id);
-      throw error;
-    } finally {
-      // リクエストが完了したらrefをクリア
-      if (activeRequestRef.current === controller) {
-        activeRequestRef.current = null;
-      }
-    }
-  };
-
   useEffect(() => {
     const fetchArticle = async () => {
+      if (!isMountedRef.current) return;
+
       try {
         console.log("Fetching article with slug:", params.slug);
 
@@ -132,7 +99,6 @@ export default function EditArticlePage({ params }: PageProps) {
           localData.timestamp &&
           Date.now() - localData.timestamp < 3600000
         ) {
-          // 1時間以内のデータがあればそれを使用
           console.log("Using local cached data");
           setTitle(localData.title);
           setSlug(localData.slug);
@@ -153,17 +119,15 @@ export default function EditArticlePage({ params }: PageProps) {
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
 
-        // タイムアウト付きのフェッチを使用
-        const response = await fetchWithTimeout(
-          `/api/articles/${encodedSlug}`,
-          {},
-          30000
-        );
+        // 通常のfetchを使用
+        const response = await fetch(`/api/articles/${encodedSlug}`);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error || "記事の取得に失敗しました");
         }
+
+        if (!isMountedRef.current) return;
 
         const article = await response.json();
         console.log("Article data received:", article);
@@ -199,6 +163,8 @@ export default function EditArticlePage({ params }: PageProps) {
       } catch (error: unknown) {
         console.error("記事取得エラー:", error);
 
+        if (!isMountedRef.current) return;
+
         // ローカルデータがあれば最終手段としてそれを使用
         const localData = getLocalArticleData();
         if (localData) {
@@ -226,11 +192,18 @@ export default function EditArticlePage({ params }: PageProps) {
           );
         }
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchArticle();
+
+    // クリーンアップ
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [params.slug]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -270,15 +243,13 @@ export default function EditArticlePage({ params }: PageProps) {
       const formData = new FormData();
       formData.append("file", newFile);
 
-      // アップロードリクエスト送信（タイムアウト付き）
-      const response = await fetchWithTimeout(
-        "/api/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
-        60000
-      ); // 画像アップロードは長めのタイムアウトを設定
+      // 通常のfetchを使用
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!isMountedRef.current) return null;
 
       console.log("Upload response status:", response.status);
       const data = await response.json();
@@ -293,24 +264,22 @@ export default function EditArticlePage({ params }: PageProps) {
       return data.url;
     } catch (error: unknown) {
       console.error("Image upload error:", error);
-      if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          setError(
-            "画像アップロードがタイムアウトしました。ネットワーク接続を確認してください。"
-          );
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setError("画像のアップロードに失敗しました");
+      if (isMountedRef.current) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "画像のアップロードに失敗しました"
+        );
       }
       return null;
     } finally {
-      setUploading(false);
+      if (isMountedRef.current) {
+        setUploading(false);
+      }
     }
   };
 
-  const handleDeleteImage = async () => {
+  const handleDeleteImage = () => {
     if (!image) return;
 
     try {
@@ -326,34 +295,57 @@ export default function EditArticlePage({ params }: PageProps) {
     }
   };
 
-  // フィルタリング状態を保持して元のページに戻る関数
-  const navigateBack = () => {
+  // 管理者トップページに戻る関数
+  const navigateToAdminDashboard = () => {
     try {
       // セッションストレージのリセット（ダッシュボード再初期化のため）
       sessionStorage.removeItem("dashboardInitialized");
 
       // 保存成功時はローカルストレージのドラフトをクリア
       if (saveSuccess) {
-        localStorage.removeItem(`article_draft_${slug}`);
+        localStorage.removeItem(`article_draft_${params.slug}`);
       }
+
+      // 管理者トップページへのURL構築
+      let url = "/admin";
+
+      // 強制的にキャッシュ回避のためにタイムスタンプを追加
+      url += `?_ts=${Date.now()}`;
+
+      console.log("管理者トップページへ遷移:", url);
+
+      // 直接ブラウザの遷移を使用
+      window.location.href = url;
+    } catch (error) {
+      console.error("ナビゲーションエラー:", error);
+      setError("ページ遷移に失敗しました。再度お試しください。");
+      setSaving(false);
+    }
+  };
+
+  // 元のページに戻る関数（キャンセル時に使用）
+  const navigateBack = () => {
+    try {
+      // セッションストレージのリセット（ダッシュボード再初期化のため）
+      sessionStorage.removeItem("dashboardInitialized");
 
       // 戻り先のURLを構築
       let url = returnPath;
 
       // クエリパラメータを追加
-      const params = new URLSearchParams();
+      const urlParams = new URLSearchParams();
 
       // 特に注意：returnPageの処理を強化
-      if (returnCategory) params.append("category", returnCategory);
-      if (returnSearch) params.append("search", returnSearch);
+      if (returnCategory) urlParams.append("category", returnCategory);
+      if (returnSearch) urlParams.append("search", returnSearch);
 
       // returnPageが存在し、空でなければ追加
       if (returnPage && returnPage !== "") {
-        params.append("page", returnPage);
+        urlParams.append("page", returnPage);
       }
 
       // パラメータがある場合は追加
-      const queryString = params.toString();
+      const queryString = urlParams.toString();
       if (queryString) {
         url = `${url}?${queryString}`;
       }
@@ -402,6 +394,8 @@ export default function EditArticlePage({ params }: PageProps) {
           throw new Error("画像のアップロードに失敗しました");
         }
       }
+
+      if (!isMountedRef.current) return;
 
       // 記事データの準備
       const updateData: {
@@ -456,21 +450,19 @@ export default function EditArticlePage({ params }: PageProps) {
       console.log("Updating article with data:", updateData);
 
       // 記事を更新 - スラッグをエンコードして使用
-      const encodedSlug = encodeURIComponent(slug);
+      const encodedSlug = encodeURIComponent(params.slug);
       console.log("Encoded slug for API call:", encodedSlug);
 
-      // タイムアウト付きでリクエスト実行
-      const response = await fetchWithTimeout(
-        `/api/articles/${encodedSlug}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updateData),
+      // 通常のフェッチを使用
+      const response = await fetch(`/api/articles/${encodedSlug}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-        30000 // 30秒タイムアウト
-      );
+        body: JSON.stringify(updateData),
+      });
+
+      if (!isMountedRef.current) return;
 
       if (!response.ok) {
         let errorMessage = "記事の更新に失敗しました";
@@ -492,23 +484,20 @@ export default function EditArticlePage({ params }: PageProps) {
 
       // 少し待機してから遷移
       setTimeout(() => {
-        // 成功したら保持していたフィルター状態で元のページに戻る
-        navigateBack();
-      }, 100);
+        if (isMountedRef.current) {
+          // 成功したら管理者トップページに戻る
+          navigateToAdminDashboard();
+        }
+      }, 500);
     } catch (error: unknown) {
       console.error("Article save error:", error);
+
+      if (!isMountedRef.current) return;
+
       // エラーメッセージをより詳細に表示
-      if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          setError(
-            "リクエストがタイムアウトしました。データベース接続に問題がある可能性があります。"
-          );
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setError("不明なエラーが発生しました");
-      }
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
       setSaving(false);
     }
   };
@@ -527,14 +516,14 @@ export default function EditArticlePage({ params }: PageProps) {
 
     try {
       // スラッグをエンコード
-      const encodedSlug = encodeURIComponent(slug);
+      const encodedSlug = encodeURIComponent(params.slug);
 
-      // タイムアウト付きのリクエスト
-      const response = await fetchWithTimeout(
-        `/api/articles/${encodedSlug}`,
-        { method: "DELETE" },
-        30000
-      );
+      // 通常のフェッチを使用
+      const response = await fetch(`/api/articles/${encodedSlug}`, {
+        method: "DELETE",
+      });
+
+      if (!isMountedRef.current) return;
 
       if (!response.ok) {
         const data = await response.json();
@@ -546,26 +535,23 @@ export default function EditArticlePage({ params }: PageProps) {
       setSaveSuccess(true);
 
       // ローカルストレージのドラフトをクリア
-      localStorage.removeItem(`article_draft_${slug}`);
+      localStorage.removeItem(`article_draft_${params.slug}`);
 
       // 少し待機してから遷移
       setTimeout(() => {
-        // 削除成功後も元のページに戻る
-        navigateBack();
-      }, 100);
+        if (isMountedRef.current) {
+          // 削除成功後も管理者トップページに戻る
+          navigateToAdminDashboard();
+        }
+      }, 500);
     } catch (error: unknown) {
       console.error("Article delete error:", error);
-      if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          setError(
-            "削除リクエストがタイムアウトしました。データベース接続に問題がある可能性があります。"
-          );
-        } else {
-          setError(error.message);
-        }
-      } else {
-        setError("不明なエラーが発生しました");
-      }
+
+      if (!isMountedRef.current) return;
+
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
       setSaving(false);
     }
   };
@@ -785,17 +771,6 @@ export default function EditArticlePage({ params }: PageProps) {
               公開する
             </label>
           </div>
-
-          {/* デバッグ情報 */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="text-xs text-gray-500 border p-2 mt-4">
-              <p>デバッグ情報:</p>
-              <p>戻り先パス: {returnPath}</p>
-              <p>カテゴリ: {returnCategory}</p>
-              <p>検索: {returnSearch}</p>
-              <p>ページ: {returnPage}</p>
-            </div>
-          )}
 
           <div className="flex justify-end space-x-2">
             <Button
