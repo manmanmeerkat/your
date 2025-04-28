@@ -8,13 +8,15 @@ export type articleType = {
     id: string;
     slug: string;
     title: string;
-    category: "mythology" | "culture" | "festivals" | "customs";
+    category: string;
     content: string;
-    summary?: string;
-    createdAt: string;
+    summary: string | null;
+    createdAt: Date;
     images?: {
+      id: string;
       url: string;
-      altText?: string;
+      altText: string | null;
+      isFeatured: boolean;
     }[];
 }
 

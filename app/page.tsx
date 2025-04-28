@@ -1,151 +1,59 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import Slider from "../components/top/slider/Slider";
-import ArticleCard from "../components/articleCard/articleCard";
-import CategoryCard from "../components/top/categoryCard/categoryCard";
-import { articleType } from "@/types/types";
-import { CATEGORY_ITEMS } from "@/constants/constants";
+// app/page.tsx (サーバーコンポーネント)
+import { prisma } from "@/lib/prisma";
+import { Suspense } from "react";
+import HeroSection from "@/components/top/hero/HeroSection";
+import CategorySection from "@/components/top/category/CategorySection";
+import LatestArticlesSection from "@/components/top/latestArticles/LatestArticlesSection";
 import Redbubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
+import { CATEGORY_ITEMS } from "@/constants/constants";
+import { Metadata } from "next";
 
-export default function Home() {
-  const [articles, setArticles] = useState<articleType[]>([]);
-  const [loading, setLoading] = useState(true);
+export const metadata: Metadata = {
+  title: "Your Secret Japan - 日本の秘密",
+  description: "Explore Japan's hidden charms, myths, and traditions",
+};
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        // 相対パスを使用
-        const res = await fetch("/api/articles?published=true", {
-          cache: "no-cache",
-        });
+// キャッシュの設定
+export const revalidate = 3600; // 1時間ごとに再検証
 
-        if (!res.ok) {
-          console.error(`Error status: ${res.status}`);
-          throw new Error("Failed to fetch articles");
-        }
-
-        const data = await res.json();
-        const sorted = [...(data.articles || [])]
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-          .slice(0, 6);
-
-        setArticles(sorted);
-      } catch (e) {
-        console.error("記事取得エラー:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
+export default async function Home() {
+  // サーバーサイドで直接データ取得 (APIを使用しない)
+  const articles = await prisma.article.findMany({
+    where: { published: true },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    include: { images: true },
+  });
 
   return (
     <div className="scroll-smooth">
-      {/* Hero セクション */}
-      <section className="relative text-white md:px-16">
-        <div className="absolute inset-0 z-0">
-          <Slider />
-        </div>
-        <div className="relative z-10 container mx-auto px-4 py-40">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-            Explore Japan's hidden charms
-          </h1>
-          <p className="text-xl mb-8 drop-shadow-md">
-            Ancient myths, seasonal festivals, and rich traditional culture.
-            <br></br>
-            We will introduce you to a side of Japan you may not have known
-            before.
-          </p>
-          <div className="flex gap-4 flex-wrap">
-            <Link href="#categories" scroll={true}>
-              <Button
-                size="lg"
-                className="w-[260px] font-normal
-                          border border-rose-700 bg-rose-700 text-white
-                          hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-                          shadow hover:shadow-lg"
-              >
-                Explore Categories ≫
-              </Button>
-            </Link>
-            <Link href="#latest-articles" scroll={true}>
-              <Button
-                size="lg"
-                variant="outline"
-                className="font-normal w-[220px] text-center
-                          border-white text-white
-                          hover:bg-white hover:text-black hover:font-bold"
-              >
-                Latest Articles ≫
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hero セクション - インタラクティブな部分 */}
+      <HeroSection />
 
-      {/* カテゴリーセクション */}
+      {/* カテゴリーセクション - 静的な部分 */}
       <section id="categories" className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
             Categories to Explore
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {CATEGORY_ITEMS.map((item) => (
-              <CategoryCard
-                key={item.href}
-                href={item.href}
-                title={item.title}
-                img={item.img}
-                description={item.description}
-              />
-            ))}
-          </div>
+          <CategorySection categories={CATEGORY_ITEMS} />
         </div>
       </section>
 
       <WhiteLine />
 
-      {/* 最新記事セクション */}
-      <section id="latest-articles" className="py-16 md:px-16 bg-slate-950">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-12 text-white">Latest Posts</h2>
-          {loading ? (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-            </div>
-          ) : articles.length ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((a) => (
-                <ArticleCard key={a.id} article={a} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-slate-500 text-white">No posts yet.</p>
-          )}
-          <div className="mt-20">
-            <Link href="/all-articles">
-              <Button
-                size="lg"
-                className="w-[220px] font-normal
-                          border border-rose-700 bg-rose-700 text-white
-                          hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-                          shadow hover:shadow-lg"
-              >
-                View all posts ≫
-              </Button>
-            </Link>
+      {/* 最新記事セクション - データを渡す */}
+      <Suspense
+        fallback={
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
           </div>
-        </div>
-      </section>
+        }
+      >
+        <LatestArticlesSection articles={articles} />
+      </Suspense>
 
       <WhiteLine />
 
@@ -154,7 +62,6 @@ export default function Home() {
       <WhiteLine />
 
       {/* お問い合わせ */}
-      {/* <GetInTouch/> */}
       <SimpleContact />
 
       <WhiteLine />

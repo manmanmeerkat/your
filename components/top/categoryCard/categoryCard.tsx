@@ -2,13 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { categoryItemType } from "@/types/types";
+import { memo } from "react";
 
-export default function CategoryCard({
-  href,
-  title,
-  img,
-  description,
-}: categoryItemType) {
+function CategoryCard({ href, title, img, description }: categoryItemType) {
   return (
     <Link href={href} className="block group h-full">
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform group-hover:scale-105 flex flex-col h-full p-4 pt-6">
@@ -18,6 +14,8 @@ export default function CategoryCard({
             alt={title}
             width={350}
             height={194}
+            loading="lazy"
+            sizes="(max-width: 768px) 100vw, 350px"
             className="rounded-md"
           />
         </div>
@@ -40,3 +38,6 @@ export default function CategoryCard({
     </Link>
   );
 }
+
+// コンポーネントをメモ化して再レンダリングを最適化
+export default memo(CategoryCard);
