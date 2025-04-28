@@ -1,4 +1,4 @@
-import { ContactCard } from "../contactCard/ContactCard"
+import { ContactCard } from "../contactCard/ContactCard";
 
 export const SimpleContact = () => {
   return (
@@ -16,5 +16,5 @@ export const SimpleContact = () => {
             />
         </div>
     </section>
-  )
-}
+  );
+};

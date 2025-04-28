@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { ImprovedPagination } from "@/components/ui/improved-pagination";
 
 // 型定義
 interface Article {
@@ -590,51 +591,13 @@ export default function AdminDashboardContent() {
             )}
           </div>
 
-          {/* ページネーション UI */}
+          {/* ここで改良版ページネーションを使用 */}
           {pagination.pageCount > 1 && (
-            <div className="flex justify-center items-center gap-2 pt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => changePage(1)}
-                disabled={pagination.page === 1}
-              >
-                最初
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => changePage(pagination.page - 1)}
-                disabled={pagination.page === 1}
-              >
-                前へ
-              </Button>
-
-              <div className="px-4">
-                <span className="font-medium">{pagination.page}</span>
-                <span className="text-slate-500">
-                  {" "}
-                  / {pagination.pageCount}
-                </span>
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => changePage(pagination.page + 1)}
-                disabled={pagination.page === pagination.pageCount}
-              >
-                次へ
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => changePage(pagination.pageCount)}
-                disabled={pagination.page === pagination.pageCount}
-              >
-                最後
-              </Button>
-            </div>
+            <ImprovedPagination
+              currentPage={pagination.page}
+              totalPages={pagination.pageCount}
+              onPageChange={changePage}
+            />
           )}
         </>
       )}

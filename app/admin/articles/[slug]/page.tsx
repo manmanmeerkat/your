@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,15 +21,22 @@ export default function EditArticlePage({
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [image, setImage] = useState<any | null>(null);
+  const [image, setImage] = useState<{
+    id: string;
+    url: string;
+    altText?: string;
+  } | null>(null);
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const router = useRouter();
+  // AbortControllerを使用せずに通常のfetchを使用する
+  const isMountedRef = useRef(true);
+
   const searchParams = useSearchParams();
 
   // 戻り先ページの状態を取得
@@ -38,8 +45,44 @@ export default function EditArticlePage({
   const returnSearch = searchParams.get("search") || "";
   const returnPage = searchParams.get("page") || "1";
 
+  // マウント状態の管理
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // ローカルストレージからデータを取得する関数
+  const getLocalArticleData = () => {
+    try {
+      const savedData = localStorage.getItem(`article_draft_${params.slug}`);
+      if (savedData) {
+        return JSON.parse(savedData);
+      }
+    } catch (e) {
+      console.error("ローカルストレージからのデータ取得に失敗:", e);
+    }
+    return null;
+  };
+
+  // ローカルストレージにデータを保存する関数
+  const saveLocalArticleData = (data: Record<string, unknown>) => {
+    try {
+      localStorage.setItem(
+        `article_draft_${params.slug}`,
+        JSON.stringify(data)
+      );
+    } catch (e) {
+      console.error("ローカルストレージへのデータ保存に失敗:", e);
+    }
+  };
+
   useEffect(() => {
     const fetchArticle = async () => {
+      if (!isMountedRef.current) return;
+
       try {
         console.log("Fetching article with slug:", params.slug);
 
@@ -47,15 +90,44 @@ export default function EditArticlePage({
           throw new Error("スラッグが指定されていません");
         }
 
-        const { data: sessionData } = await supabase.auth.getSession();
+        await supabase.auth.getSession();
+
+        // ローカルデータの確認
+        const localData = getLocalArticleData();
+        if (
+          localData &&
+          localData.timestamp &&
+          Date.now() - localData.timestamp < 3600000
+        ) {
+          console.log("Using local cached data");
+          setTitle(localData.title);
+          setSlug(localData.slug);
+          setSummary(localData.summary || "");
+          setContent(localData.content);
+          setCategory(localData.category);
+          setPublished(localData.published);
+
+          if (localData.image) {
+            setImage(localData.image);
+            setAltText(localData.image.altText || "");
+          }
+
+          setLoading(false);
+          return;
+        }
 
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
+
+        // 通常のfetchを使用
         const response = await fetch(`/api/articles/${encodedSlug}`);
 
         if (!response.ok) {
-          throw new Error("記事の取得に失敗しました");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "記事の取得に失敗しました");
         }
+
+        if (!isMountedRef.current) return;
 
         const article = await response.json();
         console.log("Article data received:", article);
@@ -76,15 +148,62 @@ export default function EditArticlePage({
         if (featuredImage) {
           setAltText(featuredImage.altText || "");
         }
-      } catch (error: any) {
+
+        // ローカルストレージにキャッシュ
+        saveLocalArticleData({
+          title: article.title,
+          slug: article.slug,
+          summary: article.summary || "",
+          content: article.content,
+          category: article.category,
+          published: article.published,
+          image: featuredImage,
+          timestamp: Date.now(),
+        });
+      } catch (error: unknown) {
         console.error("記事取得エラー:", error);
-        setError(error.message);
+
+        if (!isMountedRef.current) return;
+
+        // ローカルデータがあれば最終手段としてそれを使用
+        const localData = getLocalArticleData();
+        if (localData) {
+          console.log("Using local cached data as fallback after fetch error");
+          setTitle(localData.title);
+          setSlug(localData.slug);
+          setSummary(localData.summary || "");
+          setContent(localData.content);
+          setCategory(localData.category);
+          setPublished(localData.published);
+
+          if (localData.image) {
+            setImage(localData.image);
+            setAltText(localData.image.altText || "");
+          }
+
+          setError(
+            "APIからのデータ取得に失敗しましたが、ローカルデータを復元しました。保存前にデータを確認してください。"
+          );
+        } else {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "予期せぬエラーが発生しました"
+          );
+        }
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchArticle();
+
+    // クリーンアップ
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [params.slug]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,11 +243,13 @@ export default function EditArticlePage({
       const formData = new FormData();
       formData.append("file", newFile);
 
-      // アップロードリクエスト送信
+      // 通常のfetchを使用
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
+
+      if (!isMountedRef.current) return null;
 
       console.log("Upload response status:", response.status);
       const data = await response.json();
@@ -141,16 +262,24 @@ export default function EditArticlePage({
 
       console.log("Image uploaded successfully:", data.url);
       return data.url;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Image upload error:", error);
-      setError(error.message || "画像のアップロードに失敗しました");
+      if (isMountedRef.current) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "画像のアップロードに失敗しました"
+        );
+      }
       return null;
     } finally {
-      setUploading(false);
+      if (isMountedRef.current) {
+        setUploading(false);
+      }
     }
   };
 
-  const handleDeleteImage = async () => {
+  const handleDeleteImage = () => {
     if (!image) return;
 
     try {
@@ -158,48 +287,95 @@ export default function EditArticlePage({
       setImage(null);
       setAltText("");
       setPreview(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Image delete error:", error);
-      setError(error.message);
+      setError(
+        error instanceof Error ? error.message : "予期せぬエラーが発生しました"
+      );
     }
   };
 
-  // フィルタリング状態を保持して元のページに戻る関数
-  const navigateBack = () => {
-    // セッションストレージのリセット（ダッシュボード再初期化のため）
-    sessionStorage.removeItem("dashboardInitialized");
+  // 管理者トップページに戻る関数
+  const navigateToAdminDashboard = () => {
+    try {
+      // セッションストレージのリセット（ダッシュボード再初期化のため）
+      sessionStorage.removeItem("dashboardInitialized");
 
-    // 戻り先のURLを構築
-    let url = returnPath;
+      // 保存成功時はローカルストレージのドラフトをクリア
+      if (saveSuccess) {
+        localStorage.removeItem(`article_draft_${params.slug}`);
+      }
 
-    // クエリパラメータを追加
-    const params = new URLSearchParams();
-    if (returnCategory) params.append("category", returnCategory);
-    if (returnSearch) params.append("search", returnSearch);
-    if (returnPage && returnPage !== "1") params.append("page", returnPage);
+      // 管理者トップページへのURL構築
+      let url = "/admin";
 
-    // パラメータがある場合は追加
-    const queryString = params.toString();
-    if (queryString) {
-      url = `${url}?${queryString}`;
-    }
-
-    console.log("戻り先URL:", url);
-
-    // 遷移先で強制的に初期化を実行するために、タイムスタンプパラメータを追加
-    // これによりNext.jsのルーターキャッシュを防止する
-    if (url.includes("?")) {
-      url += `&_ts=${Date.now()}`;
-    } else {
+      // 強制的にキャッシュ回避のためにタイムスタンプを追加
       url += `?_ts=${Date.now()}`;
-    }
 
-    router.push(url);
+      console.log("管理者トップページへ遷移:", url);
+
+      // 直接ブラウザの遷移を使用
+      window.location.href = url;
+    } catch (error) {
+      console.error("ナビゲーションエラー:", error);
+      setError("ページ遷移に失敗しました。再度お試しください。");
+      setSaving(false);
+    }
+  };
+
+  // 元のページに戻る関数（キャンセル時に使用）
+  const navigateBack = () => {
+    try {
+      // セッションストレージのリセット（ダッシュボード再初期化のため）
+      sessionStorage.removeItem("dashboardInitialized");
+
+      // 戻り先のURLを構築
+      let url = returnPath;
+
+      // クエリパラメータを追加
+      const urlParams = new URLSearchParams();
+
+      // 特に注意：returnPageの処理を強化
+      if (returnCategory) urlParams.append("category", returnCategory);
+      if (returnSearch) urlParams.append("search", returnSearch);
+
+      // returnPageが存在し、空でなければ追加
+      if (returnPage && returnPage !== "") {
+        urlParams.append("page", returnPage);
+      }
+
+      // パラメータがある場合は追加
+      const queryString = urlParams.toString();
+      if (queryString) {
+        url = `${url}?${queryString}`;
+      }
+
+      console.log("戻り先URL:", url);
+
+      // 強制的にキャッシュ回避のためにタイムスタンプを追加
+      if (url.includes("?")) {
+        url += `&_ts=${Date.now()}`;
+      } else {
+        url += `?_ts=${Date.now()}`;
+      }
+
+      // 直接ブラウザの遷移を使用
+      window.location.href = url;
+    } catch (error) {
+      console.error("ナビゲーションエラー:", error);
+      setError("ページ遷移に失敗しました。再度お試しください。");
+      setSaving(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // すでに保存中なら処理しない
+    if (saving) return;
+
     setSaving(true);
+    setSaveSuccess(false);
     setError("");
 
     try {
@@ -219,8 +395,24 @@ export default function EditArticlePage({
         }
       }
 
+      if (!isMountedRef.current) return;
+
       // 記事データの準備
-      const updateData: any = {
+      const updateData: {
+        title: string;
+        slug: string;
+        summary: string;
+        content: string;
+        category: string;
+        published: boolean;
+        updateImages: boolean;
+        images?: Array<{
+          id?: string;
+          url: string;
+          altText: string;
+          isFeatured: boolean;
+        }>;
+      } = {
         title,
         slug,
         summary,
@@ -261,6 +453,7 @@ export default function EditArticlePage({
       const encodedSlug = encodeURIComponent(params.slug);
       console.log("Encoded slug for API call:", encodedSlug);
 
+      // 通常のフェッチを使用
       const response = await fetch(`/api/articles/${encodedSlug}`, {
         method: "PUT",
         headers: {
@@ -268,6 +461,8 @@ export default function EditArticlePage({
         },
         body: JSON.stringify(updateData),
       });
+
+      if (!isMountedRef.current) return;
 
       if (!response.ok) {
         let errorMessage = "記事の更新に失敗しました";
@@ -284,12 +479,25 @@ export default function EditArticlePage({
       const data = await response.json();
       console.log("Update successful:", data);
 
-      // 成功したら保持していたフィルター状態で元のページに戻る
-      navigateBack();
-    } catch (error: any) {
+      // 保存成功フラグをセット
+      setSaveSuccess(true);
+
+      // 少し待機してから遷移
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          // 成功したら管理者トップページに戻る
+          navigateToAdminDashboard();
+        }
+      }, 500);
+    } catch (error: unknown) {
       console.error("Article save error:", error);
-      setError(error.message || "不明なエラーが発生しました");
-    } finally {
+
+      if (!isMountedRef.current) return;
+
+      // エラーメッセージをより詳細に表示
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
       setSaving(false);
     }
   };
@@ -300,12 +508,22 @@ export default function EditArticlePage({
       return;
     }
 
+    // 既に処理中なら重複実行しない
+    if (saving) return;
+
+    setSaving(true);
+    setError("");
+
     try {
       // スラッグをエンコード
       const encodedSlug = encodeURIComponent(params.slug);
+
+      // 通常のフェッチを使用
       const response = await fetch(`/api/articles/${encodedSlug}`, {
         method: "DELETE",
       });
+
+      if (!isMountedRef.current) return;
 
       if (!response.ok) {
         const data = await response.json();
@@ -314,18 +532,35 @@ export default function EditArticlePage({
         );
       }
 
-      // 削除成功後も元のページに戻る
-      navigateBack();
-    } catch (error: any) {
+      setSaveSuccess(true);
+
+      // ローカルストレージのドラフトをクリア
+      localStorage.removeItem(`article_draft_${params.slug}`);
+
+      // 少し待機してから遷移
+      setTimeout(() => {
+        if (isMountedRef.current) {
+          // 削除成功後も管理者トップページに戻る
+          navigateToAdminDashboard();
+        }
+      }, 500);
+    } catch (error: unknown) {
       console.error("Article delete error:", error);
-      setError(error.message || "不明なエラーが発生しました");
+
+      if (!isMountedRef.current) return;
+
+      setError(
+        error instanceof Error ? error.message : "不明なエラーが発生しました"
+      );
+      setSaving(false);
     }
   };
 
+  // ローディング中の表示を固定
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p>読み込み中...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -338,8 +573,9 @@ export default function EditArticlePage({
           variant="outline"
           className="text-red-600 hover:bg-red-50"
           onClick={handleDelete}
+          disabled={saving}
         >
-          削除
+          {saving ? "処理中..." : "削除"}
         </Button>
       </CardHeader>
       <CardContent>
@@ -347,6 +583,12 @@ export default function EditArticlePage({
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
               <p>{error}</p>
+            </div>
+          )}
+
+          {saveSuccess && (
+            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+              <p>保存が完了しました。ページ遷移中...</p>
             </div>
           )}
 
@@ -360,6 +602,7 @@ export default function EditArticlePage({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="記事のタイトル"
               required
+              disabled={saving}
             />
           </div>
 
@@ -373,6 +616,7 @@ export default function EditArticlePage({
               onChange={(e) => setSlug(e.target.value)}
               placeholder="article-slug"
               required
+              disabled={saving}
             />
           </div>
 
@@ -386,6 +630,7 @@ export default function EditArticlePage({
               onChange={(e) => setSummary(e.target.value)}
               placeholder="記事の要約..."
               className="h-20"
+              disabled={saving}
             />
           </div>
 
@@ -400,6 +645,7 @@ export default function EditArticlePage({
               placeholder="記事の本文..."
               className="h-40"
               required
+              disabled={saving}
             />
           </div>
 
@@ -413,6 +659,7 @@ export default function EditArticlePage({
               onChange={(e) => setCategory(e.target.value)}
               className="w-full rounded-md border border-gray-300 p-2"
               required
+              disabled={saving}
             >
               <option value="culture">文化</option>
               <option value="mythology">神話</option>
@@ -445,6 +692,7 @@ export default function EditArticlePage({
                   size="sm"
                   className="absolute top-2 right-2 text-red-600 hover:bg-red-50"
                   onClick={handleDeleteImage}
+                  disabled={saving}
                 >
                   削除
                 </Button>
@@ -474,6 +722,7 @@ export default function EditArticlePage({
                     setFile(null);
                     setPreview(null);
                   }}
+                  disabled={saving}
                 >
                   キャンセル
                 </Button>
@@ -488,6 +737,7 @@ export default function EditArticlePage({
                 accept="image/*"
                 onChange={handleFileChange}
                 className="mt-2"
+                disabled={saving}
               />
             )}
           </div>
@@ -503,6 +753,7 @@ export default function EditArticlePage({
                 value={altText}
                 onChange={(e) => setAltText(e.target.value)}
                 placeholder="画像の説明"
+                disabled={saving}
               />
             </div>
           )}
@@ -514,6 +765,7 @@ export default function EditArticlePage({
               checked={published}
               onChange={(e) => setPublished(e.target.checked)}
               className="rounded border-gray-300"
+              disabled={saving}
             />
             <label htmlFor="published" className="text-sm font-medium">
               公開する
@@ -521,11 +773,27 @@ export default function EditArticlePage({
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={navigateBack}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={navigateBack}
+              disabled={saving}
+            >
               キャンセル
             </Button>
-            <Button type="submit" disabled={saving || uploading}>
-              {saving || uploading ? "保存中..." : "保存"}
+            <Button
+              type="submit"
+              disabled={saving || uploading}
+              className={saving ? "bg-gray-500" : ""}
+            >
+              {saving ? (
+                <div className="flex items-center">
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  保存中...
+                </div>
+              ) : (
+                "保存"
+              )}
             </Button>
           </div>
         </form>

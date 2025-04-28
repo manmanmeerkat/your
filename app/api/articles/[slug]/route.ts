@@ -59,7 +59,7 @@ export async function GET(
     console.log('- ハイフン化したスラッグ:', hyphenSlug);
     console.log('- スペース化したスラッグ:', spaceSlug);
     
-    let possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
+    const possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
     
     for (const possibleSlug of possibleSlugs) {
       article = await prisma.article.findFirst({
@@ -152,7 +152,7 @@ export async function PUT(
         console.log('- ハイフン化したスラッグ:', hyphenSlug);
         console.log('- スペース化したスラッグ:', spaceSlug);
         
-        let possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
+        const possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
         
         for (const possibleSlug of possibleSlugs) {
           const foundArticle = await prisma.article.findFirst({
@@ -336,7 +336,7 @@ export async function DELETE(
         console.log('- ハイフン化したスラッグ:', hyphenSlug);
         console.log('- スペース化したスラッグ:', spaceSlug);
         
-        let possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
+        const possibleSlugs = [decodedSlug, hyphenSlug, spaceSlug];
         
         for (const possibleSlug of possibleSlugs) {
           const foundArticle = await prisma.article.findFirst({
