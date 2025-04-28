@@ -10,9 +10,9 @@ export const SimpleContact = () => {
               Please use the form below to reach out to us.
             </p>
             <ContactCard
-            title="Contact Us Directly via Email"
-            content="You can also reach us directly at the following email address:"
-            detail="info@yoursecretjapan.com"
+              title="Contact Us Using the Form"
+              content="Feel free to send us a message using the form below."
+              link={{ href: "/contact", label: "Go to Contact Form" }}
             />
         </div>
     </section>

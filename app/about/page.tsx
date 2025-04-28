@@ -82,7 +82,6 @@ export default function AboutPage() {
       <WhiteLine/>
       <Redbubble/>
       <WhiteLine/>
-      {/* <GetInTouch/> */}
       <SimpleContact/>
       <BackToHomeBtn/>
       <WhiteLine/>
