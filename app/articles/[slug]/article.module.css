@@ -1,0 +1,45 @@
+/* app/articles/[slug]/article.module.css */
+.articleContent {
+  @apply prose prose-lg max-w-none mb-12 text-white text-justify;
+}
+
+.articleContent :global(h1) {
+  @apply text-3xl font-bold mt-8 mb-4 text-white;
+}
+
+.articleContent :global(h2) {
+  @apply text-2xl font-bold mt-6 mb-3 text-white;
+}
+
+.articleContent :global(p) {
+  @apply mb-4 text-white;
+}
+
+.articleContent :global(ul),
+.articleContent :global(ol) {
+  @apply ml-6 mb-4;
+}
+
+.articleContent :global(li) {
+  @apply mb-2;
+}
+
+.articleContent :global(a) {
+  @apply text-blue-400 underline hover:text-blue-300;
+}
+
+.articleContent :global(img) {
+  @apply mx-auto my-4 rounded-md;
+}
+
+.articleContent :global(blockquote) {
+  @apply pl-4 border-l-4 border-gray-500 italic my-4;
+}
+
+.articleContent :global(pre) {
+  @apply bg-gray-800 p-4 rounded-md overflow-x-auto my-4;
+}
+
+.articleContent :global(code) {
+  @apply bg-gray-800 px-1 py-0.5 rounded text-sm;
+}
