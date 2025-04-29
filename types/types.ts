@@ -66,3 +66,16 @@ export type categoriesType = {
     id: string;
     name: string;
 }
+
+export type FormData = {
+    name: string;
+    email: string;
+    subject: string;
+    message: string;
+};
+  
+export type Feedback = {
+    visible: boolean;
+    success: boolean;
+    message: string;
+};
