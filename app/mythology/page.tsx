@@ -102,11 +102,11 @@ export default async function MythologyPage({
             Japanese Mythology
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
-            Japan's mythology weaves timeless tales of divine creation, heroic
-            adventures, and sacred traditions. We will explore the enchanting
-            world of Japanese mythology through stories of gods such as
-            Amaterasu, Susanoo, and Izanagi, as recorded in the Kojiki and Nihon
-            Shoki.
+            Japan&apos;s mythology weaves timeless tales of divine creation,
+            heroic adventures, and sacred traditions. We will explore the
+            enchanting world of Japanese mythology through stories of gods such
+            as Amaterasu, Susanoo, and Izanagi, as recorded in the Kojiki and
+            Nihon Shoki.
           </p>
         </div>
       </section>

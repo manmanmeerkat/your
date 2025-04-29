@@ -1,18 +1,22 @@
 // lib/prisma.ts
 import { PrismaClient } from '@prisma/client';
 
-const globalForPrisma = global as unknown as {
+// PrismaClient は Node.js のグローバル変数に格納して、
+// 接続インスタンスの重複作成を防ぐ
+const prismaGlobal = global as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ?? 
+export const prisma = 
+  prismaGlobal.prisma ?? 
   new PrismaClient({
-    log: ['query', 'error', 'warn'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// 接続プールを共有するために開発環境ではグローバル変数にキャッシュする
+if (process.env.NODE_ENV !== 'production') prismaGlobal.prisma = prisma;
+
+// アプリケーション終了時に接続を閉じる
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});

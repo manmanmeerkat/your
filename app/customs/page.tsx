@@ -101,10 +101,11 @@ export default async function CustomsPage({
             Japanese Customs
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
-            Japanese customs offer a glimpse into the country's unique sense of
-            harmony, respect, and seasonal awareness. We will explore everyday
-            traditions such as bowing, removing shoes, and celebrating seasonal
-            events that reflect the values and rhythms of Japanese life.
+            Japanese customs offer a glimpse into the country&apos;s unique
+            sense of harmony, respect, and seasonal awareness. We will explore
+            everyday traditions such as bowing, removing shoes, and celebrating
+            seasonal events that reflect the values and rhythms of Japanese
+            life.
           </p>
         </div>
       </section>

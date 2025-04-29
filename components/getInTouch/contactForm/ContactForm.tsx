@@ -5,9 +5,6 @@ import { FormGroup } from "./formGroup/FormGroup";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FormData, Feedback } from "@/types/types";
-import Image from "next/image";
-import { SNS_LINKS } from "@/constants/constants";
-import Link from "next/link";
 
 export function ContactForm() {
   const [formData, setFormData] = useState<FormData>({
@@ -42,49 +39,68 @@ export function ContactForm() {
     e.preventDefault();
 
     const validateEmail = (email: string) => {
-        if (!email) return "Email Address is required.";
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email) ? "" : "Please enter a valid email address.";
-      };
+      if (!email) return "Email Address is required.";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email)
+        ? ""
+        : "Please enter a valid email address.";
+    };
 
     const newErrors = {
-        name: formData.name ? "" : "Name is required.",
-        email: validateEmail(formData.email),
-        subject: formData.subject ? "" : "Subject is required.",
-        message: formData.message ? "" : "Message is required.",
-      };
-    
-      setErrors(newErrors);
-    
-      const hasError = Object.values(newErrors).some((msg) => msg !== "");
-      if (hasError) {
-        return;
-      }
+      name: formData.name ? "" : "Name is required.",
+      email: validateEmail(formData.email),
+      subject: formData.subject ? "" : "Subject is required.",
+      message: formData.message ? "" : "Message is required.",
+    };
+
+    setErrors(newErrors);
+
+    const hasError = Object.values(newErrors).some((msg) => msg !== "");
+    if (hasError) {
+      return;
+    }
 
     setIsSubmitting(true);
     setFeedback({ visible: false, success: true, message: "" });
 
     try {
-      setTimeout(() => {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
         setFeedback({
           visible: true,
           success: true,
           message: "Thank you! Your message has been successfully sent.",
         });
         setFormData({ name: "", email: "", subject: "", message: "" });
-        setIsSubmitting(false);
-      }, 1000);
+      } else {
+        setFeedback({
+          visible: true,
+          success: false,
+          message:
+            data.message ||
+            "Failed to send your message. Please try again later.",
+        });
+      }
     } catch (error) {
+      console.error("Error:", error);
       setFeedback({
         visible: true,
         success: false,
-        message: "Failed to send your message. Please try again later.",
+        message: "An error occurred. Please try again later.",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
-
-  const filteredSNSLinks = SNS_LINKS.filter((sns) => sns.img !== "/images/icon/x-white.png");
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -100,7 +116,10 @@ export function ContactForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-slate-800/40 rounded-lg shadow-lg p-8 space-y-6 text-white">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-slate-800/40 rounded-lg shadow-lg p-8 space-y-6 text-white"
+      >
         <FormGroup
           id="name"
           label="Name"
@@ -108,16 +127,20 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="John Smith"
         />
-        {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
+        {errors.name && (
+          <p className="text-red-600 text-sm mt-1">{errors.name}</p>
+        )}
         <FormGroup
-            id="email"
-            label="Email Address"
-            type="text"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="your-email@example.com"
+          id="email"
+          label="Email Address"
+          type="text"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="your-email@example.com"
         />
-        {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
+        {errors.email && (
+          <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+        )}
         <FormGroup
           id="subject"
           label="Subject"
@@ -125,23 +148,25 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="Enter the subject"
         />
-        {errors.subject && <p className="text-red-600 text-sm mt-1">{errors.subject}</p>}
+        {errors.subject && (
+          <p className="text-red-600 text-sm mt-1">{errors.subject}</p>
+        )}
         <div>
-            <label htmlFor="message" className="block text-sm font-medium mb-2">
+          <label htmlFor="message" className="block text-sm font-medium mb-2">
             Message<span className="text-red-600">*</span>
-            </label>
-            <Textarea
-                id="message"
-                name="message"
-                rows={6}
-                value={formData.message}
-                onChange={handleChange}
-                placeholder="Please enter your message"
-                className="resize-none"
-            />
-            {errors.message && (
-                <p className="text-red-600 text-sm mt-5">{errors.message}</p>
-            )}
+          </label>
+          <Textarea
+            id="message"
+            name="message"
+            rows={6}
+            value={formData.message}
+            onChange={handleChange}
+            placeholder="Please enter your message"
+            className="resize-none"
+          />
+          {errors.message && (
+            <p className="text-red-600 text-sm mt-5">{errors.message}</p>
+          )}
         </div>
         <Button
           type="submit"

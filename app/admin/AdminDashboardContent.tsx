@@ -362,9 +362,14 @@ export default function AdminDashboardContent() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">記事管理</h2>
-        <Link href="/admin/articles/new">
-          <Button>新規記事作成</Button>
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/admin/messages">
+            <Button variant="outline">お問い合わせ一覧</Button>
+          </Link>
+          <Link href="/admin/articles/new">
+            <Button>新規記事作成</Button>
+          </Link>
+        </div>
       </div>
 
       {/* カテゴリーフィルター */}

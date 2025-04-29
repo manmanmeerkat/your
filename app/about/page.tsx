@@ -26,11 +26,13 @@ export default function AboutPage() {
         </div>
 
         <div className="container mx-auto px-4 relative z-10 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            About us
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">About us</h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
-            Your Secret Japan is a project dedicated to sharing the richness of Japan’s cultural heritage and traditions with the world. Through stories of mythology, timeless arts, seasonal festivals, and everyday beauty, we invite you to explore the depth and charm of Japanese culture.
+            Your Secret Japan is a project dedicated to sharing the richness of
+            Japan&apos;s cultural heritage and traditions with the world.
+            Through stories of mythology, timeless arts, seasonal festivals, and
+            everyday beauty, we invite you to explore the depth and charm of
+            Japanese culture.
           </p>
         </div>
       </section>
@@ -43,20 +45,28 @@ export default function AboutPage() {
           </h2>
           <div className="shadow-md p-8">
             <p className="mb-4 text-lg text-white text-justify">
-              Your Secret Japan is passionate about discovering and sharing the deep charm of Japan.<br/>
-              We present the real Japan that you won't find in a tourist guidebook.
+              Your Secret Japan is passionate about discovering and sharing the
+              deep charm of Japan.
+              <br />
+              We present the real Japan that you won&apos;t find in a tourist
+              guidebook.
             </p>
             <p className="mb-4 text-lg text-white text-justify">
-              Japanese culture is diverse, from ancient myths, seasonal festivals, and traditional crafts that are meticulously crafted. <br/>
-              We aim to introduce this rich cultural heritage in an accessible and engaging way.
+              Japanese culture is diverse, from ancient myths, seasonal
+              festivals, and traditional crafts that are meticulously crafted.{" "}
+              <br />
+              We aim to introduce this rich cultural heritage in an accessible
+              and engaging way.
             </p>
             <p className="mb-4 text-lg text-white text-justify">
-              Whether you're a beginner wanting to learn about Japan or a knowledgeable enthusiast, Your Secret Japan will leave you with new discoveries and insights.
+              Whether you&apos;re a beginner wanting to learn about Japan or a
+              knowledgeable enthusiast, Your Secret Japan will leave you with
+              new discoveries and insights.
             </p>
           </div>
         </div>
       </section>
-      <WhiteLine/>
+      <WhiteLine />
 
       {/* コンテンツセクション */}
       <section className="pt-8 pb-24 bg-slate-950 md:px-16">
@@ -77,14 +87,13 @@ export default function AboutPage() {
             ))}
           </div>
         </div>
-  
       </section>
-      <WhiteLine/>
-      <Redbubble/>
-      <WhiteLine/>
-      <SimpleContact/>
-      <BackToHomeBtn/>
-      <WhiteLine/>
+      <WhiteLine />
+      <Redbubble />
+      <WhiteLine />
+      <SimpleContact />
+      <BackToHomeBtn />
+      <WhiteLine />
     </div>
   );
 }
