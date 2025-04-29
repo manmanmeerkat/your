@@ -1,8 +1,8 @@
 // app/api/fix-slugs/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     // すべての記事を取得
     const articles = await prisma.article.findMany();

@@ -1,6 +1,7 @@
 // app/api/articles/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * pageSize;
     
     // クエリ条件を構築
-    const where: any = {};
+    const where: Prisma.ArticleWhereInput = {};
     
     // published パラメータが指定されている場合のみフィルタリング
     if (publishedParam !== null) {
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
         { 
           error: '必須フィールドが不足しています',
           missing: Object.entries({ title, slug, content, category })
-            .filter(([_, v]) => !v)
+            .filter(([, v]) => !v)
             .map(([k]) => k)
         },
         { status: 400 }
@@ -190,14 +191,13 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('記事作成API エラー:', error);
     return NextResponse.json(
       {
         error: '記事の作成に失敗しました',
-        message: error.message,
-        name: error.name,
-        code: error.code
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : undefined
       },
       { status: 500 }
     );
