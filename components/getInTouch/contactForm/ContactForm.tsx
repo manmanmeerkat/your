@@ -43,23 +43,27 @@ export function ContactForm() {
       if (name.length > 30) return "Name must be 30 characters or less.";
       return "";
     };
-    
+
     const validateEmail = (email: string) => {
       if (!email) return "Email Address is required.";
-      if (email.length > 40) return "Email Address must be 40 characters or less.";
+      if (email.length > 40)
+        return "Email Address must be 40 characters or less.";
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email) ? "" : "Please enter a valid email address.";
+      return emailRegex.test(email)
+        ? ""
+        : "Please enter a valid email address.";
     };
-    
+
     const validateSubject = (subject: string) => {
       if (!subject) return "Subject is required.";
       if (subject.length > 50) return "Subject must be 50 characters or less.";
       return "";
     };
-    
+
     const validateMessage = (message: string) => {
       if (!message) return "Message is required.";
-      if (message.length > 1000) return "Message must be 1000 characters or less.";
+      if (message.length > 1000)
+        return "Message must be 1000 characters or less.";
       return "";
     };
 
@@ -69,13 +73,13 @@ export function ContactForm() {
       subject: validateSubject(formData.subject),
       message: validateMessage(formData.message),
     };
-    
-      setErrors(newErrors);
-    
-      const hasError = Object.values(newErrors).some((msg) => msg !== "");
-      if (hasError) {
-        return;
-      }
+
+    setErrors(newErrors);
+
+    const hasError = Object.values(newErrors).some((msg) => msg !== "");
+    if (hasError) {
+      return;
+    }
 
     setIsSubmitting(true);
     setFeedback({ visible: false, success: true, message: "" });
@@ -90,7 +94,7 @@ export function ContactForm() {
         setFormData({ name: "", email: "", subject: "", message: "" });
         setIsSubmitting(false);
       }, 1000);
-    } catch (error) {
+    } catch {
       setFeedback({
         visible: true,
         success: false,
@@ -100,11 +104,12 @@ export function ContactForm() {
     }
   };
 
-
   return (
     <div className="max-w-2xl mx-auto">
-
-      <form onSubmit={handleSubmit} className="bg-slate-800/40 rounded-lg shadow-lg p-8 space-y-6 text-white">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-slate-800/40 rounded-lg shadow-lg p-8 space-y-6 text-white"
+      >
         <FormGroup
           id="name"
           label="Name"
@@ -112,16 +117,20 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="John Smith"
         />
-        {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
+        {errors.name && (
+          <p className="text-red-600 text-sm mt-1">{errors.name}</p>
+        )}
         <FormGroup
-            id="email"
-            label="Email Address"
-            type="text"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="your-email@example.com"
+          id="email"
+          label="Email Address"
+          type="text"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="your-email@example.com"
         />
-        {errors.email && <p className="text-red-600 text-sm mt-1">{errors.email}</p>}
+        {errors.email && (
+          <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+        )}
         <FormGroup
           id="subject"
           label="Subject"
@@ -129,23 +138,25 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="Enter the subject"
         />
-        {errors.subject && <p className="text-red-600 text-sm mt-1">{errors.subject}</p>}
+        {errors.subject && (
+          <p className="text-red-600 text-sm mt-1">{errors.subject}</p>
+        )}
         <div>
-            <label htmlFor="message" className="block text-sm font-medium mb-2">
+          <label htmlFor="message" className="block text-sm font-medium mb-2">
             Message<span className="text-red-600">*</span>
-            </label>
-            <Textarea
-                id="message"
-                name="message"
-                rows={6}
-                value={formData.message}
-                onChange={handleChange}
-                placeholder="Please enter your message"
-                className="resize-none"
-            />
-            {errors.message && (
-                <p className="text-red-600 text-sm mt-5">{errors.message}</p>
-            )}
+          </label>
+          <Textarea
+            id="message"
+            name="message"
+            rows={6}
+            value={formData.message}
+            onChange={handleChange}
+            placeholder="Please enter your message"
+            className="resize-none"
+          />
+          {errors.message && (
+            <p className="text-red-600 text-sm mt-5">{errors.message}</p>
+          )}
         </div>
 
         {feedback.visible && (
@@ -175,7 +186,6 @@ export function ContactForm() {
         >
           {isSubmitting ? "Sending..." : "Send　≫"}
         </Button>
-
       </form>
     </div>
   );
