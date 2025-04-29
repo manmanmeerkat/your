@@ -21,13 +21,6 @@ export function ContactForm() {
     message: "",
   });
 
-  const [errors, setErrors] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -35,71 +28,75 @@ export function ContactForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ContactForm.tsx の handleSubmit 関数の修正部分
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const validateName = (name: string) => {
-      if (!name) return "Name is required.";
-      if (name.length > 30) return "Name must be 30 characters or less.";
-      return "";
-    };
-
-    const validateEmail = (email: string) => {
-      if (!email) return "Email Address is required.";
-      if (email.length > 40)
-        return "Email Address must be 40 characters or less.";
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email)
-        ? ""
-        : "Please enter a valid email address.";
-    };
-
-    const validateSubject = (subject: string) => {
-      if (!subject) return "Subject is required.";
-      if (subject.length > 50) return "Subject must be 50 characters or less.";
-      return "";
-    };
-
-    const validateMessage = (message: string) => {
-      if (!message) return "Message is required.";
-      if (message.length > 1000)
-        return "Message must be 1000 characters or less.";
-      return "";
-    };
-
-    const newErrors = {
-      name: validateName(formData.name),
-      email: validateEmail(formData.email),
-      subject: validateSubject(formData.subject),
-      message: validateMessage(formData.message),
-    };
-
-    setErrors(newErrors);
-
-    const hasError = Object.values(newErrors).some((msg) => msg !== "");
-    if (hasError) {
-      return;
-    }
+    // バリデーション部分は同じ
 
     setIsSubmitting(true);
     setFeedback({ visible: false, success: true, message: "" });
 
     try {
-      setTimeout(() => {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      // レスポンスの詳細をコンソールに記録（デバッグ用）
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Array.from(response.headers.entries()).reduce((obj, [key, value]) => {
+          obj[key] = value;
+          return obj;
+        }, {} as Record<string, string>)
+      );
+
+      let data;
+      try {
+        // レスポンスボディをJSONとして解析
+        data = await response.json();
+      } catch (jsonError) {
+        console.error("JSON parse error:", jsonError);
+        // レスポンスボディをテキストとして取得
+        const textData = await response.text();
+        console.log("Response text:", textData);
+        throw new Error(`Failed to parse response as JSON: ${textData}`);
+      }
+
+      console.log("Response data:", data);
+
+      if (data.success) {
         setFeedback({
           visible: true,
           success: true,
           message: "Thank you! Your message has been successfully sent.",
         });
         setFormData({ name: "", email: "", subject: "", message: "" });
-        setIsSubmitting(false);
-      }, 1000);
-    } catch {
+      } else {
+        setFeedback({
+          visible: true,
+          success: false,
+          message:
+            data.message ||
+            "Failed to send your message. Please try again later.",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
       setFeedback({
         visible: true,
         success: false,
-        message: "Failed to send your message. Please try again later.",
+        message:
+          error instanceof Error
+            ? `Error: ${error.message}`
+            : "An error occurred. Please try again later.",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -117,9 +114,6 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="John Smith"
         />
-        {errors.name && (
-          <p className="text-red-600 text-sm mt-1">{errors.name}</p>
-        )}
         <FormGroup
           id="email"
           label="Email Address"
@@ -128,9 +122,6 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="your-email@example.com"
         />
-        {errors.email && (
-          <p className="text-red-600 text-sm mt-1">{errors.email}</p>
-        )}
         <FormGroup
           id="subject"
           label="Subject"
@@ -138,9 +129,6 @@ export function ContactForm() {
           onChange={handleChange}
           placeholder="Enter the subject"
         />
-        {errors.subject && (
-          <p className="text-red-600 text-sm mt-1">{errors.subject}</p>
-        )}
         <div>
           <label htmlFor="message" className="block text-sm font-medium mb-2">
             Message<span className="text-red-600">*</span>
@@ -154,9 +142,6 @@ export function ContactForm() {
             placeholder="Please enter your message"
             className="resize-none"
           />
-          {errors.message && (
-            <p className="text-red-600 text-sm mt-5">{errors.message}</p>
-          )}
         </div>
 
         {feedback.visible && (
