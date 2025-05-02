@@ -12,7 +12,7 @@ import Image from "next/image";
 type Image = {
     id: string;
     url: string;
-    altText: string | null; // ← ✔ 正しく型定義
+    altText: string | null;
     isFeatured: boolean;
     createdAt: Date;
     articleId: string;
@@ -23,11 +23,12 @@ type Image = {
     title: string;
     slug: string;
     summary: string | null;
+    description: string | null;
     content: string;
     category: string;
     published: boolean;
-    createdAt: Date; // ← ここを string → Date に修正
-    updatedAt: Date; // ← 同上
+    createdAt: Date;
+    updatedAt: Date;
     images: Image[];
   };
 

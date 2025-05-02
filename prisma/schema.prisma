@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -13,25 +13,25 @@ model Article {
   title       String   @db.VarChar(255)
   slug        String   @unique @db.VarChar(255)
   summary     String?
-  description String?  // ここに新しいフィールドを追加
   content     String
   category    String   @db.VarChar(100)
   published   Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  description String?
   images      Image[]
 
   @@map("articles")
 }
 
 model Image {
-  id        String   @id @default(uuid()) @db.Uuid
-  articleId String   @map("article_id") @db.Uuid
-  url       String
-  altText   String?  @map("alt_text") @db.VarChar(255)
+  id         String   @id @default(uuid()) @db.Uuid
+  articleId  String   @map("article_id") @db.Uuid
+  url        String
+  altText    String?  @map("alt_text") @db.VarChar(255)
   isFeatured Boolean  @default(false) @map("is_featured")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@map("images")
 }
@@ -42,7 +42,7 @@ model ContactMessage {
   email     String   @db.VarChar(255)
   subject   String   @db.VarChar(255)
   message   String
-  status    String   @db.VarChar(50) @default("unread")
+  status    String   @default("unread") @db.VarChar(50)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@map("contact_messages")

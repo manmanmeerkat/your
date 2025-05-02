@@ -25,10 +25,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${article.title} | Your Secret Japan`,
-    description: article.summary || "Discover the spirit of Japan.",
+    description: article.description || "Discover the spirit of Japan.",
     openGraph: {
       title: `${article.title} | Your Secret Japan`,
-      description: article.summary || "",
+      description: article.description || "",
       url: `https://www.yoursecretjapan.com/articles/${article.slug}`,
       images: [
         {
