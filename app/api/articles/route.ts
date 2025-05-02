@@ -141,6 +141,7 @@ export async function POST(request: NextRequest) {
       title,
       slug,
       summary: requestBody.summary || '',
+      description: requestBody.description || '', // 追加: descriptionフィールド
       content,
       category,
       published: requestBody.published || false,

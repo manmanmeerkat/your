@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ export default function NewArticlePage() {
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
+  const [description, setDescription] = useState(""); // 説明文フィールド（SEO用）
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("culture"); // デフォルトカテゴリ
   const [published, setPublished] = useState(false);
@@ -22,7 +23,61 @@ export default function NewArticlePage() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoUpdateSummary, setAutoUpdateSummary] = useState(true); // 要約自動更新の制御
   const router = useRouter();
+
+  // マークダウン記法を削除する関数
+  const stripMarkdown = (text: string) => {
+    if (!text) return "";
+
+    // 見出し記号(#)の削除
+    let result = text.replace(/^#+\s+/gm, "");
+
+    // 強調(**と__)の削除
+    result = result.replace(/(\*\*|__)(.*?)\1/g, "$2");
+
+    // 斜体(*と_)の削除
+    result = result.replace(/(\*|_)(.*?)\1/g, "$2");
+
+    // コードブロック(```)と行内コード(`)の削除
+    result = result.replace(/```[\s\S]*?```/g, ""); // コードブロック
+    result = result.replace(/`([^`]+)`/g, "$1"); // 行内コード
+
+    // リンク記法([text](url))の削除 - テキスト部分のみを残す
+    result = result.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
+
+    // 画像記法(![alt](src))の削除
+    result = result.replace(/!\[([^\]]*)\]\([^\)]+\)/g, "");
+
+    // リスト記号(-, *, +)の削除
+    result = result.replace(/^[\-\*\+]\s+/gm, "");
+
+    // 番号付きリストの削除
+    result = result.replace(/^\d+\.\s+/gm, "");
+
+    // 水平線(---, ***, ___)の削除
+    result = result.replace(/^([\-\*\_]){3,}$/gm, "");
+
+    // 引用(>)の削除
+    result = result.replace(/^\>\s+/gm, "");
+
+    // 表記法の削除
+    result = result.replace(/\|.*\|/g, "");
+
+    // 余分な空白行の削除
+    result = result.replace(/\n\s*\n/g, "\n");
+
+    // 最初の数文字（最大150文字程度）を抽出
+    let truncated = result.trim().substring(0, 150);
+
+    // 文章が途中で切れないように調整（最後のピリオドまで）
+    const lastPeriod = truncated.lastIndexOf("。");
+    if (lastPeriod > 0 && lastPeriod < 140) {
+      truncated = truncated.substring(0, lastPeriod + 1);
+    }
+
+    return truncated;
+  };
 
   // スラッグの自動生成
   const generateSlug = () => {
@@ -35,6 +90,17 @@ export default function NewArticlePage() {
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
     setSlug(generateSlug());
+  };
+
+  // コンテンツの変更ハンドラー - マークダウンから自動要約を生成
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+
+    // 自動要約機能がオンの場合、マークダウンを削除して要約欄を更新
+    if (autoUpdateSummary) {
+      setSummary(stripMarkdown(newContent));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,9 +161,11 @@ export default function NewArticlePage() {
       }
 
       return null;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "不明なエラーが発生しました";
       console.error("画像アップロードエラー:", error);
-      toast.error(`画像アップロードエラー: ${error.message}`);
+      toast.error(`画像アップロードエラー: ${errorMessage}`);
       return null;
     } finally {
       setUploading(false);
@@ -137,6 +205,7 @@ export default function NewArticlePage() {
         title,
         slug,
         summary,
+        description, // 説明文フィールド
         content,
         category,
         published,
@@ -178,10 +247,12 @@ export default function NewArticlePage() {
       // 管理画面に戻る
       router.push("/admin");
       router.refresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "不明なエラーが発生しました";
       console.error("記事作成エラー:", error);
-      setError(error.message);
-      toast.error(`エラー: ${error.message}`);
+      setError(errorMessage);
+      toast.error(`エラー: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -230,31 +301,70 @@ export default function NewArticlePage() {
             </p>
           </div>
 
+          {/* 説明文フィールド - SEO・SNS用 */}
           <div className="space-y-2">
-            <label htmlFor="summary" className="text-sm font-medium">
-              要約
+            <label htmlFor="description" className="text-sm font-medium">
+              説明文
             </label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="日本の桜祭りの短い説明..."
+              className="h-20"
+            />
+            <p className="text-xs text-gray-500">
+              検索結果やSNSでの表示に使用されます。150文字以内推奨。
+            </p>
+          </div>
+
+          {/* 要約フィールド - 自動生成オプション付き */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label htmlFor="summary" className="text-sm font-medium">
+                要約
+              </label>
+              <div className="flex items-center">
+                <input
+                  id="autoUpdateSummary"
+                  type="checkbox"
+                  checked={autoUpdateSummary}
+                  onChange={(e) => setAutoUpdateSummary(e.target.checked)}
+                  className="rounded border-gray-300 mr-1"
+                />
+                <label
+                  htmlFor="autoUpdateSummary"
+                  className="text-xs text-gray-500"
+                >
+                  本文から自動生成
+                </label>
+              </div>
+            </div>
             <Textarea
               id="summary"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="日本の桜祭りについての要約..."
               className="h-20"
+              disabled={autoUpdateSummary}
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="content" className="text-sm font-medium">
-              本文*
+              本文* (マークダウン記法対応)
             </label>
             <Textarea
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="日本の桜祭りは..."
-              className="h-40"
+              onChange={handleContentChange}
+              placeholder="# 日本の桜祭り\n\n日本の桜祭りは..."
+              className="h-40 font-mono"
               required
             />
+            <p className="text-xs text-gray-500">
+              マークダウン記法を使って記事本文を書くことができます。
+            </p>
           </div>
 
           <div className="space-y-2">

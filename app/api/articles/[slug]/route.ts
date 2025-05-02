@@ -211,7 +211,7 @@ export async function PUT(
     }
     
     // リクエストボディを取得
-    const { title, slug, summary, content, category, published, images } = await req.json();
+    const { title, slug, summary, description, content, category, published, images } = await req.json();
     console.log('受信データ（抜粋）:', { title, slug, category, published });
     
     // 新しいスラッグが別の記事と重複していないか確認
@@ -235,6 +235,7 @@ export async function PUT(
         title,
         slug,
         summary: summary || '',
+        description: description || '', // 追加: descriptionフィールド
         content,
         category,
         published,

@@ -17,6 +17,7 @@ export default function EditArticlePage({
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
+  const [description, setDescription] = useState(""); // 追加: 説明文フィールド
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(false);
@@ -33,6 +34,7 @@ export default function EditArticlePage({
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [autoUpdateSummary, setAutoUpdateSummary] = useState(true); // 追加: 要約自動更新の制御
 
   // AbortControllerを使用せずに通常のfetchを使用する
   const isMountedRef = useRef(true);
@@ -44,6 +46,70 @@ export default function EditArticlePage({
   const returnCategory = searchParams.get("category") || "";
   const returnSearch = searchParams.get("search") || "";
   const returnPage = searchParams.get("page") || "1";
+
+  // マークダウン記法を削除する関数
+  const stripMarkdown = (text: string) => {
+    if (!text) return "";
+
+    // 見出し記号(#)の削除
+    let result = text.replace(/^#+\s+/gm, "");
+
+    // 強調(**と__)の削除
+    result = result.replace(/(\*\*|__)(.*?)\1/g, "$2");
+
+    // 斜体(*と_)の削除
+    result = result.replace(/(\*|_)(.*?)\1/g, "$2");
+
+    // コードブロック(```)と行内コード(`)の削除
+    result = result.replace(/```[\s\S]*?```/g, ""); // コードブロック
+    result = result.replace(/`([^`]+)`/g, "$1"); // 行内コード
+
+    // リンク記法([text](url))の削除 - テキスト部分のみを残す
+    result = result.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
+
+    // 画像記法(![alt](src))の削除
+    result = result.replace(/!\[([^\]]*)\]\([^\)]+\)/g, "");
+
+    // リスト記号(-, *, +)の削除
+    result = result.replace(/^[\-\*\+]\s+/gm, "");
+
+    // 番号付きリストの削除
+    result = result.replace(/^\d+\.\s+/gm, "");
+
+    // 水平線(---, ***, ___)の削除
+    result = result.replace(/^([\-\*\_]){3,}$/gm, "");
+
+    // 引用(>)の削除
+    result = result.replace(/^\>\s+/gm, "");
+
+    // 表記法の削除
+    result = result.replace(/\|.*\|/g, "");
+
+    // 余分な空白行の削除
+    result = result.replace(/\n\s*\n/g, "\n");
+
+    // 最初の数文字（最大150文字程度）を抽出
+    let truncated = result.trim().substring(0, 150);
+
+    // 文章が途中で切れないように調整（最後のピリオドまで）
+    const lastPeriod = truncated.lastIndexOf("。");
+    if (lastPeriod > 0 && lastPeriod < 140) {
+      truncated = truncated.substring(0, lastPeriod + 1);
+    }
+
+    return truncated;
+  };
+
+  // コンテンツの変更ハンドラー - マークダウンから自動要約を生成
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+
+    // 自動要約機能がオンの場合、マークダウンを削除して要約欄を更新
+    if (autoUpdateSummary) {
+      setSummary(stripMarkdown(newContent));
+    }
+  };
 
   // マウント状態の管理
   useEffect(() => {
@@ -103,6 +169,7 @@ export default function EditArticlePage({
           setTitle(localData.title);
           setSlug(localData.slug);
           setSummary(localData.summary || "");
+          setDescription(localData.description || ""); // 追加: descriptionの復元
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
@@ -135,6 +202,7 @@ export default function EditArticlePage({
         setTitle(article.title);
         setSlug(article.slug);
         setSummary(article.summary || "");
+        setDescription(article.description || ""); // 追加: descriptionをセット
         setContent(article.content);
         setCategory(article.category);
         setPublished(article.published);
@@ -154,6 +222,7 @@ export default function EditArticlePage({
           title: article.title,
           slug: article.slug,
           summary: article.summary || "",
+          description: article.description || "", // 追加: descriptionをキャッシュ
           content: article.content,
           category: article.category,
           published: article.published,
@@ -172,6 +241,7 @@ export default function EditArticlePage({
           setTitle(localData.title);
           setSlug(localData.slug);
           setSummary(localData.summary || "");
+          setDescription(localData.description || ""); // 追加: descriptionの復元
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
@@ -402,6 +472,7 @@ export default function EditArticlePage({
         title: string;
         slug: string;
         summary: string;
+        description: string; // 追加: descriptionフィールド
         content: string;
         category: string;
         published: boolean;
@@ -416,6 +487,7 @@ export default function EditArticlePage({
         title,
         slug,
         summary,
+        description, // 追加: descriptionを送信データに含める
         content,
         category,
         published,
@@ -620,33 +692,73 @@ export default function EditArticlePage({
             />
           </div>
 
+          {/* 追加: 説明文フィールド - SEO・SNS用 */}
           <div className="space-y-2">
-            <label htmlFor="summary" className="text-sm font-medium">
-              要約
+            <label htmlFor="description" className="text-sm font-medium">
+              説明文
             </label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="記事の説明文..."
+              className="h-20"
+              disabled={saving}
+            />
+            <p className="text-xs text-gray-500">
+              検索結果やSNSでの表示に使用されます。マークダウン記法なし、150文字以内推奨。
+            </p>
+          </div>
+
+          {/* 要約フィールド - 自動生成オプション付き */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label htmlFor="summary" className="text-sm font-medium">
+                要約
+              </label>
+              <div className="flex items-center">
+                <input
+                  id="autoUpdateSummary"
+                  type="checkbox"
+                  checked={autoUpdateSummary}
+                  onChange={(e) => setAutoUpdateSummary(e.target.checked)}
+                  className="rounded border-gray-300 mr-1"
+                  disabled={saving}
+                />
+                <label
+                  htmlFor="autoUpdateSummary"
+                  className="text-xs text-gray-500"
+                >
+                  本文から自動生成
+                </label>
+              </div>
+            </div>
             <Textarea
               id="summary"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="記事の要約..."
               className="h-20"
-              disabled={saving}
+              disabled={saving || autoUpdateSummary}
             />
           </div>
 
           <div className="space-y-2">
             <label htmlFor="content" className="text-sm font-medium">
-              本文*
+              本文* (マークダウン記法対応)
             </label>
             <Textarea
               id="content"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={handleContentChange}
               placeholder="記事の本文..."
-              className="h-40"
+              className="h-40 font-mono"
               required
               disabled={saving}
             />
+            <p className="text-xs text-gray-500">
+              マークダウン記法を使って記事本文を書くことができます。
+            </p>
           </div>
 
           <div className="space-y-2">
