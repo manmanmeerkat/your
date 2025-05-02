@@ -8,7 +8,7 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "postbuild": "next-sitemap"
+    "postbuild": "next-sitemap && node scripts/generate-article-sitemap.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
