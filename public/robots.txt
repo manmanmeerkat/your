@@ -1,10 +1,8 @@
-# *
 User-agent: *
+Disallow: /api/
+Disallow: /admin/
 Allow: /
-Sitemap: https://your-usrb.vercel.app/sitemap.xml
 
-# Host
-Host: https://your-usrb.vercel.app
-
-# Sitemaps
-Sitemap: https://your-usrb.vercel.app/sitemap.xml
+Sitemap: https://www.yoursecretjapan.com/sitemap.xml
+Sitemap: https://www.yoursecretjapan.com/sitemap-articles.xml
+Host: www.yoursecretjapan.com
