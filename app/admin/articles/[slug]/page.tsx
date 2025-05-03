@@ -472,7 +472,7 @@ export default function EditArticlePage({
         title: string;
         slug: string;
         summary: string;
-        description: string; // 追加: descriptionフィールド
+        description: string;
         content: string;
         category: string;
         published: boolean;
@@ -487,11 +487,11 @@ export default function EditArticlePage({
         title,
         slug,
         summary,
-        description, // 追加: descriptionを送信データに含める
+        description,
         content,
         category,
         published,
-        updateImages: true, // 画像の更新フラグを追加
+        updateImages: true,
       };
 
       // 画像の更新処理
@@ -508,7 +508,7 @@ export default function EditArticlePage({
         // 既存の画像を維持する場合
         updateData.images = [
           {
-            id: image.id, // 既存の画像IDを保持
+            id: image.id,
             url: image.url,
             altText: altText,
             isFeatured: true,
@@ -550,6 +550,9 @@ export default function EditArticlePage({
 
       const data = await response.json();
       console.log("Update successful:", data);
+
+      // ★ 追加: 保存成功後にローカルストレージをクリア
+      localStorage.removeItem(`article_draft_${params.slug}`);
 
       // 保存成功フラグをセット
       setSaveSuccess(true);
