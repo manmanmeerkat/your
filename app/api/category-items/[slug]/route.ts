@@ -25,6 +25,11 @@ export async function GET(
       { error: 'カテゴリ項目の取得に失敗しました' },
       { status: 500 }
     );
+  } finally {
+    // 開発環境では接続を明示的に切断
+    if (process.env.NODE_ENV === 'development') {
+      await prisma.$disconnect();
+    }
   }
 }
 
@@ -45,6 +50,8 @@ export async function PUT(
       imageAltText 
     } = body;
 
+    console.log('リクエストボディ:', body);
+
     // カテゴリ項目を更新
     const categoryItem = await prisma.categoryItem.update({
       where: { slug: params.slug },
@@ -59,8 +66,17 @@ export async function PUT(
       include: { images: true }
     });
 
-    // 画像の更新
-    if (imageUrl) {
+    // 画像の処理 (明示的なnullでない限り、画像情報を保持)
+    // imageUrlがnull（明示的に画像を削除する場合）の場合は既存の画像を削除
+    if (imageUrl === null) {
+      // 画像を削除
+      await prisma.categoryItemImage.deleteMany({
+        where: { categoryItemId: categoryItem.id }
+      });
+      console.log('画像を削除しました');
+    } 
+    // imageUrlが存在する場合は画像を更新
+    else if (imageUrl) {
       // 既存の画像を削除
       await prisma.categoryItemImage.deleteMany({
         where: { categoryItemId: categoryItem.id }
@@ -71,10 +87,15 @@ export async function PUT(
         data: {
           categoryItemId: categoryItem.id,
           url: imageUrl,
-          altText: imageAltText,
+          altText: imageAltText || '',
           isFeatured: true
         }
       });
+      console.log('画像を更新しました:', imageUrl);
+    } 
+    // imageUrlがundefinedの場合は画像を変更しない
+    else {
+      console.log('画像の変更はありません');
     }
 
     // 更新後のデータを取得
@@ -90,5 +111,10 @@ export async function PUT(
       { error: 'カテゴリ項目の更新に失敗しました' },
       { status: 500 }
     );
+  } finally {
+    // 開発環境では接続を明示的に切断
+    if (process.env.NODE_ENV === 'development') {
+      await prisma.$disconnect();
+    }
   }
 }

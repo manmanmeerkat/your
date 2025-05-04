@@ -197,8 +197,8 @@ export default function EditCategoryItemPage({
         content,
         category,
         published,
-        imageUrl: imageData?.url || (file ? undefined : currentImageUrl),
-        imageAltText: imageData?.altText || altText,
+        imageUrl: imageData ? imageData.url : file ? null : currentImageUrl,
+        imageAltText: imageData ? imageData.altText : altText,
       };
 
       console.log(
