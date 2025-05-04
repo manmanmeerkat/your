@@ -57,7 +57,7 @@ export default function Home() {
         </div>
         <div className="relative z-10 container mx-auto px-4 py-40">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-            Explore Japan's hidden charms
+            Explore Japan&apos;s hidden charms
           </h1>
           <p className="text-xl mb-8 drop-shadow-md">
             Ancient myths, seasonal festivals, and rich traditional culture.

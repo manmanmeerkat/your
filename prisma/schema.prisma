@@ -8,6 +8,36 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// カテゴリ項目専用テーブル（Articleテーブルと同じ構造）
+model CategoryItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(255)
+  slug        String   @unique @db.VarChar(255)
+  summary     String?
+  description String?
+  content     String
+  category    String   @db.VarChar(100)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  images      CategoryItemImage[]
+  
+  @@map("category_items")
+}
+
+// CategoryItem専用のImage関連テーブル（Articleとの区別のため）
+model CategoryItemImage {
+  id              String       @id @default(uuid()) @db.Uuid
+  categoryItemId  String       @map("category_item_id") @db.Uuid
+  url             String
+  altText         String?      @map("alt_text") @db.VarChar(255)
+  isFeatured      Boolean      @default(false) @map("is_featured")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  categoryItem    CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+  
+  @@map("category_item_images")
+}
+
 model Article {
   id          String   @id @default(uuid()) @db.Uuid
   title       String   @db.VarChar(255)

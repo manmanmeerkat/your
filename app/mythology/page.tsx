@@ -6,10 +6,12 @@ import { JAPANESE_GODS } from "@/constants/constants";
 import RedBubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import PaginationWrapper from "@/components/pagination-wrapper";
+import GodsGallery from "@/components/gods/GodsGallery";
+
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
 
-// 記事取得関数を修正
+// 記事取得関数
 async function getMythologyArticles(page = 1): Promise<{
   articles: articleType[];
   pagination: {
@@ -85,9 +87,38 @@ export default async function MythologyPage({
   // 総ページ数
   const totalPages = pagination.pageCount;
 
+  // 神々データをデータベースから取得
+  let godsSlugMap: Record<string, string> = {};
+  try {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : "https://yourwebsite.com");
+
+    const godsData = await fetch(
+      `${baseUrl}/api/category-items?category=about-japanese-gods`,
+      {
+        cache: "no-cache",
+      }
+    );
+    if (godsData.ok) {
+      const gods = await godsData.json();
+      godsSlugMap = gods.reduce(
+        (acc: Record<string, string>, god: { title: string; slug: string }) => {
+          acc[god.title] = god.slug;
+          return acc;
+        },
+        {}
+      );
+    }
+  } catch (error) {
+    console.error("Failed to fetch gods data:", error);
+  }
+
   return (
     <div>
-      {/* ヘッダー (変更なし) */}
+      {/* ヘッダー */}
       <section className="relative bg-slate-900 text-white">
         <div className="absolute inset-0 z-0 opacity-40">
           <Image
@@ -147,30 +178,13 @@ export default async function MythologyPage({
 
       <WhiteLine />
 
-      {/* その他のセクションは変更なし */}
       {/* 神々ギャラリー */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
             About Japanese Gods
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
-            {JAPANESE_GODS.map((god, index) => (
-              <div key={index}>
-                <div className="w-32 h-32 mx-auto bg-slate-200 rounded-full relative overflow-hidden">
-                  <Image
-                    src={god.img}
-                    alt={god.name}
-                    fill
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-                <p className="mt-2 font-medium text-sm sm:text-base text-white">
-                  {god.name}
-                </p>
-              </div>
-            ))}
-          </div>
+          <GodsGallery gods={JAPANESE_GODS} slugMap={godsSlugMap} />
         </div>
       </section>
 

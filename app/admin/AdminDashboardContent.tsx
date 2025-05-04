@@ -366,6 +366,9 @@ export default function AdminDashboardContent() {
           <Link href="/admin/messages">
             <Button variant="outline">お問い合わせ一覧</Button>
           </Link>
+          <Link href="/admin/category-item">
+            <Button variant="outline">カテゴリ項目管理</Button>
+          </Link>
           <Link href="/admin/articles/new">
             <Button>新規記事作成</Button>
           </Link>
