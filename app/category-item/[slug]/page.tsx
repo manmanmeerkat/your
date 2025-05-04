@@ -4,6 +4,10 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { processMarkdown } from "@/lib/markdown";
+import { Button } from "@/components/ui/button";
+import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import { CATEGORY_CONFIG } from "@/constants/constants";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 interface CategoryItemDetailProps {
   params: {
@@ -26,63 +30,34 @@ export default async function CategoryItemDetailPage({
   // MarkdownをHTMLに変換
   const contentHtml = item.content ? processMarkdown(item.content) : "";
 
-  // カテゴリに対応する戻り先パスの設定
-  const returnPaths: Record<string, string> = {
-    "about-japanese-gods": "/mythology",
-    "japanese-culture-category": "/culture",
-    "seasonal-festivals": "/festivals",
-    "japanese-way-of-life": "/customs",
-  };
-
-  const returnPath = returnPaths[item.category] || "/";
+  const sectionId = item.category; 
+  const returnPath = CATEGORY_CONFIG[item.category]?.path || "/";
+  const label = CATEGORY_CONFIG[item.category]?.label || "Category";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* ヘッダー・ナビゲーション */}
-      <div className="py-6 border-b border-slate-800">
-        <div className="container mx-auto px-4">
-          <Link
-            href={returnPath}
-            className="inline-flex items-center text-slate-400 hover:text-white transition-colors"
-          >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
-            </svg>
-            Back
-          </Link>
+    <>
+      {/* ヒーロー画像 */}
+      {item.images && item.images[0] && (
+        <div className="w-full bg-slate-950 overflow-hidden pt-8">
+          <div className="relative w-full max-w-[400px] mx-auto">
+            <Image
+              src={item.images[0].url}
+              alt={item.images[0].altText || item.title}
+              width={400}
+              height={400}
+              className="w-full h-auto object-contain rounded-[5px]"
+              priority
+            />
+          </div>
         </div>
-      </div>
+      )}
+      <WhiteLine />
 
       {/* メインコンテンツ */}
       <article className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* 画像 */}
-          {item.images && item.images[0] && (
-            <div className="mb-6 flex justify-center">
-              <div className="relative w-[300px] h-[200px] rounded-lg overflow-hidden">
-                <Image
-                  src={item.images[0].url}
-                  alt={item.images[0].altText || item.title}
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </div>
-          )}
-
           {/* タイトル */}
-          <h1 className="text-4xl md:text-5xl font-bold mb-8">{item.title}</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{item.title}</h1>
 
           {/* Markdownコンテンツ */}
           {contentHtml && (
@@ -93,7 +68,33 @@ export default async function CategoryItemDetailPage({
           )}
         </div>
       </article>
-    </div>
+
+      {/* ナビゲーションボタン */}
+      <div className="flex flex-col justify-center items-center mt-8 gap-8">
+        <Link href={`${returnPath}#${sectionId}`}>
+          <Button 
+            size="lg"
+            className="
+              w-[320px] 
+              border border-rose-700 bg-rose-700 text-white 
+              hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+              shadow hover:shadow-lg
+              whitespace-nowrap
+              w-auto
+              px-6
+              ">
+            Back to {label} ≫
+          </Button>
+        </Link>
+        <BackToHomeBtn/>
+        {/* <Link href="/all-articles">
+          <Button className="w-[220px] border border-rose-700 bg-rose-700 text-white hover:bg-white hover:text-rose-700">
+            View all posts ≫
+          </Button>
+        </Link> */}
+      </div>
+      <WhiteLine />
+    </>
   );
 }
 
