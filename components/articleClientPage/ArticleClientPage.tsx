@@ -97,12 +97,32 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
       <div className="flex flex-col justify-center items-center mt-8 gap-8">
         <Link href={`/${article.category}`}>
-          <Button className="w-[320px] border border-rose-700 bg-rose-700 text-white hover:bg-white hover:text-rose-700">
+          <Button 
+            size="lg"
+            className="
+              w-[320px] 
+              border border-rose-700 bg-rose-700 text-white 
+              hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+              shadow hover:shadow-lg
+              whitespace-nowrap
+              w-auto
+              px-6
+              ">
             Back to {CATEGORY_LABELS[article.category]} Posts ≫
           </Button>
         </Link>
         <Link href="/all-articles">
-          <Button className="w-[220px] border border-rose-700 bg-rose-700 text-white hover:bg-white hover:text-rose-700">
+          <Button 
+            size="lg"
+            className="
+              w-[220px] 
+              border border-rose-700 bg-rose-700 text-white 
+              hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+              shadow hover:shadow-lg
+              whitespace-nowrap
+              w-auto
+              px-6
+              ">
             View all posts ≫
           </Button>
         </Link>

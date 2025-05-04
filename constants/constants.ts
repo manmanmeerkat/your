@@ -225,3 +225,10 @@ export const CATEGORIES: categoriesType[] = [
   { id: "customs", name: "Customs" },
   { id: "festivals", name: "Festivals" },
 ];
+
+export const CATEGORY_CONFIG: Record<string, { path: string; label: string }> = {
+  "about-japanese-gods": { path: "/mythology", label: "About Japanese Gods" },
+  "japanese-culture-category": { path: "/culture", label: "Japanese Culture Category" },
+  "seasonal-festivals": { path: "/festivals", label: "Seasonal Festivals" },
+  "japanese-way-of-life": { path: "/customs", label: "Japanese Way of Life" },
+};

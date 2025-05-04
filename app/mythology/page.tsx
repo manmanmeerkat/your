@@ -179,7 +179,7 @@ export default async function MythologyPage({
       <WhiteLine />
 
       {/* 神々ギャラリー */}
-      <section className="py-16 bg-slate-950">
+      <section className="py-16 bg-slate-950" id="about-japanese-gods">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
             About Japanese Gods

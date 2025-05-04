@@ -6,8 +6,8 @@ export const BackToHomeBtn = () => {
     <div className="max-w-xs sm:max-w-md mx-auto px-4 text-center">
         <Link href="/">
             <Button
-                size="lg"
-                className="
+              size="lg"
+              className="
                 font-normal
                 border border-rose-700 bg-rose-700 text-white
                 hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
@@ -15,9 +15,9 @@ export const BackToHomeBtn = () => {
                 whitespace-nowrap
                 w-auto
                 px-6
-                "
+              "
             >
-                Back to Home ≫
+              Back to Home ≫
             </Button>
         </Link>
     </div>
