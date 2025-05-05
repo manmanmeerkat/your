@@ -70,19 +70,19 @@ export default async function CategoryItemDetailPage({
       </article>
 
       {/* ナビゲーションボタン */}
-      <div className="flex flex-col justify-center items-center mt-8 gap-8">
+      <div className="flex flex-col justify-center items-center mt-8 gap-8 px-4">
         <Link href={`${returnPath}#${sectionId}`}>
-          <Button 
+          <Button
             size="lg"
             className="
-              w-[320px] 
-              border border-rose-700 bg-rose-700 text-white 
-              hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-              shadow hover:shadow-lg
-              whitespace-nowrap
-              w-auto
-              px-6
-              ">
+            font-normal
+            border border-rose-700 bg-rose-700 text-white
+            hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+            shadow hover:shadow-lg
+            whitespace-normal sm:whitespace-nowrap
+            w-full
+            "
+          >
             Back to {label} ≫
           </Button>
         </Link>
