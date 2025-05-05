@@ -109,6 +109,10 @@ export const JAPANESE_GODS: categoryImgType[] = [
       name: "Ninigi no Mikoto",
       img: "/images/gods/ninigi.png",
     },
+    {
+      name: "Kagutsuchi no Mikoto",
+      img: "/images/gods/kagutsuchi.png",
+    },
   ];
   
   export const CULTURE_CATEGORIES: categoryImgType[] = [
