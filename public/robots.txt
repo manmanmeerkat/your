@@ -1,8 +1,9 @@
+# *
 User-agent: *
-Disallow: /api/
-Disallow: /admin/
 Allow: /
 
+# Host
+Host: https://www.yoursecretjapan.com
+
+# Sitemaps
 Sitemap: https://www.yoursecretjapan.com/sitemap.xml
-Sitemap: https://www.yoursecretjapan.com/sitemap-articles.xml
-Host: www.yoursecretjapan.com

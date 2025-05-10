@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ArticleClientPage from "../../../components/articleClientPage/ArticleClientPage"
+import Script from "next/script";
 
 type Props = {
   params: { slug: string };
@@ -60,5 +61,39 @@ export default async function Page({ params }: Props) {
 
   if (!article) return notFound();
 
-  return <ArticleClientPage article={article} />;
+  const featuredImage =
+    article.images.find((img) => img.isFeatured)?.url || "/ogp-image.png";
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": article.title,
+    "description": article.summary || "",
+    "image": `https://www.yoursecretjapan.com${featuredImage}`,
+    "author": {
+      "@type": "Person",
+      "name": "Your Secret Japan"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Your Secret Japan",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.yoursecretjapan.com/logo.png"
+      }
+    },
+    "datePublished": article.createdAt.toISOString(),
+    "dateModified": article.updatedAt.toISOString()
+  };
+
+  return (
+    <>
+      <Script
+        id="json-ld-article"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ArticleClientPage article={article} />
+    </>
+  );
 }

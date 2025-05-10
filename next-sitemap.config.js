@@ -1,7 +1,8 @@
-import { prisma } from './lib/prisma.ts';
+/* eslint-disable @typescript-eslint/no-require-imports */
+const { prisma } = require('./lib/prisma');
 
 /** @type {import('next-sitemap').IConfig} */
-const sitemapConfig = {
+const config = {
   siteUrl: 'https://www.yoursecretjapan.com',
   generateRobotsTxt: true,
   exclude: ['/admin/**', '/api/**', '/drafts/**'],
@@ -35,4 +36,4 @@ const sitemapConfig = {
   },
 };
 
-export default sitemapConfig;
+module.exports = config;

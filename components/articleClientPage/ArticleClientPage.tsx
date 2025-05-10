@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import Image from "next/image";
+import Head from "next/head";
 
 type Image = {
     id: string;
@@ -57,77 +58,108 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
   const featuredImage = article.images.find((img) => img.isFeatured)?.url ?? "/fallback.jpg";
 
+    const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": article.title,
+    "description": article.summary || "",
+    "image": `https://www.yoursecretjapan.com${featuredImage}`,
+    "author": {
+      "@type": "Person",
+      "name": "Your Secret Japan"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Your Secret Japan",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.yoursecretjapan.com/logo.png"
+      }
+    },
+    "datePublished": article.createdAt.toISOString(),
+    "dateModified": article.updatedAt.toISOString()
+  };
+
   return (
-    <div className="bg-slate-950 min-h-screen">
-      {/* Hero image */}
-      {article.images?.some((img) => img.isFeatured) && (
-        <div className="w-full bg-slate-950 overflow-hidden pt-8">
-          <div className="relative max-h-[400px] w-full flex justify-center">
-            <Image
-                src={featuredImage}
-                alt={article.title}
-                className="h-auto max-h-[400px] object-contain rounded-[5px]"
-                width={400}
-                height={400}
-            />
-          </div>
-          <WhiteLine />
-        </div>
-      )}
+    <>
+      <Head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </Head>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <header className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{article.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span className="bg-blue-50 text-slate-950 px-3 py-1 rounded-full">
-                {CATEGORY_LABELS[article.category]}
-              </span>
+      <div className="bg-slate-950 min-h-screen">
+        {/* Hero image */}
+        {article.images?.some((img) => img.isFeatured) && (
+          <div className="w-full bg-slate-950 overflow-hidden pt-8">
+            <div className="relative max-h-[400px] w-full flex justify-center">
+              <Image
+                  src={featuredImage}
+                  alt={article.title}
+                  className="h-auto max-h-[400px] object-contain rounded-[5px]"
+                  width={400}
+                  height={400}
+              />
             </div>
-          </header>
+            <WhiteLine />
+          </div>
+        )}
 
-          <div
-            className="prose prose-lg prose-invert max-w-none mb-12 text-white text-justify"
-            dangerouslySetInnerHTML={{
-                __html: isMarkdown ? renderMarkdown(article.content) : article.content,
-            }}
-            />
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <header className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{article.title}</h1>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <span className="bg-blue-50 text-slate-950 px-3 py-1 rounded-full">
+                  {CATEGORY_LABELS[article.category]}
+                </span>
+              </div>
+            </header>
+
+            <div
+              className="prose prose-lg prose-invert max-w-none mb-12 text-white text-justify"
+              dangerouslySetInnerHTML={{
+                  __html: isMarkdown ? renderMarkdown(article.content) : article.content,
+              }}
+              />
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col justify-center items-center mt-8 gap-8">
-        <Link href={`/${article.category}`}>
-          <Button 
-            size="lg"
-            className="
-              w-[320px] 
-              border border-rose-700 bg-rose-700 text-white 
-              hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-              shadow hover:shadow-lg
-              whitespace-nowrap
-              w-auto
-              px-6
-              ">
-            Back to {CATEGORY_LABELS[article.category]} Posts ≫
-          </Button>
-        </Link>
-        <Link href="/all-articles">
-          <Button 
-            size="lg"
-            className="
-              w-[220px] 
-              border border-rose-700 bg-rose-700 text-white 
-              hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-              shadow hover:shadow-lg
-              whitespace-nowrap
-              w-auto
-              px-6
-              ">
-            View all posts ≫
-          </Button>
-        </Link>
+        <div className="flex flex-col justify-center items-center mt-8 gap-8">
+          <Link href={`/${article.category}`}>
+            <Button 
+              size="lg"
+              className="
+                w-[320px] 
+                border border-rose-700 bg-rose-700 text-white 
+                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                shadow hover:shadow-lg
+                whitespace-nowrap
+                w-auto
+                px-6
+                ">
+              Back to {CATEGORY_LABELS[article.category]} Posts ≫
+            </Button>
+          </Link>
+          <Link href="/all-articles">
+            <Button 
+              size="lg"
+              className="
+                w-[220px] 
+                border border-rose-700 bg-rose-700 text-white 
+                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                shadow hover:shadow-lg
+                whitespace-nowrap
+                w-auto
+                px-6
+                ">
+              View all posts ≫
+            </Button>
+          </Link>
+        </div>
+        <WhiteLine />
       </div>
-      <WhiteLine />
-    </div>
+    </>
   );
 }
