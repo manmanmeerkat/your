@@ -1,5 +1,19 @@
 // components/loaders/ArticlesLoader.tsx
-export default function ArticlesLoader() {
+type ArticlesLoaderProps = {
+  fullPage?: boolean;
+};
+
+export default function ArticlesLoader({
+  fullPage = false,
+}: ArticlesLoaderProps) {
+  if (fullPage) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh] bg-slate-950">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <h2 className="text-3xl font-bold mb-12 text-white">Latest Posts</h2>
