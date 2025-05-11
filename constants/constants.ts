@@ -7,6 +7,7 @@ import type { threeFestivalsType } from "@/types/types";
 import type { wayOfLifeType } from "@/types/types";
 import type { SNSLinkType } from "@/types/types";
 import type { categoriesType } from "@/types/types";
+import type { godType } from "@/types/types";
 
 export const NAVI_LINKS: linksType[] = [
     { href: '/mythology', label: 'Mythology' },
@@ -72,46 +73,71 @@ export const CATEGORY_ITEMS: categoryItemType[] = [
   }
 ];
 
-export const JAPANESE_GODS: categoryImgType[] = [
+export const JAPANESE_GODS: godType[] = [
     {
       name: "Izanagi no Mikoto",
       img: "/images/gods/izanagi.png",
+      gender: "male"
     },
     {
       name: "Izanami no Mikoto",
       img: "/images/gods/izanami.png",
+      gender: "female"
     },
     {
       name: "Susanoo no Mikoto",
       img: "/images/gods/susanoo.png",
+      gender: "male"
     },
     {
       name: "Amaterasu Oomikami",
       img: "/images/gods/amaterasu.png",
+      gender: "female"
     },
     {
       name: "Tsukuyomi no Mikoto",
       img: "/images/gods/tsukuyomi.png",
+      gender: "male"
     },
     {
-      name: "Okuninushi no Mikoto",
+      name: "Ōkuninushi no Mikoto",
       img: "/images/gods/okuninushi.png",
+      gender: "male"
     },
     {
       name: "Iwanaga-hime",
       img: "/images/gods/iwanaga.png",
+      gender: "female"
     },
     {
       name: "Konohanasakuya-hime",
       img: "/images/gods/konohana.png",
+      gender: "female"
     },
     {
       name: "Ninigi no Mikoto",
       img: "/images/gods/ninigi.png",
+      gender: "male"
     },
     {
       name: "Kagutsuchi no Mikoto",
       img: "/images/gods/kagutsuchi.png",
+      gender: "male"
+    },
+    {
+      name: "Ōyamatsumi no Kami",
+      img: "/images/gods/oyamatsumi.png",
+      gender: "male"
+    },
+    {
+      name: "Takemikazuchi no Kami",
+      img: "/images/gods/takemikazuchi.png",
+      gender: "male"
+    },
+        {
+      name: "Yagami-hime",
+      img: "/images/gods/yagami.png",
+      gender: "female"
     },
   ];
   
