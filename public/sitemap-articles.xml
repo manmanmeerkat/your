@@ -81,15 +81,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-legend-of-yamata-no-orochi</loc>
-    <lastmod>2025-05-04T05:40:34.551Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-legend-of-amano-iwato</loc>
-    <lastmod>2025-05-04T05:19:46.626Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/amano-iwato-legend</loc>
+    <lastmod>2025-05-11T05:35:22.859Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -111,6 +104,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/onigiri</loc>
     <lastmod>2025-05-02T02:38:40.769Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/susanoo-and-the-eight-headed-serpent</loc>
+    <lastmod>2025-05-11T05:53:33.279Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -186,13 +186,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/izanagi's-misogi</loc>
-    <lastmod>2025-05-04T06:49:54.964Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/the-three-sacred-deities</loc>
     <lastmod>2025-05-05T08:14:01.742Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -216,6 +209,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/kendo</loc>
     <lastmod>2025-05-07T12:13:06.194Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/izanagi's-purification</loc>
+    <lastmod>2025-05-11T05:28:03.209Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -958,6 +958,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/inari-shrines</loc>
     <lastmod>2025-05-05T07:26:55.841Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/yaso-kami</loc>
+    <lastmod>2025-05-10T11:33:56.124Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
