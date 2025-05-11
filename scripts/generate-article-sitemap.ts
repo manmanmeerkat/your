@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { writeFileSync } = require('fs');
-const path = require('path');
-const { prisma } = require('../lib/prisma'); // ← これは .js に変換しておく必要あり
+import { writeFileSync } from 'fs';
+import path from 'path';
+import { prisma } from '../lib/prisma';
+import { Article } from '@prisma/client'; // ← Prismaの型をインポート
 
 const domain = 'https://www.yoursecretjapan.com';
 
 (async () => {
-  const articles = await prisma.article.findMany({
+  const articles: Pick<Article, 'slug' | 'updatedAt'>[] = await prisma.article.findMany({
     select: { slug: true, updatedAt: true },
     where: { published: true },
   });

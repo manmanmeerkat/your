@@ -4,7 +4,21 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 
+declare global {
+  interface Window {
+    RBExternalPortfolio?: new (
+      domain: string,
+      username: string,
+      numberOfItems: number,
+      columns: number
+    ) => {
+      renderIframe: () => void;
+    };
+  }
+}
+
 export default function Redbubble() {
+
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://www.redbubble.com/assets/external_portfolio.js";
@@ -19,14 +33,14 @@ export default function Redbubble() {
       setTimeout(() => {
         if (
           typeof window !== "undefined" &&
-          (window as any).RBExternalPortfolio &&
+          window.RBExternalPortfolio &&
           document.getElementById("rb-xzfcxvzx")
         ) {
           try {
-            new (window as any).RBExternalPortfolio(
+            new window.RBExternalPortfolio(
               "www.redbubble.com",
               "manmanmeerkat",
-              2, // 表示アイテム数（お好みで）
+              2,
               columns
             ).renderIframe();
           } catch (err) {
@@ -71,19 +85,19 @@ export default function Redbubble() {
                 href="https://www.redbubble.com/people/manmanmeerkat/shop?asc=u"
                 passHref
                 >
-                <Button
-                    size="lg"
-                    className="
-                    font-normal
-                    border border-rose-700 bg-rose-700 text-white
-                    hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-                    shadow hover:shadow-lg
-                    whitespace-normal sm:whitespace-nowrap
-                    w-full
-                    "
-                >
-                    Explore the full collection on Redbubble ≫
-                </Button>
+                  <Button
+                      size="lg"
+                      className="
+                      font-normal
+                      border border-rose-700 bg-rose-700 text-white
+                      hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                      shadow hover:shadow-lg
+                      whitespace-normal sm:whitespace-nowrap
+                      w-full
+                      "
+                  >
+                      Explore the full collection on Redbubble ≫
+                  </Button>
                 </Link>
             </div>
         </div>
