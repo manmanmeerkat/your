@@ -1,149 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import Slider from "../components/top/slider/Slider";
-import ArticleCard from "../components/articleCard/articleCard";
-import CategoryCard from "../components/top/categoryCard/categoryCard";
+import { useCallback, useEffect, useState } from "react";
 import { articleType } from "@/types/types";
 import { CATEGORY_ITEMS } from "@/constants/constants";
-import Redbubble from "@/components/redBubble/RedBubble";
+import HeroSection from "@/components/top/heroSection/HeroSection";
+import CategoriesSection from "@/components/top/categoriesSection/CategoriesSection";
+import LatestArticlesSection from "@/components/top/latestArticlesSection/LatestArticlesSection";
+import ArticlesLoader from "@/components/loaders/ArticlesLoader";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import Redbubble from "@/components/redBubble/RedBubble";
 import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
 
+// クライアントコンポーネント版の記事読み込み
 export default function Home() {
   const [articles, setArticles] = useState<articleType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchArticles = useCallback(async () => {
+    try {
+      setIsLoading(true);
+
+      // 相対URLを使用
+      console.log("記事API呼び出し開始...");
+      const response = await fetch("/api/articles?published=true&pageSize=6", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          // キャッシュ関連のヘッダー
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`APIエラー: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log("API応答:", data);
+
+      if (!data || !data.articles || !Array.isArray(data.articles)) {
+        console.error("不正なAPIレスポンス:", data);
+        throw new Error("APIレスポンスの形式が不正です");
+      }
+
+      console.log(`取得した記事数: ${data.articles.length}`);
+
+      setArticles(data.articles);
+      setError(null);
+    } catch (err) {
+      console.error("記事取得エラー:", err);
+      setError(err instanceof Error ? err.message : String(err));
+      setArticles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        // 相対パスを使用
-        const res = await fetch("/api/articles?published=true", {
-          cache: "no-cache",
-        });
-
-        if (!res.ok) {
-          console.error(`Error status: ${res.status}`);
-          throw new Error("Failed to fetch articles");
-        }
-
-        const data = await res.json();
-        const sorted = [...(data.articles || [])]
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-          .slice(0, 6);
-
-        setArticles(sorted);
-      } catch (e) {
-        console.error("記事取得エラー:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    load();
-  }, []);
+    fetchArticles();
+  }, [fetchArticles]);
 
   return (
     <div className="scroll-smooth">
       {/* Hero セクション */}
-      <section className="relative text-white md:px-16">
-        <div className="absolute inset-0 z-0">
-          <Slider />
-        </div>
-        <div className="relative z-10 container mx-auto px-4 py-40">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
-            Explore Japan&apos;s hidden charms
-          </h1>
-          <p className="text-xl mb-8 drop-shadow-md">
-            Ancient myths, seasonal festivals, and rich traditional culture.
-            <br></br>
-            We will introduce you to a side of Japan you may not have known
-            before.
-          </p>
-          <div className="flex gap-4 flex-wrap">
-            <Link href="#categories" scroll={true}>
-              <Button
-                size="lg"
-                className="w-[260px] font-normal
-                          border border-rose-700 bg-rose-700 text-white
-                          hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-                          shadow hover:shadow-lg"
-              >
-                Explore Categories ≫
-              </Button>
-            </Link>
-            <Link href="#latest-articles" scroll={true}>
-              <Button
-                size="lg"
-                variant="outline"
-                className="font-normal w-[220px] text-center
-                          border-white text-white
-                          hover:bg-white hover:text-black hover:font-bold"
-              >
-                Latest Articles ≫
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* カテゴリーセクション */}
-      <section id="categories" className="py-16 bg-slate-950 md:px-16">
-        <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
-            Categories to Explore
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            {CATEGORY_ITEMS.map((item) => (
-              <CategoryCard
-                key={item.href}
-                href={item.href}
-                title={item.title}
-                img={item.img}
-                description={item.description}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
+      <CategoriesSection categories={CATEGORY_ITEMS} />
 
       <WhiteLine />
 
       {/* 最新記事セクション */}
       <section id="latest-articles" className="py-16 md:px-16 bg-slate-950">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-12 text-white">Latest Posts</h2>
-          {loading ? (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900" />
-            </div>
-          ) : articles.length ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((a) => (
-                <ArticleCard key={a.id} article={a} />
-              ))}
-            </div>
+          {isLoading ? (
+            <ArticlesLoader />
           ) : (
-            <p className="text-slate-500 text-white">No posts yet.</p>
+            <>
+              {error && (
+                <div className="text-red-500 mb-4">読み込みエラー: {error}</div>
+              )}
+              <LatestArticlesSection articles={articles} />
+
+              {/* デバッグ用エリア - 本番では削除 */}
+              {error && (
+                <div className="mt-8 text-left">
+                  <details>
+                    <summary className="cursor-pointer text-gray-500">
+                      デバッグ情報を表示
+                    </summary>
+                    <div className="mt-2 p-4 bg-gray-900 text-gray-300 rounded text-sm overflow-auto">
+                      <p>Error: {error}</p>
+                    </div>
+                  </details>
+                </div>
+              )}
+            </>
           )}
-          <div className="mt-20">
-            <Link href="/all-articles">
-              <Button
-                size="lg"
-                className="w-[220px] font-normal
-                          border border-rose-700 bg-rose-700 text-white
-                          hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-                          shadow hover:shadow-lg"
-              >
-                View all posts ≫
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -154,7 +109,6 @@ export default function Home() {
       <WhiteLine />
 
       {/* お問い合わせ */}
-      {/* <GetInTouch/> */}
       <SimpleContact />
 
       <WhiteLine />
