@@ -9,6 +9,7 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import Image from "next/image";
 import Head from "next/head";
+import Redbubble from "../redBubble/RedBubble";
 
 type Image = {
     id: string;
@@ -159,6 +160,8 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           </Link>
         </div>
         <WhiteLine />
+        <Redbubble/>
+        <WhiteLine/>
       </div>
     </>
   );
