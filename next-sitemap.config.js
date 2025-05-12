@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { prisma } = require('./lib/prisma');
+const { prisma } = require('./lib/prisma'); // ← Prisma クライアント取得
 
 /** @type {import('next-sitemap').IConfig} */
 const config = {
@@ -32,8 +32,12 @@ const config = {
       priority: 0.9,
     }));
 
+    //Prismaクライアントを明示的に切断
+    await prisma.$disconnect();
+
     return [...staticPaths, ...articlePaths];
   },
 };
 
 module.exports = config;
+

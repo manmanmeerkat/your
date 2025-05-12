@@ -17,9 +17,9 @@ interface GodsGalleryProps {
 }
 
 const TABS = [
-  { label: "全て", value: "all" },
-  { label: "男神", value: "male" },
-  { label: "女神", value: "female" },
+  { label: "All", value: "all" },
+  { label: "Male", value: "male" },
+  { label: "Female", value: "female" },
 ];
 
 export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
@@ -44,7 +44,7 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
-              ${activeTab === tab.value ? "bg-white text-black" : "bg-slate-700 text-white"}`}
+              ${activeTab === tab.value ? "bg-white !text-black" : "bg-slate-700 text-white"}`}
           >
             {tab.label}
           </Button>
@@ -63,7 +63,7 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
                   key={index}
                   className="w-36 flex flex-col items-center justify-start group"
                 >
-                  <div className="w-24 h-24 bg-slate-200 rounded-full relative overflow-hidden">
+                  <div className="w-32 h-32 bg-slate-200 rounded-full relative overflow-hidden">
                     <Image
                       src={god.img}
                       alt={god.name}
@@ -72,7 +72,7 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
                       className="group-hover:scale-110 transition-transform duration-300"
                     />
                   </div>
-                  <p className="mt-2 text-xs text-white group-hover:underline leading-tight text-center max-w-[8rem] break-words">
+                  <p className="mt-2 text-s text-white group-hover:underline leading-tight text-center">
                     {god.name}
                   </p>
                 </Link>
@@ -89,9 +89,9 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
                   <Link
                     href={`/category-item/${slug}`}
                     key={index}
-                    className="inline-block w-28 flex-shrink-0 text-center group"
+                    className="inline-block flex-shrink-0 text-left group"
                   >
-                    <div className="w-24 h-24 bg-slate-200 rounded-full relative overflow-hidden mx-auto">
+                    <div className="w-32 h-32 bg-slate-200 rounded-full relative overflow-hidden mx-auto">
                       <Image
                         src={god.img}
                         alt={god.name}
@@ -100,7 +100,7 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
                         className="group-hover:scale-110 transition-transform duration-300"
                       />
                     </div>
-                    <p className="mt-1 text-xs text-white group-hover:underline break-words leading-tight">
+                    <p className="mt-1 text-s text-white group-hover:underline leading-tight text-left">
                       {god.name}
                     </p>
                   </Link>
