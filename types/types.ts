@@ -33,6 +33,12 @@ export type categoryImgType = {
     name: string;
     img: string;
 }
+
+export type godType = {
+    name: string;
+    img: string;
+    gender: "male" | "female";
+}
  
 export type seasonFestivalsType = {
     season: string;
