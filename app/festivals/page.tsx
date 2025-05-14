@@ -92,6 +92,7 @@ export default async function FestivalsPage({
             alt="Japanese Festivals"
             fill
             style={{ objectFit: "cover" }}
+            unoptimized
           />
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
@@ -99,7 +100,7 @@ export default async function FestivalsPage({
             Japanese Festivals
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
-            Japan's festivals reflect the beauty of the changing seasons and the
+            Japan&apos;s festivals reflect the beauty of the changing seasons and the
             spirit of each region. We will explore the vibrant world of Japanese
             festivals through traditional celebrations, local customs, and
             cultural events.
@@ -180,7 +181,7 @@ export default async function FestivalsPage({
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-10 text-center text-white">
-            Japan's Three Biggest Festivals
+            Japan&apos;s Three Biggest Festivals
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {THREE_BIG_FESTIVALS.map((festival, idx) => (

@@ -19,6 +19,7 @@ export default function CategoryCard({
             width={350}
             height={194}
             className="rounded-md"
+            unoptimized
           />
         </div>
         <div className="mt-4 text-center md:text-left flex-grow">

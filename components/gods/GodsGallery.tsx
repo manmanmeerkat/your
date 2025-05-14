@@ -70,6 +70,7 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
                       fill
                       style={{ objectFit: "cover" }}
                       className="group-hover:scale-110 transition-transform duration-300"
+                      unoptimized
                     />
                   </div>
                   <p className="mt-2 text-s text-white group-hover:underline leading-tight text-center">

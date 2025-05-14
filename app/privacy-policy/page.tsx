@@ -1,7 +1,3 @@
-"use client";
-
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import Image from "next/image";
 import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
@@ -16,6 +12,7 @@ export default function PrivacyPolicyPage() {
             alt="Japanese Customs"
             fill
             style={{ objectFit: "cover" }}
+            unoptimized
           />
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
@@ -131,7 +128,7 @@ export default function PrivacyPolicyPage() {
             <p className="mb-4 text-gray-300">
               We may update our Privacy Policy from time to time. We will notify
               you of any changes by posting the new Privacy Policy on this page
-              and updating the "last updated" date.
+              and updating the &quot;last updated&quot; date.
             </p>
             <p className="text-gray-300">
               You are advised to review this Privacy Policy periodically for any

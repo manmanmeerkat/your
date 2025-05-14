@@ -101,6 +101,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                   className="h-auto max-h-[400px] object-contain rounded-[5px]"
                   width={400}
                   height={400}
+                  unoptimized
               />
             </div>
             <WhiteLine />

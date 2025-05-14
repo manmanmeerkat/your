@@ -22,6 +22,7 @@ export default function ContactPage() {
           height={400}
           className="absolute inset-0 w-full h-full object-cover z-0"
           style={{ objectPosition: "center" }}
+          unoptimized
         />
         <div className="absolute inset-0 bg-black opacity-60 z-0" />
         <div className="relative z-10 container mx-auto px-4 text-center">

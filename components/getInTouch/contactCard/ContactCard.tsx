@@ -49,6 +49,7 @@ export function ContactCard({
                 width={20}
                 height={20}
                 className="object-contain"
+                unoptimized
               />
               <span className="relative block">
                 {sns.label}
