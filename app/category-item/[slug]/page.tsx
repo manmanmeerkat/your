@@ -46,7 +46,7 @@ export default async function CategoryItemDetailPage({
               width={400}
               height={400}
               className="w-full h-auto object-contain rounded-[5px]"
-              priority
+              unoptimized
             />
           </div>
         </div>

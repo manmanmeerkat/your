@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { SLIDE_IMAGES } from "@/constants/constants";
+import Image from "next/image";
 
 export default function Slider() {
   const [current, setCurrent] = useState(0);
@@ -20,10 +21,13 @@ export default function Slider() {
             i === current ? "opacity-100" : "opacity-0"
           }`}
         >
-          <img
+          <Image
             src={img.img}
             alt={`スライド ${i + 1}`}
             className="absolute w-full h-full object-cover object-center"
+            width={1400}
+            height={1000}
+            unoptimized
           />
           <div className="absolute inset-0 bg-black opacity-40" />
         </div>

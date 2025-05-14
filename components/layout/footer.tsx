@@ -28,6 +28,7 @@ const LinkSection = ({
                 width={20}
                 height={20}
                 className="object-contain"
+                unoptimized
               />
             )}
             <span className="relative block text-slate-300 group-hover:text-white transition-colors">

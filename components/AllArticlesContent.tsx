@@ -68,6 +68,7 @@ export default function AllArticlesContent({
             alt="Japanese Customs"
             fill
             style={{ objectFit: "cover" }}
+            unoptimized
           />
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">

@@ -94,6 +94,7 @@ export default async function CulturePage({
             alt="Japanese Culture"
             fill
             style={{ objectFit: "cover" }}
+            unoptimized
           />
         </div>
         <div className="container mx-auto px-6 py-36 relative z-10 text-center">

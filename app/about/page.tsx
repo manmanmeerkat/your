@@ -20,6 +20,7 @@ export default function AboutPage() {
               width={1024}
               height={280}
               style={{ objectPosition: "center" }}
+              unoptimized
             />
           </div>
           <div className="absolute inset-0 bg-black opacity-60"></div>

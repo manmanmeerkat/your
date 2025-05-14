@@ -34,6 +34,7 @@ export default function ArticleCard({ article }: { article: articleType }) {
               width={300}
               height={230}
               className="w-full h-52 object-contain md:object-cover"
+              unoptimized
             />
           ) : (
             <div className="text-slate-400 h-52 w-full flex items-center justify-center">

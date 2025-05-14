@@ -106,6 +106,7 @@ export default function AllArticlesContent() {
       <section className="relative bg-slate-950 text-white pt-16 pb-16">
         <div className="absolute inset-0 z-0 opacity-30">
           <Image
+            unoptimized
             src="/images/category-top/all-posts.jpg"
             alt="Japanese Customs"
             fill
