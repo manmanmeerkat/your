@@ -27,7 +27,6 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
-  themeColor: "#020617",
   openGraph: {
     title: "Your Secret Japan -Explore Japan's hidden charms-",
     description:
@@ -55,22 +54,54 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+// themeColorをviewportに移動（Next.js 14の新しい方式）
+export const viewport = {
+  themeColor: "#020617",
+};
+
+// データベース接続ウォームアップ関数
+async function warmupDatabase() {
+  if (typeof window === 'undefined') { // サーバーサイドでのみ実行
+    try {
+      console.log('データベース接続のウォームアップを開始...');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/warmup`, {
+        cache: 'no-store',
+        headers: {
+          'x-internal-token': 'warmup-request'
+        }
+      });
+      
+      if (!response.ok) {
+        console.error('データベースウォームアップに失敗:', await response.text());
+      } else {
+        console.log('データベースウォームアップ成功');
+      }
+    } catch (error) {
+      console.error('データベースウォームアップエラー:', error);
+      // エラーは無視して続行
+    }
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // レイアウトコンポーネントがレンダリングされる前にデータベース接続をウォームアップ
+  await warmupDatabase();
+
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
         <Script id="gtm-init" strategy="afterInteractive">
           {`
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-MZDHPBHT');
-      `}
+         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+         j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+         })(window,document,'script','dataLayer','GTM-MZDHPBHT');
+       `}
         </Script>
       </head>
       <body className={inter.className}>
