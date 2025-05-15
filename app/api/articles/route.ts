@@ -1,10 +1,29 @@
 // app/api/articles/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../lib/prisma';
-import { Prisma } from '@prisma/client';
+import { prisma } from '../../../lib/prisma'; // デフォルトインポートに変更
+import { Prisma, Article, Image } from '@prisma/client'; // 型をインポート
+
+// 記事と画像を含む型を定義
+type ArticleWithImages = Article & {
+  images: Image[];
+};
+
+// 接続リセット関数
+async function resetPrismaConnection() {
+  try {
+    await prisma.$disconnect();
+    // 再接続は自動的に行われる
+    console.log('Prisma接続をリセットしました');
+  } catch (error) {
+    console.error('Prisma接続リセットエラー:', error);
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
+    // 接続をリセット
+    await resetPrismaConnection();
+    
     console.log('記事一覧API: リクエスト受信');
     
     // URLからクエリパラメータを取得
@@ -13,7 +32,7 @@ export async function GET(request: NextRequest) {
     
     const publishedParam = searchParams.get('published');
     const categoryParam = searchParams.get('category');
-    const searchQuery = searchParams.get('search'); // キーワード検索パラメータの追加
+    const searchQuery = searchParams.get('search');
     
     // ページネーション用パラメータ
     let page = 1;
@@ -59,21 +78,60 @@ export async function GET(request: NextRequest) {
     console.log('検索条件:', where);
     console.log('ページネーション:', { page, pageSize, skip });
     
-    // 記事の総数を取得（ページネーション用）
-    const totalCount = await prisma.article.count({ where });
+    // エラーハンドリングを分離
+    let totalCount = 0;
+    // 明示的に型を指定
+    let articles: ArticleWithImages[] = [];
     
-    // 記事をデータベースから取得
-    const articles = await prisma.article.findMany({
-      where,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        images: true,
-      },
-      skip,
-      take: pageSize,
-    });
+    try {
+      // 記事の総数を取得（ページネーション用）
+      totalCount = await prisma.article.count({ where });
+    } catch (countError) {
+      console.error('記事数取得エラー:', countError);
+      // エラー発生時は再試行
+      await resetPrismaConnection();
+      try {
+        totalCount = await prisma.article.count({ where });
+      } catch (retryError) {
+        console.error('記事数再取得エラー:', retryError);
+        // フォールバック値を使用
+        totalCount = 0;
+      }
+    }
+    
+    try {
+      // 記事をデータベースから取得
+      articles = await prisma.article.findMany({
+        where,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        include: {
+          images: true,
+        },
+        skip,
+        take: pageSize,
+      });
+    } catch (articlesError) {
+      console.error('記事取得エラー:', articlesError);
+      // エラー発生時は再試行（より単純なクエリで）
+      await resetPrismaConnection();
+      try {
+        const simpleArticles = await prisma.article.findMany({
+          where,
+          take: pageSize,
+        });
+        // 型を合わせるため空の画像配列を追加
+        articles = simpleArticles.map(article => ({
+          ...article,
+          images: []
+        }));
+      } catch (retryError) {
+        console.error('記事再取得エラー:', retryError);
+        // 空の配列を使用
+        articles = [];
+      }
+    }
     
     // ページネーション情報を含めてレスポンス
     return NextResponse.json({
@@ -90,17 +148,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Internal Server Error',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
+        // フォールバック値も提供
+        articles: [],
+        pagination: {
+          total: 0,
+          page: 1,
+          pageSize: 10,
+          pageCount: 1
+        }
       },
       { status: 500 }
     );
   } finally {
-    // await prisma.$disconnect();
+    // 処理完了後に明示的に切断
+    try {
+      await prisma.$disconnect();
+    } catch (disconnectError) {
+      console.error('切断エラー:', disconnectError);
+    }
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // 接続をリセット
+    await resetPrismaConnection();
+    
     console.log('記事作成API: リクエスト受信');
     
     // リクエストボディを取得
@@ -128,20 +202,30 @@ export async function POST(request: NextRequest) {
     }
     
     // スラッグの重複チェック
-    const existingArticle = await prisma.article.findUnique({
-      where: { slug },
-    });
+    let existingArticle: Article | null = null;
+    try {
+      existingArticle = await prisma.article.findUnique({
+        where: { slug },
+      });
+    } catch (findError) {
+      console.error('記事重複チェックエラー:', findError);
+      await resetPrismaConnection();
+      // 再試行
+      existingArticle = await prisma.article.findUnique({
+        where: { slug },
+      });
+    }
     
     if (existingArticle) {
       return NextResponse.json({ error: 'Slug already exists' }, { status: 400 });
     }
     
     // 記事データを準備
-    const articleData = {
+    const articleData: Prisma.ArticleCreateInput = {
       title,
       slug,
       summary: requestBody.summary || '',
-      description: requestBody.description || '', // 追加: descriptionフィールド
+      description: requestBody.description || '',
       content,
       category,
       published: requestBody.published || false,
@@ -149,10 +233,21 @@ export async function POST(request: NextRequest) {
     
     console.log('作成する記事データ:', articleData);
     
-    // 記事を作成
-    const article = await prisma.article.create({
-      data: articleData,
-    });
+    // 記事作成とエラーハンドリング
+    let article: Article;
+    try {
+      // 記事を作成
+      article = await prisma.article.create({
+        data: articleData,
+      });
+    } catch (createError) {
+      console.error('記事作成エラー:', createError);
+      // 接続をリセットして再試行
+      await resetPrismaConnection();
+      article = await prisma.article.create({
+        data: articleData,
+      });
+    }
     
     console.log('記事作成成功:', article.id);
     
@@ -173,6 +268,23 @@ export async function POST(request: NextRequest) {
         } catch (imageError) {
           console.error('画像保存エラー:', imageError);
           // 画像保存エラーは無視して続行
+          
+          // 必要に応じて接続をリセット
+          await resetPrismaConnection();
+          
+          try {
+            await prisma.image.create({
+              data: {
+                articleId: article.id,
+                url: image.url,
+                altText: image.altText || title,
+                isFeatured: image.isFeatured || false,
+              },
+            });
+          } catch (retryError) {
+            console.error('画像再保存エラー:', retryError);
+            // 次の画像へ続行
+          }
         }
       }
       
@@ -180,10 +292,20 @@ export async function POST(request: NextRequest) {
     }
     
     // 作成した記事を返す（画像付き）
-    const completeArticle = await prisma.article.findUnique({
-      where: { id: article.id },
-      include: { images: true },
-    });
+    let completeArticle: ArticleWithImages | Article = article;
+    try {
+      const fetchedArticle = await prisma.article.findUnique({
+        where: { id: article.id },
+        include: { images: true },
+      });
+      
+      if (fetchedArticle) {
+        completeArticle = fetchedArticle;
+      }
+    } catch (findError) {
+      console.error('作成記事取得エラー:', findError);
+      // エラー発生時は基本情報のみ返す（すでに article に代入済み）
+    }
     
     return NextResponse.json(
       {
@@ -203,6 +325,11 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   } finally {
-    // await prisma.$disconnect();
+    // 処理完了後に明示的に切断
+    try {
+      await prisma.$disconnect();
+    } catch (disconnectError) {
+      console.error('切断エラー:', disconnectError);
+    }
   }
 }
