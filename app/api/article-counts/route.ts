@@ -1,5 +1,6 @@
 // app/api/article-counts/route.ts
-import { prisma } from '../../../lib/prisma';
+// app/api/article-counts/route.ts
+import { prisma } from '../../../lib/prisma'; // 名前付きインポートに変更
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -9,55 +10,76 @@ export async function GET() {
     // 公開済み記事のみカウント
     const publishedCondition = { published: true };
     
-    // 各カテゴリーごとの記事数を取得
-    const categoryCounts = await Promise.all([
-      // culture カテゴリーの記事数
-      prisma.article.count({
+    // 各カテゴリーの記事数を順次取得（並列処理を避ける）
+    const counts = {
+      culture: 0,
+      mythology: 0, 
+      customs: 0,
+      festivals: 0
+    };
+    
+    try {
+      counts.culture = await prisma.article.count({
         where: {
           ...publishedCondition,
           category: 'culture',
         },
-      }),
-      // mythology カテゴリーの記事数
-      prisma.article.count({
+      });
+    } catch (e) {
+      console.error('culture記事数取得エラー:', e);
+    }
+    
+    try {
+      counts.mythology = await prisma.article.count({
         where: {
           ...publishedCondition,
           category: 'mythology',
         },
-      }),
-      // customs カテゴリーの記事数
-      prisma.article.count({
+      });
+    } catch (e) {
+      console.error('mythology記事数取得エラー:', e);
+    }
+    
+    try {
+      counts.customs = await prisma.article.count({
         where: {
           ...publishedCondition,
           category: 'customs',
         },
-      }),
-      // festivals カテゴリーの記事数
-      prisma.article.count({
+      });
+    } catch (e) {
+      console.error('customs記事数取得エラー:', e);
+    }
+    
+    try {
+      counts.festivals = await prisma.article.count({
         where: {
           ...publishedCondition,
           category: 'festivals',
         },
-      }),
-    ]);
-    
-    // カテゴリーごとの記事数をオブジェクトに整形
-    const counts = {
-      culture: categoryCounts[0],
-      mythology: categoryCounts[1],
-      customs: categoryCounts[2],
-      festivals: categoryCounts[3],
-    };
+      });
+    } catch (e) {
+      console.error('festivals記事数取得エラー:', e);
+    }
     
     console.log('カテゴリー記事数取得成功:', counts);
     
     return NextResponse.json({ counts });
   } catch (error) {
     console.error('カテゴリー記事数取得エラー:', error);
+    
+    // エラー時にもクライアントが処理できるデータを返す
     return NextResponse.json(
       { 
         error: 'Internal Server Error',
-        details: error instanceof Error ? error.message : String(error)
+        details: error instanceof Error ? error.message : String(error),
+        // フォールバック値も提供
+        counts: {
+          culture: 0,
+          mythology: 0,
+          customs: 0,
+          festivals: 0
+        }
       },
       { status: 500 }
     );
