@@ -8,6 +8,7 @@ import type { wayOfLifeType } from "@/types/types";
 import type { SNSLinkType } from "@/types/types";
 import type { categoriesType } from "@/types/types";
 import type { godType } from "@/types/types";
+import type { redbubbleType } from "@/types/types";
 
 export const NAVI_LINKS: linksType[] = [
     { href: '/mythology', label: 'Mythology' },
@@ -262,3 +263,256 @@ export const CATEGORY_CONFIG: Record<string, { path: string; label: string }> = 
   "seasonal-festivals": { path: "/festivals", label: "Seasonal Festivals" },
   "japanese-way-of-life": { path: "/customs", label: "Japanese Way of Life" },
 };
+
+export const REDBUBBLE_LISTS: redbubbleType[] = [
+  { 
+    title: "Noble Akita in a Scenic Landscape - Japanese Animal Art",
+    img: "/images/redbubble/rb-akita.jpg",
+    link: "https://www.redbubble.com/shop/ap/170284007" 
+  },
+  { 
+    title: "Japanese Autumn leaves - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-autumn.jpg",
+    link: "https://www.redbubble.com/shop/ap/168277992" 
+  },
+  { 
+    title: "Winter Serenity & Plum Blossoms - Japanese Seazon Art",
+    img: "/images/redbubble/rb-bird.jpg",
+    link: "https://www.redbubble.com/shop/ap/169215961" 
+  },
+  { 
+    title: "Elegant Kimono Beauty with Lute - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-biwa.jpg",
+    link: "https://www.redbubble.com/shop/ap/168607133" 
+  },
+  { 
+    title: "Graceful Koi & Waves -Japanese Timeless Art",
+    img: "/images/redbubble/rb-carp.jpg",
+    link: "https://www.redbubble.com/shop/ap/168177946" 
+  },
+  { 
+    title: "Majestic Japanese Castle in Spring - Japanese Heritage Art",
+    img: "/images/redbubble/rb-castle.jpg",
+    link: "https://www.redbubble.com/shop/ap/169591351" 
+  },
+  { 
+    title: "Elegant Chrysanthemums in Autumn Breeze - Japanese Floral Art",
+    img: "/images/redbubble/rb-chrysanthemum.jpg",
+    link: "https://www.redbubble.com/shop/ap/170403213" 
+  },
+  { 
+    title: "Elegant Japanese Crane & Waves - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-crane.jpg",
+    link: "https://www.redbubble.com/shop/ap/168091447" 
+  },
+  { 
+    title: "Traditional Daruma & Torii - Timeless Japanese Art",
+    img: "/images/redbubble/rb-daruma.jpg",
+    link: "https://www.redbubble.com/shop/ap/168190797" 
+  },
+  { 
+    title: "Golden Sunset Countryside - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-dragonfly.jpg",
+    link: "https://www.redbubble.com/shop/ap/168406526" 
+  },
+  { 
+    title: "Japanese Bonfire Night - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-bonfire.jpg",
+    link: "https://www.redbubble.com/shop/ap/168331723" 
+  },
+  { 
+    title: "Mystical Japanese Moonlit Night - Japanese Nature Art",
+    img: "/images/redbubble/rb-fullmoon.jpg",
+    link: "https://www.redbubble.com/shop/ap/169355468" 
+  },
+  { 
+    title: "Elegant Tea Ceremony & Geisha - Japanese Culture Art",
+    img: "/images/redbubble/rb-greentea.jpg",
+    link: "https://www.redbubble.com/shop/ap/169194842" 
+  },
+  { 
+    title: "Sunrise Over Mount Fuji - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-happyfuji.jpg",
+    link: "https://www.redbubble.com/shop/ap/168281331" 
+  },
+  { 
+    title: "Japanese Temple in the Rain - Timeless Japanese Art",
+    img: "/images/redbubble/rb-hydrangea.jpg",
+    link: "https://www.redbubble.com/shop/ap/168430405" 
+  },
+  { 
+    title: "Tranquil Jizo in Autumn - Japanese Buddhist Art",
+    img: "/images/redbubble/rb-jizo.jpg",
+    link: "https://www.redbubble.com/shop/ap/168330195" 
+  },
+  { 
+    title: "Princess Kaguya’s Ascent to the Moon - Japanese Folklore Art",
+    img: "/images/redbubble/rb-kaguya.jpg",
+    link: "https://www.redbubble.com/shop/ap/168737670" 
+  },
+  { 
+    title: "Chrysanthemums in Moonlit Garden - Japanese Landscape Art",
+    img: "/images/redbubble/rb-kiku.jpg",
+    link: "https://www.redbubble.com/shop/ap/170089781" 
+  },
+  { 
+    title: "Japanese Temple & Osmanthus Blossoms - Japanese Flower Art",
+    img: "/images/redbubble/rb-kinmokusei.jpg",
+    link: "https://www.redbubble.com/shop/ap/168605565" 
+  },
+  { 
+    title: "Traditional Kite Flying - Japanese Culture Art",
+    img: "/images/redbubble/rb-kite.jpg",
+    link: "https://www.redbubble.com/shop/ap/168594639" 
+  },
+  { 
+    title: "Geisha Dance Under Autumn Lanterns - Japanese Seasonal Art",
+    img: "/images/redbubble/rb-kyoto.jpg",
+    link: "https://www.redbubble.com/shop/ap/168752973" 
+  },
+  { 
+    title: "Sakura Night & Lantern Glow - Timeless Japanese Art",
+    img: "/images/redbubble/rb-lantern.jpg",
+    link: "https://www.redbubble.com/shop/ap/168236881" 
+  },
+  { 
+    title: "Blooming Lilies in Tranquil Garden - Japanese Nature Art",
+    img: "/images/redbubble/rb-lily.jpg",
+    link: "https://www.redbubble.com/shop/ap/168687853" 
+  },
+  { 
+    title: "Maiko in Kyoto - Japanese Timeless Art",
+    img: "/images/redbubble/rb-maiko.jpg",
+    link: "https://www.redbubble.com/shop/ap/168236072" 
+  },
+  { 
+    title: "Mount Fuji and Autumn Maple Leaves - Japanese Landscape Art",
+    img: "/images/redbubble/rb-maplefuji.jpg",
+    link: "https://www.redbubble.com/shop/ap/168714070" 
+  },
+  { 
+    title: "Falling Japanese Maple Leaves Pattern - Japanese Nature Art",
+    img: "/images/redbubble/rb-maplepattern.jpg",
+    link: "https://www.redbubble.com/shop/ap/170141485" 
+  },
+  { 
+    title: "Enchanting Autumn Mountainscape - Japanese Landscape Art",
+    img: "/images/redbubble/rb-momiji.jpg",
+    link: "https://www.redbubble.com/shop/ap/170308347" 
+  },
+  { 
+    title: "Snow Monkey in Moonlit Hot Spring - Japanese Animal Art",
+    img: "/images/redbubble/rb-monkey.jpg",
+    link: "https://www.redbubble.com/shop/ap/170556994" 
+  },
+  { 
+    title: "Morning Glories in a Japanese Garden - Japanese Art",
+    img: "/images/redbubble/rb-morningglory.jpg",
+    link: "https://www.redbubble.com/shop/ap/168355191" 
+  },
+  { 
+    title: "Spirits & Mythical Beasts of Japan - Japanese Mythology Art",
+    img: "/images/redbubble/rb-mythology.jpg",
+    link: "https://www.redbubble.com/shop/ap/169146974" 
+  },
+  { 
+    title: "Stealthy Ninja Warriors in a Bamboo Forest - Japanese Ninja Art",
+    img: "/images/redbubble/rb-ninja.jpg",
+    link: "https://www.redbubble.com/shop/ap/170308474" 
+  },
+  { 
+    title: "Moonlit Noh Theater Dreamscape - Japanese Culture Art",
+    img: "/images/redbubble/rb-noh.jpg",
+    link: "https://www.redbubble.com/shop/ap/170456998" 
+  },
+  { 
+    title: "Japanese Folktale - The Grateful Crane - Japanese Folktale Art",
+    img: "/images/redbubble/rb-ongaeshi.jpg",
+    link: "https://www.redbubble.com/shop/ap/168542216" 
+  },
+  { 
+    title: "Tranquil Autumn at a Japanese Temple - Japanese Zen Art",
+    img: "/images/redbubble/rb-pagoda.jpg",
+    link: "https://www.redbubble.com/shop/ap/169525578" 
+  },
+  { 
+    title: "Japanese Sakura Bridge & Torii - Japanese Sakura Art",
+    img: "/images/redbubble/rb-sakura.jpg",
+    link: "https://www.redbubble.com/shop/ap/168273029" 
+  },
+  { 
+    title: "Enchanting Cherry Blossom Garden - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-sakurafubuki.jpg",
+    link: "https://www.redbubble.com/shop/ap/168664166" 
+  },
+  { 
+    title: "Elegant Folding Fans Pattern - Japanese Sensu Ukiyo-e Art",
+    img: "/images/redbubble/rb-sensu.jpg",
+    link: "https://www.redbubble.com/shop/ap/170595444" 
+  },
+  { 
+    title: "Joyful Snowball Fight- Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-snow.jpg",
+    link: "https://www.redbubble.com/shop/ap/168664336" 
+  },
+  { 
+    title: "Serene Ink Landscape with Red Sun - Japanese Sumi-e Art",
+    img: "/images/redbubble/rb-suibokuga.jpg",
+    link: "https://www.redbubble.com/shop/ap/170403332" 
+  },
+  { 
+    title: "Mystical Misty Landscape - Japanese Sumi-e Art",
+    img: "/images/redbubble/rb-sumie.jpg",
+    link: "https://www.redbubble.com/shop/ap/168574668" 
+  },
+  { 
+    title: "Sunset Over Serene Lake with Blossoms - Japanese Landscape Art",
+    img: "/images/redbubble/rb-sunset.jpg",
+    link: "https://www.redbubble.com/shop/ap/168687702" 
+  },
+  { 
+    title: "Ukiyo-e Sunset Over the Sea - Traditional Japanese Art",
+    img: "/images/redbubble/rb-sunsetship.jpg",
+    link: "https://www.redbubble.com/shop/ap/168430001" 
+  },
+  { 
+    title: "Golden Fields of Autumn - Japanese Landscape Art",
+    img: "/images/redbubble/rb-susuki.jpg",
+    link: "https://www.redbubble.com/shop/ap/170260059" 
+  },
+  { 
+    title: "Moonlit Fire Festival by the Lake - Japanese Festival Art",
+    img: "/images/redbubble/rb-takibi.jpg",
+    link: "https://www.redbubble.com/shop/ap/169838369" 
+  },
+  { 
+    title: "Enchanting Tanabata Festival by the River - Japanese Festival Art",
+    img: "/images/redbubble/rb-tanabata.jpg",
+    link: "https://www.redbubble.com/shop/ap/169523025" 
+  },
+  { 
+    title: "Fisherman & Line-caught Tuna - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-tuna.jpg",
+    link: "https://www.redbubble.com/shop/ap/168502183" 
+  },
+  { 
+    title: "Tranquil Riverside Scene - Japanese Ukiyo-e Art",
+    img: "/images/redbubble/rb-willow.jpg",
+    link: "https://www.redbubble.com/shop/ap/168605329" 
+  },
+  { 
+    title: "Tranquil Wisteria Morning Glow - Japanese Landscape Art",
+    img: "/images/redbubble/rb-wisteria.jpg",
+    link: "https://www.redbubble.com/shop/ap/170427950" 
+  },
+  { 
+    title: "Sakura and Waves in Spring - Japanese Sakura Art",
+    img: "/images/redbubble/rb-yaezakura.jpg",
+    link: "https://www.redbubble.com/shop/ap/169121939" 
+  },
+  { 
+    title: "Zen Meditation in Autumn Serenity - Japanese Buddhist Art",
+    img: "/images/redbubble/rb-zen.jpg",
+    link: "https://www.redbubble.com/shop/ap/168381319" 
+  },
+];
