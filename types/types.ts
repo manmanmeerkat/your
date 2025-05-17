@@ -83,3 +83,9 @@ export type Feedback = {
     success: boolean;
     message: string;
 };
+
+export type redbubbleType = {
+    title: string;
+    img: string;
+    link: string;
+}
