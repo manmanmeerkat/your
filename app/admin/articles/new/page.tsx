@@ -26,7 +26,7 @@ export default function NewArticlePage() {
   const [autoUpdateSummary, setAutoUpdateSummary] = useState(true); // 要約自動更新の制御
   const router = useRouter();
 
-  // マークダウン記法を削除する関数
+  // マークダウン記法とHTMLタグを削除する関数
   const stripMarkdown = (text: string) => {
     if (!text) return "";
 
@@ -64,6 +64,28 @@ export default function NewArticlePage() {
     // 表記法の削除
     result = result.replace(/\|.*\|/g, "");
 
+    // ここからHTMLとCSS関連の削除処理を追加
+
+    // HTMLタグを削除（開始タグと終了タグのペア）
+    result = result.replace(/<[^>]*>/g, "");
+
+    // インラインスタイルを含むHTMLタグの削除
+    result = result.replace(/<[^>]*style=["'][^"']*["'][^>]*>/g, "");
+
+    // CSS宣言ブロックの削除
+    result = result.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+
+    // script要素の削除
+    result = result.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+
+    // HTMLエンティティをデコード（&amp; → &, &lt; → < など）
+    result = result
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+
     // 余分な空白行の削除
     result = result.replace(/\n\s*\n/g, "\n");
 
@@ -78,7 +100,6 @@ export default function NewArticlePage() {
 
     return truncated;
   };
-
   // スラッグの自動生成
   const generateSlug = () => {
     return title

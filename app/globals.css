@@ -62,7 +62,7 @@
   border-left: 4px solid #e5e7eb; /* gray-200 */
   padding-left: 1rem;
   margin-left: 0;
-  color: #CBD5E1; /* gray-500 */
+  color: #cbd5e1; /* gray-500 */
   font-style: italic;
   margin-bottom: 1rem;
 }
@@ -104,14 +104,14 @@
 }
 
 .markdown-content table th {
-  background-color: #9CA3AF; /* gray-50 */
+  background-color: #9ca3af; /* gray-50 */
   color: #020617;
   font-weight: 600;
 }
 
 .markdown-content hr {
   border: 0;
-  border-top: 1px solid #9CA3AF; /* gray-400 */
+  border-top: 1px solid #9ca3af; /* gray-400 */
   margin: 1.5rem 0;
 }
 

@@ -1,0 +1,83 @@
+/* 管理画面専用のオーバーライドスタイル */
+
+/* カードのタイトル部分の修正 */
+.text-lg.font-semibold.mb-1,
+h3.text-lg,
+.card-title {
+  color: #1e293b !important; /* slate-800 - !importantで強制 */
+}
+
+/* カード全体のコンテンツ部分 */
+.flex.flex-col.justify-between.flex-grow.bg-white.text-left {
+  color: #334155 !important; /* slate-700 */
+}
+
+/* 編集ボタンの修正 */
+button.font-medium.rounded.transition-colors.py-1.px-2.text-sm.bg-transparent.border.border-gray-300.hover\:bg-gray-100,
+button.font-medium.rounded.transition-colors.py-1.px-2.text-sm.bg-transparent.border.border-gray-300 {
+  color: #475569 !important; /* slate-600 */
+  font-weight: 500 !important;
+}
+
+/* ページネーションボタンの修正 */
+button.font-medium.rounded,
+.pagination button,
+button[disabled],
+button.bg-transparent,
+button.hover\:bg-gray-100 {
+  color: #475569 !important; /* slate-600 */
+}
+
+/* アクティブなページボタン */
+button.bg-blue-600,
+.active-page {
+  color: #ffffff !important; /* 白テキスト */
+  font-weight: 600 !important;
+}
+
+/* 「公開中」などのステータスラベル */
+.text-sm.text-gray-600,
+.status-label {
+  color: #64748b !important; /* slate-500 */
+  font-weight: 500 !important;
+}
+
+/* その他ボタンやテキスト要素の修正 */
+.text-gray-500 {
+  color: #64748b !important;
+}
+
+.text-gray-600 {
+  color: #475569 !important;
+}
+
+.text-gray-700 {
+  color: #334155 !important;
+}
+
+.text-gray-800 {
+  color: #1e293b !important;
+}
+
+.text-gray-900 {
+  color: #0f172a !important;
+}
+
+/* 入力フォームの修正 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+  color: #0f172a !important; /* slate-900 */
+  background-color: #ffffff !important;
+}
+
+/* テーブル要素の修正 */
+table th {
+  color: #1e293b !important; /* slate-800 */
+}
+
+table td {
+  color: #334155 !important; /* slate-700 */
+}

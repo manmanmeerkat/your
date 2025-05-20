@@ -2,7 +2,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import ArticleClientPage from "../../../components/articleClientPage/ArticleClientPage"
+import ArticleClientPage from "../../../components/articleClientPage/ArticleClientPage";
 import Script from "next/script";
 
 type Props = {
@@ -33,7 +33,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `https://www.yoursecretjapan.com/articles/${article.slug}`,
       images: [
         {
-          url: article.images.find((img) => img.isFeatured)?.url || "/ogp-image.png",
+          url:
+            article.images.find((img) => img.isFeatured)?.url ||
+            "/ogp-image.png",
           width: 1200,
           height: 630,
           alt: article.title,
@@ -45,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${article.title} | Your Secret Japan`,
       description: article.summary || "",
       images: [
-        article.images.find((img) => img.isFeatured)?.url || "/ogp-image.png"
+        article.images.find((img) => img.isFeatured)?.url || "/ogp-image.png",
       ],
     },
   };
@@ -67,23 +69,23 @@ export default async function Page({ params }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": article.title,
-    "description": article.summary || "",
-    "image": `https://www.yoursecretjapan.com${featuredImage}`,
-    "author": {
+    headline: article.title,
+    description: article.summary || "",
+    image: `https://www.yoursecretjapan.com${featuredImage}`,
+    author: {
       "@type": "Person",
-      "name": "Your Secret Japan"
+      name: "Your Secret Japan",
     },
-    "publisher": {
+    publisher: {
       "@type": "Organization",
-      "name": "Your Secret Japan",
-      "logo": {
+      name: "Your Secret Japan",
+      logo: {
         "@type": "ImageObject",
-        "url": "https://www.yoursecretjapan.com/logo.png"
-      }
+        url: "https://www.yoursecretjapan.com/logo.png",
+      },
     },
-    "datePublished": article.createdAt.toISOString(),
-    "dateModified": article.updatedAt.toISOString()
+    datePublished: article.createdAt.toISOString(),
+    dateModified: article.updatedAt.toISOString(),
   };
 
   return (
