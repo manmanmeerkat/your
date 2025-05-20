@@ -5,9 +5,7 @@ export const configureMarkedRenderer = () => {
   // マークダウンレンダラーの設定
   marked.setOptions({
     gfm: true,
-    breaks: true,
-    headerIds: true,
-    mangle: false,
+    breaks: true
   });
 
   // カスタムレンダラーを設定
@@ -32,9 +30,9 @@ export const configureMarkedRenderer = () => {
   };
   
   // リストにクラスを追加
-  renderer.list = (body, ordered) => {
-    const type = ordered ? 'ol' : 'ul';
-    return `<${type} class="japanese-style-modern-${type}">${body}</${type}>`;
+  renderer.list = (token) => {
+    const type = token.ordered ? 'ol' : 'ul';
+    return `<${type} class="japanese-style-modern-${type}">${token.items.join('')}</${type}>`;
   };
   
   // リスト項目にクラスを追加
@@ -48,7 +46,7 @@ export const configureMarkedRenderer = () => {
   };
   
   // 強調にクラスを追加
-  renderer.strong = (text) => {
+  renderer.strong = ({ text }) => {
     // 流派名の場合は特別なクラスを追加
     if (text.includes('-ryu')) {
       return `<strong class="ryu-name">${text}</strong>`;
@@ -62,20 +60,20 @@ export const configureMarkedRenderer = () => {
   };
   
   // リンクにクラスを追加
-  renderer.link = (href, title, text) => {
-    return `<a href="${href}" class="japanese-style-modern-a" ${title ? `title="${title}"` : ''}>${text}</a>`;
+  renderer.link = ({ href, title, tokens }) => {
+    return `<a href="${href}" class="japanese-style-modern-a" ${title ? `title="${title}"` : ''}>${tokens[0].raw}</a>`;
   };
   
   // 画像にクラスを追加
-  renderer.image = (href, title, text) => {
+  renderer.image = ({ href, title, text }) => {
     return `<img src="${href}" alt="${text || ''}" class="japanese-style-modern-img" ${title ? `title="${title}"` : ''}>`;
   };
   
   marked.use({ renderer });
   
   // マークダウンのレンダリングと後処理
-  const renderMarkdown = (content: string) => {
-    let html = marked.parse(content);
+  const renderMarkdown = async (content: string) => {
+    let html = await marked.parse(content);
     
     // H1見出しの後にセクションの閉じタグを追加し、新しいセクションを開始
     html = html.replace(/<\/h1>/g, '</h1>');
