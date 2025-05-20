@@ -130,8 +130,6 @@ const JapaneseMarkdownRenderer: React.FC<JapaneseMarkdownRendererProps> = ({
     marked.setOptions({
       gfm: true,
       breaks: true,
-      headerIds: true,
-      mangle: false,
     });
 
     // カスタムレンダラーの設定
@@ -145,7 +143,7 @@ const JapaneseMarkdownRenderer: React.FC<JapaneseMarkdownRendererProps> = ({
     };
 
     // 画像レンダリングをカスタマイズ
-    renderer.image = ({ href, title, text, tokens }) => {
+    renderer.image = ({ href, title, text }) => {
       return `
         <figure class="jp-figure">
           <img src="${href}" alt="${
@@ -201,7 +199,7 @@ const JapaneseMarkdownRenderer: React.FC<JapaneseMarkdownRendererProps> = ({
   // マークダウンをHTMLに変換
   const renderMarkdown = (markdown: string) => {
     // 通常のマークダウン変換
-    const html = marked.parse(markdown);
+    const html = marked.parse(markdown) as string;
     // 流派名などの特別な単語を後処理で強調
     const processedHtml = postProcessMarkdown(html);
     // 安全なHTMLに変換
