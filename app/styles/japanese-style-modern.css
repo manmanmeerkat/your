@@ -1,16 +1,3 @@
-/* ハイコントラスト和風ダークスタイル - 極黒と極白のコントラスト */
-/* フォントの読み込み */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;700&display=swap");
-
-/* 記事ページコンテナのスタイル - 特定のコンテナのみに影響するように */
-.article-page-container {
-  background-color: #000000;
-  color: #ffffff;
-  font-family: "Noto Sans JP", -apple-system, BlinkMacSystemFont, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* スクロールバーのカスタムスタイル - 特定のコンテナに限定 */
 .article-page-container .scrollbar-custom::-webkit-scrollbar {
   height: 3px;
@@ -28,9 +15,8 @@
 
 /* ハイコントラスト和風スタイル */
 .japanese-style-modern {
-  font-family: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif !important;
   line-height: 1.7;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
   background: #000000; /* 純粋な黒 */
   padding: 0;
   margin: 2rem auto;
@@ -42,12 +28,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #ffffff; /* 純白 */
+  color: #F3F3F2; /* 白練 */
   max-width: 95%;
   z-index: 1;
   /* 外枠に金色のボーダー */
-  border: 1px solid rgba(217, 119, 6, 0.4);
-  will-change: transform; /* GPU加速のヒント */
+  border: 1px solid rgba(241, 144, 114, 0.6);
+  font-weight: 400;
 }
 
 /* 記事全体を包むコンテナ */
@@ -78,7 +64,7 @@
   position: relative;
   height: 180px;
   overflow: hidden;
-  background: #1e293b; /* 深い紺藍色 */
+  background: #1F1D1C; /* 深い紺藍色 */
   border-radius: 0.3rem 0.3rem 0 0;
   display: flex;
   flex-direction: column;
@@ -88,22 +74,9 @@
   padding: 1.5rem;
 }
 
-/* ヘッダー背景の青海波模様（控えめ） */
-.japanese-style-modern-header::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cpath d='M0,20 C10,10 30,10 40,20 C50,30 70,30 80,20 M0,40 C10,30 30,30 40,40 C50,50 70,50 80,40 M0,0 C10,-10 30,-10 40,0 C50,10 70,10 80,0' stroke='rgba(255,255,255,0.07)' stroke-width='1' fill='none'/%3E%3C/svg%3E");
-  opacity: 0.2;
-  z-index: -1;
-}
-
 /* ヘッダータイトル */
 .japanese-style-modern-title {
-  color: #ffffff; /* 純白 */
+  color: #F3F3F2; /* 白練 */
   font-size: 1.8rem;
   font-weight: 500;
   text-align: center;
@@ -138,11 +111,11 @@
   width: 250px;
   flex-shrink: 0;
   padding: 1.25rem;
-  background: rgba(23, 23, 23, 0.95); /* 濃い黒 */
+  background: #0a0a0a; /* 濃い黒 */
   border-radius: 0.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   z-index: 10;
-  border-left: 2px solid rgba(217, 119, 6, 0.5); /* 濃い金色 */
+  border: solid 1px #2b2b2b;
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
   align-self: flex-start;
@@ -169,15 +142,25 @@
   }
 }
 
-/* サイドバータイトル */
+/* 見出し3 */
 .japanese-style-modern-sidebar-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #ffffff;
-  margin-bottom: 1rem;
-  padding-bottom: 0.8rem;
-  border-bottom: 1px solid rgba(217, 119, 6, 0.4); /* 濃い金色 */
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #F19072;
+  margin: 1.5rem 0 1rem;
+  padding: 0.3rem 0 0.3rem 0.75rem;
+  background: rgba(23, 23, 23, 0.9);
   position: relative;
+}
+
+.japanese-style-modern-sidebar-title::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  background:  #F19072; 
 }
 
 /* 目次項目 */
@@ -188,19 +171,14 @@
   position: relative;
   padding-left: 1.25rem;
   font-size: 0.9rem;
-  color: #d4d4d4;
+  font-weight: 600;
+  color: #F3F3F2; 
 }
 
 /* 目次項目のホバー効果 */
 .japanese-style-modern-toc-item:hover {
   transform: translateX(3px);
-  color: #ffffff;
-}
-
-/* アクティブな目次項目 */
-.japanese-style-modern-toc-item.active {
-  color: #f59e0b; /* 金色 */
-  font-weight: 500;
+  color: #59B9C6;
 }
 
 /* 目次項目のマーカー - シンプル */
@@ -210,16 +188,11 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 4px;
-  background-color: rgba(217, 119, 6, 0.6);
-  opacity: 0.7;
+  width: 8px;
+  height: 2px;
+  background-color: #F19072;
 }
 
-.japanese-style-modern-toc-item.active::before {
-  background-color: #f59e0b; /* 金色 */
-  opacity: 1;
-}
 
 /* 目次の階層レベル */
 .japanese-style-modern-toc-item[data-level="2"] {
@@ -230,36 +203,6 @@
 .japanese-style-modern-toc-item[data-level="3"] {
   padding-left: 2.75rem;
   font-size: 0.8rem;
-}
-
-/* 目次閉じるボタン */
-.japanese-style-modern-close-button {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.japanese-style-modern-close-button::before,
-.japanese-style-modern-close-button::after {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 1px;
-  background: #d4d4d4;
-}
-
-.japanese-style-modern-close-button::before {
-  transform: rotate(45deg);
-}
-
-.japanese-style-modern-close-button::after {
-  transform: rotate(-45deg);
 }
 
 /* モバイル目次オーバーレイ */
@@ -279,11 +222,10 @@
 }
 
 /* 見出し1 */
-.japanese-style-modern h1,
-.japanese-style-modern-h1 {
+.japanese-style-modern h1 {
   font-size: 1.7rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #F3F3F2;  /* 白練 */
   margin: 2.5rem 0 1.5rem;
   padding: 0.75rem 0;
   position: relative;
@@ -291,23 +233,21 @@
 }
 
 /* 見出し1の下線 */
-.japanese-style-modern h1::after,
-.japanese-style-modern-h1::after {
+.japanese-style-modern h1::after {
   content: "";
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, rgba(217, 119, 6, 0.6), transparent);
+  background: linear-gradient(90deg, rgba(241, 144, 114, 0.8), transparent);
 }
 
 /* 見出し2 */
-.japanese-style-modern h2,
 .japanese-style-modern-h2 {
   font-size: 1.4rem;
   font-weight: 500;
-  color: #b45309; /* 深い琥珀色/山吹色 - 落ち着いた和風の色 */
+  color: #f19072; /* 東雲色 */
   margin: 2rem 0 1rem;
   padding: 0.5rem 0.75rem;
   position: relative;
@@ -316,7 +256,6 @@
 }
 
 /* 見出し2の左の装飾 */
-.japanese-style-modern h2::before,
 .japanese-style-modern-h2::before {
   content: "";
   position: absolute;
@@ -324,27 +263,18 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #b45309; /* 深い琥珀色/山吹色 */
+  background: #ee836f;
 }
 
 /* 見出し3 */
-.japanese-style-modern h3,
 .japanese-style-modern-h3 {
   font-size: 1.2rem;
   font-weight: 500;
-  color: #0f766e; /* 深い青緑色 */
+  color: #f1bf99;
   margin: 1.5rem 0 1rem;
   padding: 0.3rem 0 0.3rem 0.75rem;
-  border-bottom: 1px dotted rgba(15, 118, 110, 0.4);
+  background: rgba(23, 23, 23, 0.9);
   position: relative;
-}
-
-.japanese-style-modern h3::before,
-.japanese-style-modern-h3::before {
-  content: "•";
-  position: absolute;
-  left: 0;
-  color: #0f766e; /* 深い青緑色 */
 }
 
 /* セクション - シンプル */
@@ -354,26 +284,24 @@
   background: #0a0a0a; /* 深い黒 */
   border-radius: 0.25rem;
   position: relative;
-  border: 1px solid #262626; /* 暗い灰色 */
+  border: 1px solid #2b2b2b; /* 蝋色 */
 }
 
 /* パラグラフスタイル */
-.japanese-style-modern p,
 .japanese-style-modern-p {
   margin-bottom: 1.25rem;
   line-height: 1.9;
-  color: #ffffff;
+  color: #F3F3F2;
   font-size: 1rem;
 }
 
 /* 引用ブロック */
-.japanese-style-modern blockquote,
 .japanese-style-modern-blockquote {
   margin: 2rem 0;
   padding: 1.5rem 1.5rem 1.5rem 2rem;
   background: #171717; /* 暗い灰色 */
   border-radius: 0.25rem;
-  border-left: 3px solid #65a30d; /* 落ち着いた緑色 */
+  border-left: 3px solid #59b9c6; /* 落ち着いた緑色 */
   position: relative;
   font-style: italic;
 }
@@ -381,38 +309,40 @@
 /* 引用の文字色 */
 .japanese-style-modern blockquote p,
 .japanese-style-modern-blockquote p {
-  color: #a3e635; /* 薄い緑色 */
-  opacity: 0.9; /* やや透明度を上げて落ち着かせる */
+  color: #59b9c6; /* 新橋色 */
+  margin-bottom: 0;
+  font-weight: 500;
 }
 
 /* リンクスタイル */
 .japanese-style-modern a,
 .japanese-style-modern-a {
-  color: #f59e0b; /* 金色 */
+  color: #000;
   text-decoration: none;
   transition: all 0.2s ease;
-  padding-bottom: 1px;
-  border-bottom: 1px dotted rgba(245, 158, 11, 0.5);
+  padding: 0 8px 1px;
+  background-color: #bbc8e6; /*淡藤色*/
+    border-bottom: 1px solid #bbc8e6;
 }
 
 .japanese-style-modern a:hover,
 .japanese-style-modern-a:hover {
-  border-bottom: 1px solid #f59e0b;
+  border-bottom: 1px solid #bbc8e6;
   background: rgba(245, 158, 11, 0.1);
+  color: #F3F3F2;
 }
 
 /* 強調テキスト */
-.japanese-style-modern strong,
 .japanese-style-modern-strong {
-  font-weight: 600;
-  color: #d97706; /* 深い金茶色 - 落ち着いた暖色 */
+  font-weight: 700;
+  color: #f1bf99;
 }
 
 /* 斜体 */
-.japanese-style-modern em,
 .japanese-style-modern-em {
   font-style: italic;
-  color: #8b5cf6; /* 紫色 */
+  color: #59b9c6; /* 新橋色 */
+  font-weight: 600;
 }
 
 /* コード */
@@ -448,20 +378,17 @@
 }
 
 /* リスト */
-.japanese-style-modern ul,
 .japanese-style-modern-ul {
   margin: 1.25rem 0;
   padding-left: 0.5rem;
 }
 
-.japanese-style-modern ol,
 .japanese-style-modern-ol {
   margin: 1.25rem 0;
   padding-left: 1rem;
   counter-reset: item;
 }
 
-.japanese-style-modern li,
 .japanese-style-modern-li {
   margin-bottom: 0.6rem;
   position: relative;
@@ -470,7 +397,6 @@
 }
 
 /* 箇条書きリストのマーカー */
-.japanese-style-modern ul li::before,
 .japanese-style-modern-ul .japanese-style-modern-li::before {
   content: "";
   position: absolute;
@@ -478,8 +404,7 @@
   top: 0.7em;
   width: 4px;
   height: 4px;
-  background: #f59e0b; /* 金色 */
-  opacity: 0.9;
+  background: #F19072;
 }
 
 /* 番号付きリストのマーカー */
@@ -494,7 +419,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  color: #06b6d4; /* 水色 */
+  color: #F19072; /* 水色 */
   font-size: 0.9em;
   font-weight: 500;
 }
@@ -514,16 +439,16 @@
 
 .japanese-style-modern-th {
   background: #18181b; /* 暗い灰色 */
-  color: #ffffff;
+  color: #F3F3F2; /* 白練 */
   font-weight: 500;
   padding: 0.7rem;
-  border: 1px solid #262626;
+  border: 1px solid #383c3c; /* 羊羹色 */
   text-align: left;
 }
 
 .japanese-style-modern-td {
   padding: 0.7rem;
-  border: 1px solid #262626;
+  border: 1px solid #383c3c; /* 羊羹色 */
   background: #0a0a0a;
 }
 
@@ -589,15 +514,6 @@
   z-index: 1000;
 }
 
-/* プログレスバー */
-.japanese-style-modern-progress-bar {
-  height: 100%;
-  background: #f59e0b; /* 金色 */
-  width: 0%;
-  transition: width 0.1s ease;
-  will-change: width;
-}
-
 /* モバイル対応の調整 */
 @media (max-width: 768px) {
   .japanese-style-modern {
@@ -606,23 +522,12 @@
   }
 
   .japanese-style-modern-header {
-    height: 150px;
-    padding: 1.2rem 1rem;
+    /* height: 250px; */
+    padding: 10rem 1rem;
   }
 
   .japanese-style-modern-title {
     font-size: 1.6rem;
-  }
-
-  .japanese-style-modern-section {
-    padding: 1.2rem;
-    margin: 1.2rem 0;
-  }
-
-  .japanese-style-modern h1,
-  .japanese-style-modern-h1 {
-    font-size: 1.5rem;
-    margin: 2rem 0 1rem;
   }
 
   .japanese-style-modern h2,

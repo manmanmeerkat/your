@@ -8,7 +8,6 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
-import { ProgressBar } from "@/components/japanese-style/ProgressBar";
 
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
@@ -460,17 +459,17 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     <div className="bg-slate-950 min-h-screen article-page-container">
       {/* Hero image */}
       {article.images?.some((img) => img.isFeatured) && (
-        <div className="w-full bg-slate-950 overflow-hidden pt-8">
-          <div className="relative max-h-[500px] w-full flex justify-center">
-            <Image
-              src={featuredImage}
-              alt={article.title}
-              className="h-auto max-h-[500px] w-auto object-contain rounded-md"
-              width={800}
-              height={500}
-              unoptimized
-            />
-          </div>
+<div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
+  <div className="relative max-h-[500px] w-full flex justify-center">
+    <Image
+      src={featuredImage}
+      alt={article.title}
+      className="h-auto max-h-[500px] w-full max-w-[800px] object-contain rounded-md"
+      width={800}
+      height={500}
+      unoptimized
+    />
+  </div>
           <WhiteLine />
         </div>
       )}
@@ -509,9 +508,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
               />
             </div>
           </div>
-
-          {/* プログレスバー */}
-          <ProgressBar />
 
           {/* フローティングボタン */}
           <FloatingButtons
