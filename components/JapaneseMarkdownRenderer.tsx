@@ -130,8 +130,6 @@ const JapaneseMarkdownRenderer: React.FC<JapaneseMarkdownRendererProps> = ({
     marked.setOptions({
       gfm: true,
       breaks: true,
-      headerIds: true,
-      mangle: false,
     });
 
     // カスタムレンダラーの設定
