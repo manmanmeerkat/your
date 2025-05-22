@@ -3,14 +3,18 @@ import "./globals.css";
 import "./styles/japanese-style-modern.css";
 import "highlight.js/styles/github-dark.css"; // or any highlight.js theme
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Noto_Serif_JP } from "next/font/google";
 import { Toaster } from "sonner";
 import Header from "../components/layout/header";
 import Footer from "../components/layout/footer";
 import BackToTopButton from "@/components/backToTopBtn/BackToTopBtn";
 import Script from "next/script";
 
-const inter = Inter({ subsets: ["latin"] });
+const notoSerifJP = Noto_Serif_JP({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Your Secret Japan -Explore Japan's hidden charms-",
@@ -115,7 +119,7 @@ export default async function RootLayout({
        `}
         </Script>
       </head>
-      <body className={inter.className}>
+      <body className={notoSerifJP.className}>
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-MZDHPBHT"
