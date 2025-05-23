@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
@@ -35,102 +34,182 @@ type Article = {
   images: Image[];
 };
 
-// テーブル・オブ・コンテンツの項目型定義
 export type TocItem = {
   id: string;
   text: string;
   level: number;
 };
 
-// 安全なID生成ヘルパー関数
-const safeId = (text: unknown): string => {
-  if (typeof text !== "string") {
-    return `heading-${Math.random().toString(36).substring(2, 9)}`;
+// ⭐ 高パフォーマンス画像コンポーネント（unoptimized）
+const HighPerformanceImage = ({
+  src,
+  alt,
+  className,
+  priority = false,
+  style = {},
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  priority?: boolean;
+  style?: React.CSSProperties;
+}) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [isInView, setIsInView] = useState(priority); // 優先画像は即座に表示
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // ⭐ Intersection Observer for lazy loading
+  useEffect(() => {
+    if (priority) return; // 優先画像はスキップ
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsInView(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: "50px", // 50px手前で読み込み開始
+        threshold: 0.1,
+      }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [priority]);
+
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const handleError = useCallback(() => {
+    setHasError(true);
+    setIsLoaded(true);
+  }, []);
+
+  if (hasError) {
+    return (
+      <div
+        className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 min-h-[200px] flex items-center justify-center"
+        style={style}
+      >
+        <div className="text-center">
+          <div className="text-gray-400 text-4xl mb-2">📷</div>
+          <div>画像を読み込めませんでした</div>
+        </div>
+      </div>
+    );
   }
 
-  try {
-    return text.toLowerCase().replace(/[^\w]+/g, "-");
-  } catch (error) {
-    console.error("ID generation error:", error);
-    return `heading-${Math.random().toString(36).substring(2, 9)}`;
-  }
+  return (
+    <div ref={imgRef} className="relative" style={style}>
+      {/* ⭐ スケルトンローダー */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+          <div className="text-gray-400">
+            <svg className="animate-spin h-8 w-8" viewBox="0 0 24 24">
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="none"
+                strokeDasharray="32"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* ⭐ 実際の画像 */}
+      {isInView && (
+        <img
+          src={src}
+          alt={alt}
+          className={`transition-opacity duration-500 ${
+            isLoaded ? "opacity-100" : "opacity-0"
+          } ${className || ""}`}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          onLoad={handleLoad}
+          onError={handleError}
+          style={{
+            maxWidth: "100%",
+            height: "auto",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            ...style,
+          }}
+        />
+      )}
+    </div>
+  );
 };
 
-// インライン要素の処理（リンク、強調、コードなど）
+const safeId = (text: unknown): string => {
+  if (typeof text !== "string") {
+    return `heading-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  }
+
+  return text
+    .toLowerCase()
+    .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-");
+};
+
+// ⭐ 高性能インライン処理（unoptimized画像）
 const processInlineMarkdown = (text: string): string => {
   if (!text) return "";
 
-  let processed = text;
-
-  // リンクを処理
-  processed = processed.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" class="japanese-style-modern-a">$1</a>'
+  return (
+    text
+      .replace(
+        /\[([^\]]+)\]\(([^)]+)\)/g,
+        '<a href="$2" class="japanese-style-modern-a">$1</a>'
+      )
+      .replace(/\*\*(.*?-ryu)\*\*/g, '<strong class="ryu-name">$1</strong>')
+      .replace(
+        /\*\*(.*?)\*\*/g,
+        '<strong class="japanese-style-modern-strong">$1</strong>'
+      )
+      .replace(/\*(.*?)\*/g, '<em class="japanese-style-modern-em">$1</em>')
+      .replace(
+        /`([^`]+)`/g,
+        '<code class="japanese-style-modern-code">$1</code>'
+      )
+      // ⭐ 高パフォーマンス画像処理
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+        return `<div class="high-perf-img-container" data-src="${src}" data-alt="${
+          alt || "画像"
+        }" style="margin: 1.5rem 0;">
+        <div class="img-skeleton">
+          <div class="skeleton-animation"></div>
+          <div class="skeleton-text">読み込み中...</div>
+        </div>
+      </div>`;
+      })
   );
-
-  // 流派名を特別に処理 (太字の前に行う必要がある)
-  processed = processed.replace(
-    /\*\*(.*?-ryu)\*\*/g,
-    '<strong class="ryu-name">$1</strong>'
-  );
-
-  // 太字を処理
-  processed = processed.replace(
-    /\*\*(.*?)\*\*/g,
-    '<strong class="japanese-style-modern-strong">$1</strong>'
-  );
-
-  // 斜体を処理
-  processed = processed.replace(
-    /\*(.*?)\*/g,
-    '<em class="japanese-style-modern-em">$1</em>'
-  );
-
-  // インラインコードを処理
-  processed = processed.replace(
-    /`([^`]+)`/g,
-    '<code class="japanese-style-modern-code">$1</code>'
-  );
-
-  // 画像を処理
-  processed = processed.replace(
-    /!\[([^\]]*)\]\(([^)]+)\)/g,
-    '<img src="$2" alt="$1" class="japanese-style-modern-img">'
-  );
-
-  return processed;
 };
 
-// 改良されたマークダウンレンダラー
 const renderEnhancedMarkdown = (content: string): string => {
   if (!content) return "";
 
-  // セクション開始タグの追加
   let html = '<section class="japanese-style-modern-section">';
+  const paragraphs = content.split(/\n\s*\n/).filter((p) => p.trim());
 
-  // 段落に分割
-  const paragraphs = content.split(/\n\s*\n/);
-
-  // 各段落を処理
   for (let i = 0; i < paragraphs.length; i++) {
     const paragraph = paragraphs[i].trim();
+    if (!paragraph) continue;
 
-    if (!paragraph) continue; // 空の段落はスキップ
-
-    // 見出しを処理
-    if (paragraph.startsWith("# ")) {
-      const headingText = paragraph.substring(2).trim();
-      const id = safeId(headingText);
-
-      // 新しいセクションの開始（最初のセクション以外）
-      if (i > 0) {
-        html += '</section><section class="japanese-style-modern-section">';
-      }
-
-      html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
-        headingText
-      )}</h1>`;
-    } else if (paragraph.startsWith("## ")) {
+    if (paragraph.startsWith("## ")) {
       const headingText = paragraph.substring(3).trim();
       const id = safeId(headingText);
       html += `<h2 id="${id}" class="japanese-style-modern-h2">${processInlineMarkdown(
@@ -142,174 +221,68 @@ const renderEnhancedMarkdown = (content: string): string => {
       html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
         headingText
       )}</h3>`;
-    }
-    // コードブロックを処理
-    else if (paragraph.startsWith("```")) {
-      const codePattern = /```(?:(\w+))?\n([\s\S]*?)```/;
-      const match = paragraph.match(codePattern);
-
-      if (match) {
-        const language = match[1] || "";
-        const code = match[2];
-        html += `<pre class="japanese-style-modern-pre ${
-          language ? `language-${language}` : ""
-        }"><code class="japanese-style-modern-code">${code}</code></pre>`;
-      } else {
-        // マッチしなかった場合は単純な段落として扱う
-        html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
-          paragraph
-        )}</p>`;
+    } else if (paragraph.startsWith("# ")) {
+      const headingText = paragraph.substring(2).trim();
+      const id = safeId(headingText);
+      if (i > 0) {
+        html += '</section><section class="japanese-style-modern-section">';
       }
-    }
-    // 引用を処理
-    else if (paragraph.startsWith("> ")) {
-      // 複数行の引用をサポート
-      const quoteLines = paragraph.split("\n");
-      const quoteContent = quoteLines
+      html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
+        headingText
+      )}</h1>`;
+    } else if (paragraph.startsWith("> ")) {
+      const quoteContent = paragraph
+        .split("\n")
         .map((line) => (line.startsWith("> ") ? line.substring(2) : line))
         .join("\n");
-
       html += `<blockquote class="japanese-style-modern-blockquote"><p class="japanese-style-modern-p">${processInlineMarkdown(
         quoteContent
       )}</p></blockquote>`;
-    }
-    // テーブルを処理
-    else if (paragraph.includes("|") && paragraph.trim().startsWith("|")) {
-      const rows = paragraph.trim().split("\n");
-      let tableHtml =
-        '<div class="japanese-style-modern-table-container"><table class="japanese-style-modern-table">';
-
-      // ヘッダー行が存在するか確認
-      const hasHeader = rows.length > 1 && rows[1].includes("--");
-
-      rows.forEach((row, rowIndex) => {
-        // 区切り行（---）はスキップ
-        if (row.replace(/[\s|:-]/g, "") === "") return;
-
-        // 行を処理
-        const cells = row.split("|").filter((cell) => cell.trim() !== "");
-        const isHeaderRow = hasHeader && rowIndex === 0;
-
-        tableHtml += '<tr class="japanese-style-modern-tr">';
-
-        cells.forEach((cell) => {
-          const cellContent = cell.trim();
-          if (isHeaderRow) {
-            tableHtml += `<th class="japanese-style-modern-th">${processInlineMarkdown(
-              cellContent
-            )}</th>`;
-          } else {
-            tableHtml += `<td class="japanese-style-modern-td">${processInlineMarkdown(
-              cellContent
-            )}</td>`;
-          }
-        });
-
-        tableHtml += "</tr>";
-      });
-
-      tableHtml += "</table></div>";
-      html += tableHtml;
-    }
-    // 箇条書きリストを処理（改良版）
-    else if (/^\s*-\s/.test(paragraph)) {
-      const listLines = paragraph.split("\n");
+    } else if (/^\s*-\s/.test(paragraph)) {
+      const listItems = paragraph
+        .split(/\n\s*-\s/)
+        .filter((item) => item.trim());
       let listHtml = '<ul class="japanese-style-modern-ul">';
-      let currentItemContent = "";
-      let isInItem = false;
-
-      listLines.forEach((line, lineIndex) => {
-        const trimmed = line.trim();
-
-        if (trimmed.startsWith("- ")) {
-          // 前の項目があれば追加
-          if (isInItem) {
-            listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-              currentItemContent
-            )}</li>`;
-          }
-
-          // 新しい項目を開始
-          currentItemContent = trimmed.substring(2);
-          isInItem = true;
-        } else if (isInItem && trimmed !== "") {
-          // 現在の項目の続き
-          currentItemContent += "\n" + trimmed;
-        }
-
-        // 最後の行なら項目を閉じる
-        if (lineIndex === listLines.length - 1 && isInItem) {
+      listItems.forEach((item) => {
+        if (item.trim()) {
           listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-            currentItemContent
+            item.trim()
           )}</li>`;
         }
       });
-
       listHtml += "</ul>";
       html += listHtml;
-    }
-    // 番号付きリストを処理（改良版）
-    else if (/^\s*\d+\.\s/.test(paragraph)) {
-      const listLines = paragraph.split("\n");
+    } else if (/^\s*\d+\.\s/.test(paragraph)) {
+      const listItems = paragraph
+        .split(/\n\s*\d+\.\s/)
+        .filter((item) => item.trim());
       let listHtml = '<ol class="japanese-style-modern-ol">';
-      let currentItemContent = "";
-      let isInItem = false;
-
-      listLines.forEach((line, lineIndex) => {
-        const trimmed = line.trim();
-        const numberMatch = trimmed.match(/^\d+\.\s(.+)/);
-
-        if (numberMatch) {
-          // 前の項目があれば追加
-          if (isInItem) {
-            listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-              currentItemContent
-            )}</li>`;
-          }
-
-          // 新しい項目を開始
-          currentItemContent = numberMatch[1];
-          isInItem = true;
-        } else if (isInItem && trimmed !== "") {
-          // 現在の項目の続き
-          currentItemContent += "\n" + trimmed;
-        }
-
-        // 最後の行なら項目を閉じる
-        if (lineIndex === listLines.length - 1 && isInItem) {
+      listItems.forEach((item) => {
+        if (item.trim()) {
           listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-            currentItemContent
+            item.trim()
           )}</li>`;
         }
       });
-
       listHtml += "</ol>";
       html += listHtml;
-    }
-    // 水平線を処理
-    else if (
+    } else if (
       paragraph === "---" ||
       paragraph === "***" ||
       paragraph === "___"
     ) {
       html += '<hr class="japanese-style-modern-hr" />';
-    }
-    // 通常の段落を処理
-    else {
-      // インライン要素を処理して段落タグを追加
+    } else {
       html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
         paragraph
       )}</p>`;
     }
   }
 
-  // セクション終了タグを追加
   html += "</section>";
-
   return html;
 };
 
-// 記事の内容からヘッダー（見出し）を抽出する関数
 const extractHeaders = (content: string): TocItem[] => {
   const headingRegex = /^(#{1,3})\s+(.+)$/gm;
   const headers: TocItem[] = [];
@@ -319,7 +292,6 @@ const extractHeaders = (content: string): TocItem[] => {
     const level = match[1].length;
     const text = match[2].trim();
     const id = safeId(text);
-
     headers.push({ id, text, level });
   }
 
@@ -327,21 +299,12 @@ const extractHeaders = (content: string): TocItem[] => {
 };
 
 export default function ArticleClientPage({ article }: { article: Article }) {
-  // isMarkdown状態は実際に使用されていないため削除
-  const [tableOfContents, setTableOfContents] = useState<TocItem[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [showMobileToc, setShowMobileToc] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [renderedContent, setRenderedContent] = useState<string>("");
 
-  // マークダウンの検出とレンダリング
-  useEffect(() => {
-    // デバッグ用：コンテンツの確認
-    console.log("Article content type:", typeof article.content);
-    console.log("Article content sample:", article.content.substring(0, 100));
-
-    // マークダウンかどうかを判定
+  const { renderedContent, tableOfContents } = useMemo(() => {
     const mdPatterns = [
       /^#\s+.+$/m,
       /\*\*.+\*\*/,
@@ -350,97 +313,123 @@ export default function ArticleClientPage({ article }: { article: Article }) {
       /^\s*\d+\.\s+.+$/m,
       /\[.+\]\(.+\)/,
       /!\[.+\]\(.+\)/,
-      /^\|.+\|$/m,
       /^>.+$/m,
-      /^```[\s\S]*?```$/m,
     ];
+
     const contentIsMarkdown = mdPatterns.some((pattern) =>
       pattern.test(article.content)
     );
 
-    console.log("Is Markdown:", contentIsMarkdown);
-
-    // マークダウンの場合、レンダリングと目次抽出
     if (contentIsMarkdown) {
-      try {
-        // 改良されたマークダウンレンダラーを使用
-        const html = renderEnhancedMarkdown(article.content);
-        setRenderedContent(html);
-
-        // 目次の抽出
-        const extractedToc = extractHeaders(article.content);
-        console.log("Extracted TOC:", extractedToc);
-        setTableOfContents(extractedToc);
-      } catch (error) {
-        console.error("Error rendering markdown:", error);
-        setRenderedContent(
-          "<p class='japanese-style-modern-p'>マークダウンの処理中にエラーが発生しました。</p>"
-        );
-      }
+      const html = renderEnhancedMarkdown(article.content);
+      const toc = extractHeaders(article.content);
+      return { renderedContent: html, tableOfContents: toc };
     } else {
-      // マークダウンでない場合はそのまま表示
-      setRenderedContent(
-        `<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">${article.content}</p></section>`
-      );
+      return {
+        renderedContent: `<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">${article.content}</p></section>`,
+        tableOfContents: [],
+      };
     }
   }, [article.content]);
 
-  // スクロール処理と目次の位置調整
+  // ⭐ 画像の動的読み込み処理
   useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+    if (!contentRef.current) return;
 
-      // 現在表示されているセクションを特定
-      if (tableOfContents.length > 0) {
-        const headings = Array.from(
-          document.querySelectorAll(
-            ".japanese-style-modern h1, .japanese-style-modern h2, .japanese-style-modern h3"
-          )
-        );
+    const imageContainers = contentRef.current.querySelectorAll(
+      ".high-perf-img-container"
+    );
 
-        let currentId = "";
-        for (const heading of headings) {
-          const rect = heading.getBoundingClientRect();
+    imageContainers.forEach((container) => {
+      const src = container.getAttribute("data-src");
+      const alt = container.getAttribute("data-alt") || "画像";
 
-          if (rect.top <= 100) {
-            currentId = heading.id;
-          } else {
-            break;
-          }
-        }
+      if (src) {
+        // 高パフォーマンス画像要素を作成
+        const imgElement = document.createElement("img");
+        imgElement.src = src;
+        imgElement.alt = alt;
+        imgElement.loading = "lazy";
+        imgElement.decoding = "async";
+        imgElement.style.cssText = `
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          opacity: 0;
+          transition: opacity 0.5s ease;
+        `;
 
-        setActiveSection(currentId);
+        imgElement.onload = () => {
+          imgElement.style.opacity = "1";
+        };
+
+        imgElement.onerror = () => {
+          container.innerHTML = `
+            <div style="background: linear-gradient(135deg, #f3f4f6, #e5e7eb); border-radius: 8px; padding: 2rem; text-align: center; color: #6b7280;">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
+              <div>画像を読み込めませんでした</div>
+            </div>
+          `;
+        };
+
+        container.innerHTML = "";
+        container.appendChild(imgElement);
       }
+    });
+  }, [renderedContent]);
+
+  const handleScroll = useCallback(() => {
+    setShowScrollTop(window.scrollY > 300);
+
+    if (tableOfContents.length > 0) {
+      const headings = document.querySelectorAll(
+        ".japanese-style-modern h1, .japanese-style-modern h2, .japanese-style-modern h3"
+      );
+
+      let currentId = "";
+      for (const heading of headings) {
+        const rect = heading.getBoundingClientRect();
+        if (rect.top <= 100) {
+          currentId = heading.id;
+        } else {
+          break;
+        }
+      }
+      setActiveSection(currentId);
+    }
+  }, [tableOfContents.length]);
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    const debouncedHandleScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleScroll, 16); // 60fps
     };
 
-    // スクロールイベントの設定
-    window.addEventListener("scroll", handleScroll);
-
-    // リサイズ時にも位置調整
+    window.addEventListener("scroll", debouncedHandleScroll, { passive: true });
     window.addEventListener("resize", handleScroll);
 
-    // 初期化時に一度実行
     setTimeout(handleScroll, 100);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(timeoutId);
+      window.removeEventListener("scroll", debouncedHandleScroll);
       window.removeEventListener("resize", handleScroll);
     };
-  }, [tableOfContents]);
+  }, [handleScroll]);
 
-  // トップへスクロール
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  }, []);
 
-  // 目次項目クリック時のスクロール
-  const scrollToHeading = (id: string) => {
+  const scrollToHeading = useCallback((id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      // より正確な位置計算でスクロール
       const elementPosition =
         element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - 100; // 見出しの少し上に移動（20px余白）
+      const offsetPosition = elementPosition - 100;
 
       window.scrollTo({
         top: offsetPosition,
@@ -448,35 +437,35 @@ export default function ArticleClientPage({ article }: { article: Article }) {
       });
 
       setActiveSection(id);
-
-      // モバイル版では、クリック後に目次を非表示にする
       if (window.innerWidth <= 768) {
         setShowMobileToc(false);
       }
     }
-  };
+  }, []);
 
-  // 目次の表示切り替え
-  const toggleMobileToc = () => {
-    setShowMobileToc(!showMobileToc);
-  };
+  const toggleMobileToc = useCallback(() => {
+    setShowMobileToc((prev) => !prev);
+  }, []);
 
-  const featuredImage =
-    article.images.find((img) => img.isFeatured)?.url ?? "/fallback.jpg";
+  const featuredImage = useMemo(
+    () => article.images.find((img) => img.isFeatured)?.url ?? "/fallback.jpg",
+    [article.images]
+  );
+
+  const hasFeaturedImage = article.images?.some((img) => img.isFeatured);
 
   return (
     <div className="bg-slate-950 min-h-screen article-page-container">
-      {/* Hero image */}
-      {article.images?.some((img) => img.isFeatured) && (
+      {/* ⭐ Hero image - 完全unoptimized高パフォーマンス版 */}
+      {hasFeaturedImage && (
         <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[500px] w-full flex justify-center">
-            <Image
+            <HighPerformanceImage
               src={featuredImage}
               alt={article.title}
               className="h-auto max-h-[500px] w-full max-w-[800px] object-contain rounded-md"
-              width={800}
-              height={500}
-              unoptimized
+              priority={true}
+              style={{ maxWidth: "800px", maxHeight: "500px" }}
             />
           </div>
           <WhiteLine />
@@ -485,7 +474,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
       <div className="container mx-auto px-4 py-8">
         <div className="japanese-style-modern">
-          {/* ヘッダー部分 */}
           <div className="japanese-style-modern-header">
             <h1 className="japanese-style-modern-title">{article.title}</h1>
             <div className="japanese-style-modern-date">
@@ -498,7 +486,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           </div>
 
           <div className="japanese-style-modern-container">
-            {/* サイドバー（目次） */}
             <TableOfContents
               tableOfContents={tableOfContents}
               activeSection={activeSection}
@@ -507,18 +494,14 @@ export default function ArticleClientPage({ article }: { article: Article }) {
               closeMobileToc={() => setShowMobileToc(false)}
             />
 
-            {/* メインコンテンツ */}
             <div className="japanese-style-modern-content">
               <div
                 ref={contentRef}
-                dangerouslySetInnerHTML={{
-                  __html: renderedContent,
-                }}
+                dangerouslySetInnerHTML={{ __html: renderedContent }}
               />
             </div>
           </div>
 
-          {/* フローティングボタン */}
           <FloatingButtons
             showScrollTop={showScrollTop}
             scrollToTop={scrollToTop}
@@ -526,7 +509,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           />
         </div>
 
-        {/* ボタン部分 */}
         <div className="flex flex-col justify-center items-center mt-8 gap-8">
           <Link href={`/${article.category}`}>
             <Button
@@ -565,6 +547,59 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         </div>
         <WhiteLine />
       </div>
+
+      {/* ⭐ スタイルインジェクション */}
+      <style jsx>{`
+        .img-skeleton {
+          background: linear-gradient(
+            90deg,
+            #f0f0f0 25%,
+            #e0e0e0 50%,
+            #f0f0f0 75%
+          );
+          background-size: 200% 100%;
+          animation: loading 1.5s infinite;
+          height: 200px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+        }
+
+        .skeleton-animation {
+          width: 60px;
+          height: 60px;
+          border: 3px solid #e0e0e0;
+          border-top: 3px solid #999;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 10px;
+        }
+
+        .skeleton-text {
+          color: #999;
+          font-size: 14px;
+        }
+
+        @keyframes loading {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 }

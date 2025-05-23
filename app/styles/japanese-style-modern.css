@@ -28,7 +28,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #F3F3F2; /* 白練 */
+  color: #f3f3f2; /* 白練 */
   max-width: 95%;
   z-index: 1;
   /* 外枠に金色のボーダー */
@@ -64,7 +64,7 @@
   position: relative;
   height: 180px;
   overflow: hidden;
-  background: #1F1D1C; /* 深い紺藍色 */
+  background: #1f1d1c; /* 深い紺藍色 */
   border-radius: 0.3rem 0.3rem 0 0;
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@
 
 /* ヘッダータイトル */
 .japanese-style-modern-title {
-  color: #F3F3F2; /* 白練 */
+  color: #f3f3f2; /* 白練 */
   font-size: 1.8rem;
   font-weight: 500;
   text-align: center;
@@ -146,7 +146,7 @@
 .japanese-style-modern-sidebar-title {
   font-size: 1.2rem;
   font-weight: 500;
-  color: #F19072;
+  color: #f19072;
   margin: 1.5rem 0 1rem;
   padding: 0.3rem 0 0.3rem 0.75rem;
   background: rgba(23, 23, 23, 0.9);
@@ -160,7 +160,7 @@
   left: 0;
   bottom: 0;
   width: 2px;
-  background:  #F19072; 
+  background: #f19072;
 }
 
 /* 目次項目 */
@@ -172,13 +172,13 @@
   padding-left: 1.25rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #F3F3F2; 
+  color: #f3f3f2;
 }
 
 /* 目次項目のホバー効果 */
 .japanese-style-modern-toc-item:hover {
   transform: translateX(3px);
-  color: #59B9C6;
+  color: #59b9c6;
 }
 
 /* 目次項目のマーカー - シンプル */
@@ -190,9 +190,8 @@
   transform: translateY(-50%);
   width: 8px;
   height: 2px;
-  background-color: #F19072;
+  background-color: #f19072;
 }
-
 
 /* 目次の階層レベル */
 .japanese-style-modern-toc-item[data-level="2"] {
@@ -225,7 +224,7 @@
 .japanese-style-modern h1 {
   font-size: 1.7rem;
   font-weight: 600;
-  color: #F3F3F2;  /* 白練 */
+  color: #f3f3f2; /* 白練 */
   margin: 2.5rem 0 1.5rem;
   padding: 0.75rem 0;
   position: relative;
@@ -291,7 +290,7 @@
 .japanese-style-modern-p {
   margin-bottom: 1.25rem;
   line-height: 1.9;
-  color: #F3F3F2;
+  color: #f3f3f2;
   font-size: 1rem;
 }
 
@@ -322,14 +321,14 @@
   transition: all 0.2s ease;
   padding: 0 8px 1px;
   background-color: #bbc8e6; /*淡藤色*/
-    border-bottom: 1px solid #bbc8e6;
+  border-bottom: 1px solid #bbc8e6;
 }
 
 .japanese-style-modern a:hover,
 .japanese-style-modern-a:hover {
   border-bottom: 1px solid #bbc8e6;
   background: rgba(245, 158, 11, 0.1);
-  color: #F3F3F2;
+  color: #f3f3f2;
 }
 
 /* 強調テキスト */
@@ -404,7 +403,7 @@
   top: 0.7em;
   width: 4px;
   height: 4px;
-  background: #F19072;
+  background: #f19072;
 }
 
 /* 番号付きリストのマーカー */
@@ -419,7 +418,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  color: #F19072; /* 水色 */
+  color: #f19072; /* 水色 */
   font-size: 0.9em;
   font-weight: 500;
 }
@@ -439,7 +438,7 @@
 
 .japanese-style-modern-th {
   background: #18181b; /* 暗い灰色 */
-  color: #F3F3F2; /* 白練 */
+  color: #f3f3f2; /* 白練 */
   font-weight: 500;
   padding: 0.7rem;
   border: 1px solid #383c3c; /* 羊羹色 */
@@ -552,4 +551,66 @@
   font-weight: 600;
   color: #fbbf24; /* 金色 */
   letter-spacing: 0.08em;
+}
+
+/* 高パフォーマンス画像最適化 */
+.article-content-img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: 1.5rem 0;
+  transition: opacity 0.5s ease, transform 0.3s ease;
+  background: linear-gradient(90deg, #f0f0f0, #e0e0e0, #f0f0f0);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.article-content-img[loading="lazy"] {
+  will-change: opacity;
+}
+
+.article-content-img:hover {
+  transform: scale(1.02);
+}
+
+/* スケルトンアニメーション */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Intersection Observer最適化 */
+.high-perf-img-container {
+  contain: layout style paint;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 記事カード最適化 */
+.article-card-image {
+  content-visibility: auto;
+  contain: layout style paint;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+/* パフォーマンス向上のための一般的な最適化 */
+.japanese-style-modern * {
+  box-sizing: border-box;
+}
+
+.japanese-style-modern img {
+  content-visibility: auto;
+  contain: layout;
+}
+
+/* レイアウトシフト防止 */
+.japanese-style-modern-section {
+  contain: layout style;
 }
