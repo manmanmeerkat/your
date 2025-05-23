@@ -19,10 +19,9 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
-  // 実験的機能
+  // ⭐ 実験的機能（問題のある設定を削除）
   experimental: {
-    // CSS最適化
-    optimizeCss: true,
+    // optimizeCss: true, // ← critters エラーの原因なので削除
     // サーバーコンポーネント最適化
     serverComponentsExternalPackages: [],
   },
@@ -33,14 +32,13 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production' ? {
       exclude: ['error', 'warn'], // エラーと警告は残す
     } : false,
-    // React StrictModeの最適化
-    reactRemoveProperties: process.env.NODE_ENV === 'production',
+    // reactRemoveProperties: process.env.NODE_ENV === 'production', // ← 存在しないオプションなので削除
   },
   
   // 圧縮とキャッシュの最適化
   compress: true,
   
-  // プリフェッチの設定
+  // プリフェッチの設定（簡素化）
   async headers() {
     return [
       {
@@ -69,26 +67,30 @@ const nextConfig = {
     ];
   },
   
-  // バンドルサイズ分析（開発時のみ）
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: async (config, { dev, isServer }) => {
-      if (!dev && !isServer) {
-        const { BundleAnalyzerPlugin } = await import('webpack-bundle-analyzer');
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            reportFilename: './analyze/client.html'
-          })
-        );
-      }
-      return config;
-    },
-  }),
+  // ⭐ バンドルサイズ分析（安全な方法に修正）
+  webpack: async (config, { dev, isServer }) => {
+    // 開発環境またはサーバーサイドではスキップ
+    if (dev || isServer) return config;
+    
+    // 環境変数でのみ有効化
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = await import('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: './analyze/client.html',
+          openAnalyzer: false,
+        })
+      );
+    }
+    
+    return config;
+  },
   
   // 出力設定（静的エクスポート用）
   trailingSlash: false,
   
-  // パフォーマンス監視
+  // ⭐ パフォーマンス監視（Next.js 14対応）
   onDemandEntries: {
     // ページがメモリに保持される時間
     maxInactiveAge: 25 * 1000,
