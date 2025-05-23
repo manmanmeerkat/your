@@ -21,7 +21,12 @@ async function getFestivalArticles(page = 1) {
 
     const res = await fetch(
       `${baseUrl}/api/articles?category=festivals&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
-      { cache: "no-cache" }
+      {
+        next: {
+          revalidate: 3600, // 1時間キャッシュ
+          tags: ["festivals-articles"],
+        },
+      }
     );
 
     if (!res.ok)
@@ -36,24 +41,19 @@ async function getFestivalArticles(page = 1) {
       };
 
     const data = await res.json();
-    if (data.articles && Array.isArray(data.articles)) {
-      data.articles = data.articles.filter(
-        (article: articleType) => article.category === "festivals"
-      );
-    }
 
-    // paginationが返されていない場合のデフォルト値を設定
-    if (!data.pagination) {
-      data.pagination = {
-        total: data.articles?.length || 0,
+    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
+    const articles = Array.isArray(data.articles) ? data.articles : [];
+
+    return {
+      articles,
+      pagination: data.pagination || {
+        total: articles.length,
         page: 1,
         pageSize: ARTICLES_PER_PAGE,
-        pageCount:
-          Math.ceil((data.articles?.length || 0) / ARTICLES_PER_PAGE) || 1,
-      };
-    }
-
-    return data;
+        pageCount: Math.ceil(articles.length / ARTICLES_PER_PAGE) || 1,
+      },
+    };
   } catch (error) {
     console.error("Failed to fetch festival articles:", error);
     return {
@@ -92,7 +92,8 @@ export default async function FestivalsPage({
             alt="Japanese Festivals"
             fill
             style={{ objectFit: "cover" }}
-            unoptimized
+            priority={true}
+            sizes="100vw"
           />
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
@@ -100,15 +101,15 @@ export default async function FestivalsPage({
             Japanese Festivals
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
-            Japan&apos;s festivals reflect the beauty of the changing seasons and the
-            spirit of each region. We will explore the vibrant world of Japanese
-            festivals through traditional celebrations, local customs, and
-            cultural events.
+            Japan&apos;s festivals reflect the beauty of the changing seasons
+            and the spirit of each region. We will explore the vibrant world of
+            Japanese festivals through traditional celebrations, local customs,
+            and cultural events.
           </p>
         </div>
       </section>
 
-      {/* 記事一覧 (ページネーション追加) */}
+      {/* 記事一覧 */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -144,7 +145,7 @@ export default async function FestivalsPage({
 
       <WhiteLine />
 
-      {/* 四季の祭り (変更なし) */}
+      {/* 四季の祭り */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -159,6 +160,7 @@ export default async function FestivalsPage({
                     alt={`${item.season} icon`}
                     fill
                     style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 8rem, 8rem"
                   />
                 </div>
                 <h3 className="mt-4 font-bold text-xl text-white">
@@ -177,7 +179,7 @@ export default async function FestivalsPage({
 
       <WhiteLine />
 
-      {/* 日本三大祭り (変更なし) */}
+      {/* 日本三大祭り */}
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-10 text-center text-white">
@@ -195,6 +197,7 @@ export default async function FestivalsPage({
                     alt={festival.alt}
                     fill
                     style={{ objectFit: "cover" }}
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
                 <div className="p-6">

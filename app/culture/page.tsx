@@ -1,16 +1,16 @@
-// app/culture/page.tsx
+// app/customs/page.tsx
 import Image from "next/image";
 import { articleType } from "@/types/types";
-import ArticleCard from "../../components/articleCard/articleCard";
-import { CULTURE_CATEGORIES } from "@/constants/constants";
-import RedBubble from "@/components/redBubble/RedBubble";
+import ArticleCard from "@/components/articleCard/articleCard";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
+import { WAY_OF_LIFE } from "@/constants/constants";
+import Redbubble from "@/components/redBubble/RedBubble";
 import PaginationWrapper from "@/components/pagination-wrapper";
 
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
 
-async function getCultureArticles(page = 1) {
+async function getCustomsArticles(page = 1) {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
@@ -19,8 +19,13 @@ async function getCultureArticles(page = 1) {
         : "https://yourwebsite.com");
 
     const res = await fetch(
-      `${baseUrl}/api/articles?category=culture&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
-      { cache: "no-cache" }
+      `${baseUrl}/api/articles?category=customs&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
+      {
+        next: {
+          revalidate: 3600, // 1時間キャッシュ
+          tags: ["customs-articles"],
+        },
+      }
     );
 
     if (!res.ok)
@@ -36,28 +41,20 @@ async function getCultureArticles(page = 1) {
 
     const data = await res.json();
 
-    // 記事データを抽出してフィルタリング
-    const filteredArticles = Array.isArray(data.articles)
-      ? data.articles.filter((a: articleType) => a.category === "culture")
-      : [];
-
-    // paginationが返されていない場合のデフォルト値を設定
-    if (!data.pagination) {
-      data.pagination = {
-        total: filteredArticles.length || 0,
-        page: 1,
-        pageSize: ARTICLES_PER_PAGE,
-        pageCount:
-          Math.ceil((filteredArticles.length || 0) / ARTICLES_PER_PAGE) || 1,
-      };
-    }
+    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
+    const articles = Array.isArray(data.articles) ? data.articles : [];
 
     return {
-      articles: filteredArticles,
-      pagination: data.pagination,
+      articles,
+      pagination: data.pagination || {
+        total: articles.length,
+        page: 1,
+        pageSize: ARTICLES_PER_PAGE,
+        pageCount: Math.ceil(articles.length / ARTICLES_PER_PAGE) || 1,
+      },
     };
   } catch (error) {
-    console.error("Failed to fetch culture articles:", error);
+    console.error("Failed to fetch customs articles:", error);
     return {
       articles: [],
       pagination: {
@@ -70,7 +67,7 @@ async function getCultureArticles(page = 1) {
   }
 }
 
-export default async function CulturePage({
+export default async function CustomsPage({
   searchParams,
 }: {
   searchParams?: { page?: string };
@@ -79,7 +76,7 @@ export default async function CulturePage({
   const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
 
   // 記事データを取得
-  const { articles = [], pagination } = await getCultureArticles(currentPage);
+  const { articles = [], pagination } = await getCustomsArticles(currentPage);
 
   // 総ページ数
   const totalPages = pagination.pageCount;
@@ -87,40 +84,41 @@ export default async function CulturePage({
   return (
     <div>
       {/* ヘッダー */}
-      <section className="relative bg-slate-900 text-white pb-8">
-        <div className="absolute inset-0 z-0 opacity-40">
+      <section className="relative bg-slate-950 text-white pt-16 pb-16">
+        <div className="absolute inset-0 z-0 opacity-30">
           <Image
-            src="/images/category-top/culture.jpg"
-            alt="Japanese Culture"
+            src="/images/category-top/custom.jpg"
+            alt="Japanese Customs"
             fill
             style={{ objectFit: "cover" }}
-            unoptimized
+            priority={true}
+            sizes="100vw"
           />
         </div>
-        <div className="container mx-auto px-6 py-36 relative z-10 text-center">
+        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Japanese Culture
+            Japanese Customs
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
-            Japan has cultivated a rich cultural heritage for over a thousand
-            years, blending refined traditions, craftsmanship, and everyday
-            practices. We will explore the depth and beauty of Japanese culture
-            through arts such as the tea ceremony, ceramics, kimono, and
-            ukiyo-e.
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+            Japanese customs offer a glimpse into the country&apos;s unique
+            sense of harmony, respect, and seasonal awareness. We will explore
+            everyday traditions such as bowing, removing shoes, and celebrating
+            seasonal events that reflect the values and rhythms of Japanese
+            life.
           </p>
         </div>
       </section>
 
-      {/* 文化記事一覧 (ページネーション追加) */}
-      <section className="py-16 bg-slate-950">
+      {/* 記事一覧 */}
+      <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
-            The charm of Japanese culture
+            Discover Japanese customs
           </h2>
 
           {articles.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {articles.map((article: articleType) => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
@@ -132,14 +130,14 @@ export default async function CulturePage({
                   <PaginationWrapper
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    basePath="/culture"
+                    basePath="/customs"
                   />
                 </div>
               )}
             </>
           ) : (
             <p className="text-center text-white">
-              Culture posts will be available soon.
+              Customs posts will be available soon.
             </p>
           )}
         </div>
@@ -147,11 +145,11 @@ export default async function CulturePage({
 
       <WhiteLine />
 
-      {/* 文化カテゴリー (変更なし) */}
+      {/* サブカテゴリ */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
-            Japanese Culture Category
+            Japanese Way of Life
           </h2>
           <div
             className="
@@ -161,17 +159,18 @@ export default async function CulturePage({
               justify-items-center
             "
           >
-            {CULTURE_CATEGORIES.map((category, index) => (
+            {WAY_OF_LIFE.map((item, index) => (
               <div key={index} className="text-center">
-                <div className="w-32 h-32 bg-indigo-100 rounded-full relative overflow-hidden mx-auto">
+                <div className="w-32 h-32 mx-auto bg-amber-100 rounded-full relative overflow-hidden">
                   <Image
-                    src={category.img}
-                    alt={category.name}
+                    src={item.img}
+                    alt={item.label}
                     fill
-                    style={{ objectFit: "cover" }}
+                    className="object-cover"
+                    sizes="(max-width: 768px) 8rem, 8rem"
                   />
                 </div>
-                <p className="mt-2 font-medium text-white">{category.name}</p>
+                <p className="mt-2 font-medium text-white">{item.label}</p>
               </div>
             ))}
           </div>
@@ -180,8 +179,7 @@ export default async function CulturePage({
 
       <WhiteLine />
 
-      {/* Redbubble商品紹介セクション (変更なし) */}
-      <RedBubble />
+      <Redbubble />
 
       <WhiteLine />
     </div>

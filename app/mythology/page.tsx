@@ -11,7 +11,7 @@ import GodsGallery from "@/components/gods/GodsGallery";
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
 
-// 記事取得関数
+// 記事取得関数（キャッシュ最適化）
 async function getMythologyArticles(page = 1): Promise<{
   articles: articleType[];
   pagination: {
@@ -28,11 +28,14 @@ async function getMythologyArticles(page = 1): Promise<{
         ? "http://localhost:3000"
         : "https://yourwebsite.com");
 
-    // ページネーションパラメータを追加
+    // ⭐ キャッシュ戦略を最適化
     const res = await fetch(
       `${baseUrl}/api/articles?category=mythology&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
-        cache: "no-cache",
+        next: {
+          revalidate: 3600, // 1時間キャッシュ
+          tags: ["mythology-articles"], // タグベースの無効化
+        },
       }
     );
 
@@ -48,10 +51,10 @@ async function getMythologyArticles(page = 1): Promise<{
       };
 
     const data = await res.json();
+
+    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
     return {
-      articles: Array.isArray(data.articles)
-        ? data.articles.filter((a: articleType) => a.category === "mythology")
-        : [],
+      articles: Array.isArray(data.articles) ? data.articles : [],
       pagination: data.pagination || {
         total: 0,
         page: 1,
@@ -73,22 +76,8 @@ async function getMythologyArticles(page = 1): Promise<{
   }
 }
 
-export default async function MythologyPage({
-  searchParams,
-}: {
-  searchParams?: { page?: string };
-}) {
-  // クエリパラメータからページ番号を取得
-  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
-
-  // 記事データを取得
-  const { articles = [], pagination } = await getMythologyArticles(currentPage);
-
-  // 総ページ数
-  const totalPages = pagination.pageCount;
-
-  // 神々データをデータベースから取得
-  let godsSlugMap: Record<string, string> = {};
+// ⭐ 神々データ取得を別関数に分離（キャッシュ最適化）
+async function getGodsSlugMap(): Promise<Record<string, string>> {
   try {
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
@@ -99,12 +88,16 @@ export default async function MythologyPage({
     const godsData = await fetch(
       `${baseUrl}/api/category-items?category=about-japanese-gods`,
       {
-        cache: "no-cache",
+        next: {
+          revalidate: 86400, // 24時間キャッシュ（神々データは頻繁に変わらない）
+          tags: ["gods-data"],
+        },
       }
     );
+
     if (godsData.ok) {
       const gods = await godsData.json();
-      godsSlugMap = gods.reduce(
+      return gods.reduce(
         (acc: Record<string, string>, god: { title: string; slug: string }) => {
           acc[god.title] = god.slug;
           return acc;
@@ -112,9 +105,29 @@ export default async function MythologyPage({
         {}
       );
     }
+    return {};
   } catch (error) {
     console.error("Failed to fetch gods data:", error);
+    return {};
   }
+}
+
+export default async function MythologyPage({
+  searchParams,
+}: {
+  searchParams?: { page?: string };
+}) {
+  // クエリパラメータからページ番号を取得
+  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
+
+  // ⭐ 並列実行でパフォーマンス向上
+  const [{ articles = [], pagination }, godsSlugMap] = await Promise.all([
+    getMythologyArticles(currentPage),
+    getGodsSlugMap(),
+  ]);
+
+  // 総ページ数
+  const totalPages = pagination.pageCount;
 
   return (
     <div>
@@ -126,7 +139,8 @@ export default async function MythologyPage({
             alt="Japanese Mythology"
             fill
             style={{ objectFit: "cover" }}
-            unoptimized
+            priority={true} // ⭐ 最初に表示される画像は優先読み込み
+            sizes="100vw" // ⭐ レスポンシブ対応
           />
         </div>
         <div className="container mx-auto px-6 py-36 relative z-10 text-center">

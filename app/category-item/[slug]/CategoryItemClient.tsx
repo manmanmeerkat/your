@@ -1,3 +1,4 @@
+// app/category-item/[slug]/CategoryItemClient.tsx
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -5,7 +6,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import { CATEGORY_LABELS } from "@/constants/constants";
+import { CATEGORY_CONFIG } from "@/constants/constants";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
 
@@ -19,15 +21,14 @@ type Image = {
   altText: string | null;
   isFeatured: boolean;
   createdAt: Date;
-  articleId: string;
+  categoryItemId: string;
 };
 
-type Article = {
+type CategoryItem = {
   id: string;
   title: string;
   slug: string;
-  summary: string | null;
-  content: string;
+  content: string | null;
   category: string;
   published: boolean;
   createdAt: Date;
@@ -326,8 +327,7 @@ const extractHeaders = (content: string): TocItem[] => {
   return headers;
 };
 
-export default function ArticleClientPage({ article }: { article: Article }) {
-  // isMarkdown状態は実際に使用されていないため削除
+export default function CategoryItemClient({ item }: { item: CategoryItem }) {
   const [tableOfContents, setTableOfContents] = useState<TocItem[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
@@ -337,9 +337,15 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
   // マークダウンの検出とレンダリング
   useEffect(() => {
-    // デバッグ用：コンテンツの確認
-    console.log("Article content type:", typeof article.content);
-    console.log("Article content sample:", article.content.substring(0, 100));
+    if (!item.content) {
+      setRenderedContent(
+        '<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">コンテンツがありません。</p></section>'
+      );
+      return;
+    }
+
+    console.log("Item content type:", typeof item.content);
+    console.log("Item content sample:", item.content.substring(0, 100));
 
     // マークダウンかどうかを判定
     const mdPatterns = [
@@ -355,7 +361,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
       /^```[\s\S]*?```$/m,
     ];
     const contentIsMarkdown = mdPatterns.some((pattern) =>
-      pattern.test(article.content)
+      pattern.test(item.content!)
     );
 
     console.log("Is Markdown:", contentIsMarkdown);
@@ -364,11 +370,11 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     if (contentIsMarkdown) {
       try {
         // 改良されたマークダウンレンダラーを使用
-        const html = renderEnhancedMarkdown(article.content);
+        const html = renderEnhancedMarkdown(item.content);
         setRenderedContent(html);
 
         // 目次の抽出
-        const extractedToc = extractHeaders(article.content);
+        const extractedToc = extractHeaders(item.content);
         console.log("Extracted TOC:", extractedToc);
         setTableOfContents(extractedToc);
       } catch (error) {
@@ -380,10 +386,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     } else {
       // マークダウンでない場合はそのまま表示
       setRenderedContent(
-        `<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">${article.content}</p></section>`
+        `<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">${item.content}</p></section>`
       );
     }
-  }, [article.content]);
+  }, [item.content]);
 
   // スクロール処理と目次の位置調整
   useEffect(() => {
@@ -437,16 +443,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   const scrollToHeading = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      // より正確な位置計算でスクロール
-      const elementPosition =
-        element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - 100; // 見出しの少し上に移動（20px余白）
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-
+      element.scrollIntoView({ behavior: "smooth" });
       setActiveSection(id);
 
       // モバイル版では、クリック後に目次を非表示にする
@@ -461,18 +458,19 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     setShowMobileToc(!showMobileToc);
   };
 
-  const featuredImage =
-    article.images.find((img) => img.isFeatured)?.url ?? "/fallback.jpg";
+  const sectionId = item.category;
+  const returnPath = CATEGORY_CONFIG[item.category]?.path || "/";
+  const label = CATEGORY_CONFIG[item.category]?.label || "Category";
 
   return (
     <div className="bg-slate-950 min-h-screen article-page-container">
       {/* Hero image */}
-      {article.images?.some((img) => img.isFeatured) && (
+      {item.images?.[0] && (
         <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[500px] w-full flex justify-center">
             <Image
-              src={featuredImage}
-              alt={article.title}
+              src={item.images[0].url}
+              alt={item.images[0].altText || item.title}
               className="h-auto max-h-[500px] w-full max-w-[800px] object-contain rounded-md"
               width={800}
               height={500}
@@ -487,9 +485,9 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         <div className="japanese-style-modern">
           {/* ヘッダー部分 */}
           <div className="japanese-style-modern-header">
-            <h1 className="japanese-style-modern-title">{article.title}</h1>
+            <h1 className="japanese-style-modern-title">{item.title}</h1>
             <div className="japanese-style-modern-date">
-              {new Date(article.updatedAt).toLocaleDateString("ja-JP", {
+              {new Date(item.updatedAt).toLocaleDateString("ja-JP", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -528,7 +526,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
         {/* ボタン部分 */}
         <div className="flex flex-col justify-center items-center mt-8 gap-8">
-          <Link href={`/${article.category}`}>
+          <Link href={`${returnPath}#${sectionId}`}>
             <Button
               size="lg"
               className="
@@ -542,26 +540,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                 transition-all duration-300
               "
             >
-              Back to {CATEGORY_LABELS[article.category]} Posts ≫
+              Back to {label} ≫
             </Button>
           </Link>
-          <Link href="/all-articles">
-            <Button
-              size="lg"
-              className="
-                w-[220px] 
-                border border-rose-700 bg-rose-700 text-white 
-                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
-                shadow hover:shadow-lg
-                whitespace-nowrap
-                w-auto
-                px-6
-                transition-all duration-300
-              "
-            >
-              View all posts ≫
-            </Button>
-          </Link>
+          <BackToHomeBtn />
         </div>
         <WhiteLine />
       </div>

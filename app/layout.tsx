@@ -1,5 +1,5 @@
+//app/layout.tsx
 import "./globals.css";
-// import "./styles/japanese-theme.css";
 import "./styles/japanese-style-modern.css";
 import "highlight.js/styles/github-dark.css"; // or any highlight.js theme
 import type { Metadata } from "next";
@@ -65,47 +65,11 @@ export const viewport = {
   themeColor: "#020617",
 };
 
-// データベース接続ウォームアップ関数
-async function warmupDatabase() {
-  if (typeof window === "undefined") {
-    // サーバーサイドでのみ実行
-    try {
-      console.log("データベース接続のウォームアップを開始...");
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
-        }/api/warmup`,
-        {
-          cache: "no-store",
-          headers: {
-            "x-internal-token": "warmup-request",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        console.error(
-          "データベースウォームアップに失敗:",
-          await response.text()
-        );
-      } else {
-        console.log("データベースウォームアップ成功");
-      }
-    } catch (error) {
-      console.error("データベースウォームアップエラー:", error);
-      // エラーは無視して続行
-    }
-  }
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // レイアウトコンポーネントがレンダリングされる前にデータベース接続をウォームアップ
-  await warmupDatabase();
-
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>

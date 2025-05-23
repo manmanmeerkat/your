@@ -21,7 +21,10 @@ async function getCustomsArticles(page = 1) {
     const res = await fetch(
       `${baseUrl}/api/articles?category=customs&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
-        cache: "no-cache",
+        next: {
+          revalidate: 3600, // 1時間キャッシュ
+          tags: ["customs-articles"],
+        },
       }
     );
 
@@ -38,24 +41,18 @@ async function getCustomsArticles(page = 1) {
 
     const data = await res.json();
 
-    if (data.articles && Array.isArray(data.articles)) {
-      data.articles = data.articles.filter(
-        (article: articleType) => article.category === "customs"
-      );
-    }
+    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
+    const articles = Array.isArray(data.articles) ? data.articles : [];
 
-    // paginationが返されていない場合のデフォルト値を設定
-    if (!data.pagination) {
-      data.pagination = {
-        total: data.articles?.length || 0,
+    return {
+      articles,
+      pagination: data.pagination || {
+        total: articles.length,
         page: 1,
         pageSize: ARTICLES_PER_PAGE,
-        pageCount:
-          Math.ceil((data.articles?.length || 0) / ARTICLES_PER_PAGE) || 1,
-      };
-    }
-
-    return data;
+        pageCount: Math.ceil(articles.length / ARTICLES_PER_PAGE) || 1,
+      },
+    };
   } catch (error) {
     console.error("Failed to fetch customs articles:", error);
     return {
@@ -94,7 +91,8 @@ export default async function CustomsPage({
             alt="Japanese Customs"
             fill
             style={{ objectFit: "cover" }}
-            unoptimized
+            priority={true}
+            sizes="100vw"
           />
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
@@ -111,7 +109,7 @@ export default async function CustomsPage({
         </div>
       </section>
 
-      {/* 記事一覧 (ページネーション追加) */}
+      {/* 記事一覧 */}
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -147,7 +145,7 @@ export default async function CustomsPage({
 
       <WhiteLine />
 
-      {/* サブカテゴリ (変更なし) */}
+      {/* サブカテゴリ */}
       <section className="py-16 bg-slate-950">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center text-white">
@@ -169,6 +167,7 @@ export default async function CustomsPage({
                     alt={item.label}
                     fill
                     className="object-cover"
+                    sizes="(max-width: 768px) 8rem, 8rem"
                   />
                 </div>
                 <p className="mt-2 font-medium text-white">{item.label}</p>
