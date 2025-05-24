@@ -23,9 +23,26 @@ const nextConfig = {
   // ⭐ 基本圧縮
   compress: true,
   
+  // ⭐ 実験的機能（開発環境でのキャッシュ無効化追加）
+  experimental: {
+    // 開発環境でのキャッシュ完全無効化
+    ...(process.env.NODE_ENV === 'development' && {
+      isrMemoryCacheSize: 0, // ISRキャッシュを無効化
+    }),
+  },
+
+  // ⭐ 開発環境での追加設定（キャッシュ完全無効化）
+  ...(process.env.NODE_ENV === 'development' && {
+    // developmentでのキャッシュを無効化
+    onDemandEntries: {
+      maxInactiveAge: 0,      // ページの非アクティブ時間を0に
+      pagesBufferLength: 0,   // バッファリングを無効化
+    },
+  }),
+  
   // ⭐ 基本ヘッダー設定のみ
   async headers() {
-    return [
+    const headers = [
       {
         source: '/(.*)',
         headers: [
@@ -35,13 +52,15 @@ const nextConfig = {
           },
         ],
       },
-      // 静的ファイルキャッシュ
+      // 静的ファイルキャッシュ（本番環境のみ）
       {
         source: '/images/:path*',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: process.env.NODE_ENV === 'development' 
+              ? 'no-cache, no-store, must-revalidate'  // 開発環境：キャッシュ無効
+              : 'public, max-age=31536000, immutable', // 本番環境：長期キャッシュ
           },
         ],
       },
@@ -50,11 +69,36 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: process.env.NODE_ENV === 'development' 
+              ? 'no-cache, no-store, must-revalidate'  // 開発環境：キャッシュ無効
+              : 'public, max-age=31536000, immutable', // 本番環境：長期キャッシュ
           },
         ],
       },
     ];
+
+    // ⭐ 開発環境では記事ページもキャッシュ無効化
+    if (process.env.NODE_ENV === 'development') {
+      headers.push({
+        source: '/articles/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate, proxy-revalidate, max-age=0',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      });
+    }
+
+    return headers;
   },
   
   // ⭐ 出力設定

@@ -231,32 +231,35 @@ const renderEnhancedMarkdown = (content: string): string => {
       if (!paragraph) continue;
 
       try {
+        // ⭐ 見出し処理（長い順に処理して正確にマッチング）
+        if (paragraph.match(/^###\s+/)) {
+          const headingText = paragraph.replace(/^###\s+/, "").trim();
+          const id = safeId(headingText);
+          console.log("Processing H3:", headingText); // デバッグログ
+          html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
+            headingText
+          )}</h3>`;
+        }
+        // ⭐ 見出し2
+        else if (paragraph.match(/^##\s+/)) {
+          const headingText = paragraph.replace(/^##\s+/, "").trim();
+          const id = safeId(headingText);
+          console.log("Processing H2:", headingText); // デバッグログ
+          html += `<h2 id="${id}" class="japanese-style-modern-h2">${processInlineMarkdown(
+            headingText
+          )}</h2>`;
+        }
         // ⭐ 見出し1
-        if (paragraph.match(/^#\s+/)) {
+        else if (paragraph.match(/^#\s+/)) {
           const headingText = paragraph.replace(/^#\s+/, "").trim();
           const id = safeId(headingText);
+          console.log("Processing H1:", headingText); // デバッグログ
           if (i > 0) {
             html += '</section><section class="japanese-style-modern-section">';
           }
           html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
             headingText
           )}</h1>`;
-        }
-        // ⭐ 見出し2
-        else if (paragraph.match(/^##\s+/)) {
-          const headingText = paragraph.replace(/^##\s+/, "").trim();
-          const id = safeId(headingText);
-          html += `<h2 id="${id}" class="japanese-style-modern-h2">${processInlineMarkdown(
-            headingText
-          )}</h2>`;
-        }
-        // ⭐ 見出し3
-        else if (paragraph.match(/^###\s+/)) {
-          const headingText = paragraph.replace(/^###\s+/, "").trim();
-          const id = safeId(headingText);
-          html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
-            headingText
-          )}</h3>`;
         }
         // ⭐ 引用ブロック
         else if (paragraph.match(/^>\s/)) {
@@ -349,16 +352,30 @@ const renderEnhancedMarkdown = (content: string): string => {
 };
 
 const extractHeaders = (content: string): TocItem[] => {
-  const headingRegex = /^(#{1,3})\s+(.+)$/gm;
   const headers: TocItem[] = [];
-  let match;
+  const lines = content.split("\n");
 
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length;
-    const text = match[2].trim();
-    const id = safeId(text);
-    headers.push({ id, text, level });
-  }
+  lines.forEach((line) => {
+    const trimmedLine = line.trim();
+
+    // ⭐ 長い順に処理（### → ## → #）
+    if (trimmedLine.match(/^###\s+/)) {
+      const text = trimmedLine.replace(/^###\s+/, "").trim();
+      const id = safeId(text);
+      headers.push({ id, text, level: 3 });
+      console.log("TOC H3:", text); // デバッグログ
+    } else if (trimmedLine.match(/^##\s+/)) {
+      const text = trimmedLine.replace(/^##\s+/, "").trim();
+      const id = safeId(text);
+      headers.push({ id, text, level: 2 });
+      console.log("TOC H2:", text); // デバッグログ
+    } else if (trimmedLine.match(/^#\s+/)) {
+      const text = trimmedLine.replace(/^#\s+/, "").trim();
+      const id = safeId(text);
+      headers.push({ id, text, level: 1 });
+      console.log("TOC H1:", text); // デバッグログ
+    }
+  });
 
   return headers;
 };
@@ -370,24 +387,42 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { renderedContent, tableOfContents } = useMemo(() => {
+    // ⭐ デバッグログを追加
+    console.log("Rendering markdown content:", {
+      contentLength: article.content?.length,
+      updatedAt: article.updatedAt,
+      slug: article.slug,
+      contentPreview: article.content?.substring(0, 200),
+    });
+
+    // ⭐ より厳密なMarkdownパターン検出
     const mdPatterns = [
-      /^#\s+.+$/m,
-      /\*\*.+\*\*/,
-      /\*.+\*/,
-      /^\s*-\s+.+$/m,
-      /^\s*\d+\.\s+.+$/m,
-      /\[.+\]\(.+\)/,
-      /!\[.+\]\(.+\)/,
-      /^>.+$/m,
+      /^#{1,3}\s+.+$/m, // 見出し（# ## ###）
+      /\*\*.+?\*\*/, // 太字
+      /\*.+?\*/, // 斜体
+      /^\s*-\s+.+$/m, // 箇条書きリスト
+      /^\s*\d+\.\s+.+$/m, // 番号付きリスト
+      /\[[^\]]+\]\([^)]+\)/, // リンク
+      /!\[[^\]]*\]\([^)]+\)/, // 画像
+      /^>\s.+$/m, // 引用
+      /^(-{3,}|\*{3,}|_{3,})$/m, // 水平線
+      /`[^`]+`/, // インラインコード
     ];
 
-    const contentIsMarkdown = mdPatterns.some((pattern) =>
-      pattern.test(article.content)
-    );
+    const contentIsMarkdown = mdPatterns.some((pattern) => {
+      const match = pattern.test(article.content);
+      if (match) {
+        console.log("Detected markdown pattern:", pattern.source);
+      }
+      return match;
+    });
+
+    console.log("Content is markdown:", contentIsMarkdown);
 
     if (contentIsMarkdown) {
       const html = renderEnhancedMarkdown(article.content);
       const toc = extractHeaders(article.content);
+      console.log("Generated TOC:", toc);
       return { renderedContent: html, tableOfContents: toc };
     } else {
       return {
@@ -395,7 +430,22 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         tableOfContents: [],
       };
     }
-  }, [article.content]);
+  }, [
+    article.content,
+    article.updatedAt,
+    article.slug,
+    article.id, // ⭐ 記事IDも依存関係に追加
+  ]);
+
+  // ⭐ 記事データ変更の監視とデバッグ
+  useEffect(() => {
+    console.log("Article data changed:", {
+      title: article.title,
+      slug: article.slug,
+      updatedAt: article.updatedAt,
+      contentPreview: article.content?.substring(0, 100) + "...",
+    });
+  }, [article]);
 
   // ⭐ スクロール処理
   const handleScroll = useCallback(() => {
