@@ -59,9 +59,9 @@ const HighPerformanceImage = ({
   const [isInView, setIsInView] = useState(priority); // 優先画像は即座に表示
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // ⭐ Intersection Observer for lazy loading
+  // ⭐ Intersection Observer for lazy loading (SSR対応)
   useEffect(() => {
-    if (priority) return; // 優先画像はスキップ
+    if (priority || typeof window === "undefined") return; // SSR対応
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -78,11 +78,17 @@ const HighPerformanceImage = ({
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    const currentRef = imgRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+      observer.disconnect();
+    };
   }, [priority]);
 
   const handleLoad = useCallback(() => {
@@ -332,9 +338,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     }
   }, [article.content]);
 
-  // ⭐ 画像の動的読み込み処理
+  // ⭐ 画像の動的読み込み処理 (SSR対応)
   useEffect(() => {
-    if (!contentRef.current) return;
+    // ⭐ ブラウザ環境チェック
+    if (typeof window === "undefined" || !contentRef.current) return;
 
     const imageContainers = contentRef.current.querySelectorAll(
       ".high-perf-img-container"
@@ -380,6 +387,9 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   }, [renderedContent]);
 
   const handleScroll = useCallback(() => {
+    // ⭐ ブラウザ環境チェック
+    if (typeof window === "undefined") return;
+
     setShowScrollTop(window.scrollY > 300);
 
     if (tableOfContents.length > 0) {
@@ -401,6 +411,9 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   }, [tableOfContents.length]);
 
   useEffect(() => {
+    // ⭐ ブラウザ環境チェック
+    if (typeof window === "undefined") return;
+
     let timeoutId: NodeJS.Timeout;
 
     const debouncedHandleScroll = () => {
@@ -421,10 +434,14 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   }, [handleScroll]);
 
   const scrollToTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, []);
 
   const scrollToHeading = useCallback((id: string) => {
+    if (typeof window === "undefined") return;
+
     const element = document.getElementById(id);
     if (element) {
       const elementPosition =

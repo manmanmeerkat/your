@@ -24,8 +24,11 @@ export default function ArticleCard({ article }: { article: articleType }) {
   const [isInView, setIsInView] = useState(false);
   const imgContainerRef = useRef<HTMLDivElement>(null);
 
-  // ⭐ Intersection Observer for lazy loading
+  // ⭐ Intersection Observer for lazy loading (SSR対応)
   useEffect(() => {
+    // ⭐ ブラウザ環境チェック
+    if (typeof window === "undefined" || !imgContainerRef.current) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -41,11 +44,17 @@ export default function ArticleCard({ article }: { article: articleType }) {
       }
     );
 
-    if (imgContainerRef.current) {
-      observer.observe(imgContainerRef.current);
+    const currentRef = imgContainerRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+      observer.disconnect();
+    };
   }, []);
 
   const handleImageLoad = useCallback(() => {

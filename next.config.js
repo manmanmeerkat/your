@@ -29,12 +29,6 @@ const nextConfig = {
   // ⭐ 出力最適化
   swcMinify: true, // SWCによる高速ミニファイ
   
-  // ⭐ 実験的な無料最適化
-  experimental: {
-    // 高速リフレッシュ
-    optimizePackageImports: ['lucide-react'],
-  },
-  
   // ⭐ ヘッダー最適化（重要・無料）
   async headers() {
     return [
@@ -218,7 +212,7 @@ const nextConfig = {
   
   // ⭐ 出力設定
   trailingSlash: false,
-  poweredByHeader: false, // "X-Powered-By" ヘッダーを削除
+  poweredByHeader: false,
   
   // ⭐ TypeScript設定
   typescript: {
