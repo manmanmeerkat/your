@@ -1,4 +1,4 @@
-// app/articles/[slug]/page.tsx - 即座反映版
+// app/articles/[slug]/page.tsx - 静的設定版
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -150,6 +150,6 @@ export default async function Page({ params }: Props) {
   );
 }
 
-// ⭐ 開発環境では動的レンダリングを強制
+// ⭐ 静的設定（開発環境での即座反映のため）
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
