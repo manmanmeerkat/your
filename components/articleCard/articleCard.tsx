@@ -5,7 +5,7 @@ import { articleType } from "@/types/types";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 export default function ArticleCard({ article }: { article: articleType }) {
   const { id, slug, title, category, content, summary, images } = article;
@@ -18,44 +18,9 @@ export default function ArticleCard({ article }: { article: articleType }) {
       customs: "Customs",
     }[category] || "Article";
 
-  // ⭐ 高パフォーマンス画像状態管理
+  // ⭐ シンプルな画像状態管理（Intersection Observerなし）
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const imgContainerRef = useRef<HTMLDivElement>(null);
-
-  // ⭐ Intersection Observer for lazy loading (SSR対応)
-  useEffect(() => {
-    // ⭐ ブラウザ環境チェック
-    if (typeof window === "undefined" || !imgContainerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsInView(true);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      {
-        rootMargin: "100px", // 100px手前で読み込み開始
-        threshold: 0.1,
-      }
-    );
-
-    const currentRef = imgContainerRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-      observer.disconnect();
-    };
-  }, []);
 
   const handleImageLoad = useCallback(() => {
     setImageLoaded(true);
@@ -78,31 +43,17 @@ export default function ArticleCard({ article }: { article: articleType }) {
         className="flex flex-col md:flex-row h-full min-h-[260px] rounded-xl shadow-md overflow-hidden bg-white 
                         transition-transform duration-300 ease-in-out hover:scale-[1.03]"
       >
-        {/* ⭐ Image area - 高パフォーマンス版 */}
+        {/* ⭐ Image area - シンプル版 */}
         <div
-          ref={imgContainerRef}
           className="w-full md:w-[220px] min-h-[208px] bg-slate-100 flex items-center justify-center 
                 p-4 md:p-0 md:pl-4 md:pt-0 overflow-hidden rounded-[5px] md:rounded-none relative"
         >
           {images?.[0] ? (
             <>
-              {/* ⭐ スケルトンローダー */}
-              {!imageLoaded && (
+              {/* ⭐ シンプルなスケルトンローダー */}
+              {!imageLoaded && !imageError && (
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 animate-pulse rounded-[5px] md:rounded-none flex items-center justify-center">
-                  <div className="text-slate-400">
-                    <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        fill="none"
-                        strokeDasharray="24"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
+                  <div className="text-slate-400 text-sm">Loading...</div>
                 </div>
               )}
 
@@ -116,8 +67,8 @@ export default function ArticleCard({ article }: { article: articleType }) {
                 </div>
               )}
 
-              {/* ⭐ 実際の画像（unoptimized + 高パフォーマンス） */}
-              {isInView && !imageError && (
+              {/* ⭐ 実際の画像（unoptimized + シンプル） */}
+              {!imageError && (
                 <img
                   src={images[0].url}
                   alt={images[0].altText || title}
