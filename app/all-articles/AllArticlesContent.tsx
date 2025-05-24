@@ -1,7 +1,6 @@
-// app/all-articles/AllArticlesContent.tsx
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/articleCard/articleCard";
@@ -11,10 +10,29 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import Image from "next/image";
 import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 
 // フェッチャー関数
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const fetcher = async (url: string) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "Cache-Control": "max-age=300",
+      },
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
 
 interface AllArticlesContentProps {
   initialArticles: articleType[];
@@ -39,13 +57,21 @@ export default function AllArticlesContent({
   initialCategory,
 }: AllArticlesContentProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [prefetchedPages, setPrefetchedPages] = useState(new Set<number>());
+  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const hoverTimeoutRef = useRef<NodeJS.Timeout>();
 
   const currentPage = Number(searchParams.get("page") || initialPage);
   const currentCategory = searchParams.get("category") || initialCategory;
 
-  // 記事データのSWRキャッシュ
+  // クライアントサイドマウント状態管理
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // APIキー生成
   const articlesParams = useMemo(() => {
     const params = new URLSearchParams({
       published: "true",
@@ -56,37 +82,57 @@ export default function AllArticlesContent({
     return params.toString();
   }, [currentPage, currentCategory, initialPagination.pageSize]);
 
+  const apiKey = `/api/articles?${articlesParams}`;
+
+  // 記事データのSWR
   const {
     data: articlesData,
     error: articlesError,
     isLoading: articlesLoading,
     mutate: mutateArticles,
-  } = useSWR(`/api/articles?${articlesParams}`, fetcher, {
+  } = useSWR(mounted ? apiKey : null, fetcher, {
     fallbackData: {
       articles: initialArticles,
       pagination: initialPagination,
     },
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
-    dedupingInterval: 30000, // 30秒間の重複排除
-    refreshInterval: 0, // 自動更新無効
+    revalidateOnMount: !initialArticles.length,
+    dedupingInterval: 60000,
+    refreshInterval: 0,
+    keepPreviousData: true,
+    errorRetryCount: 2,
+    compare: (a, b) => {
+      if (!mounted) return true;
+      return JSON.stringify(a) === JSON.stringify(b);
+    },
   });
 
-  // カテゴリー数のSWRキャッシュ
+  // カテゴリー数のSWR
   const { data: countsData, error: countsError } = useSWR(
-    "/api/article-counts",
+    mounted ? "/api/article-counts" : null,
     fetcher,
     {
       fallbackData: { counts: initialCategoryCounts },
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 300000, // 5分間の重複排除
+      revalidateOnMount: false,
+      dedupingInterval: 300000,
       refreshInterval: 0,
     }
   );
 
-  // メモ化された値
+  // データ取得
   const { articles, pagination, categoryCounts, totalCount } = useMemo(() => {
+    if (!mounted || !articlesData?.articles) {
+      return {
+        articles: initialArticles,
+        pagination: initialPagination,
+        categoryCounts: initialCategoryCounts,
+        totalCount: initialTotalCount,
+      };
+    }
+
     const counts = countsData?.counts || initialCategoryCounts;
     const calculatedTotalCount = Object.values(counts).reduce(
       (sum: number, count) => sum + (count as number),
@@ -94,12 +140,13 @@ export default function AllArticlesContent({
     );
 
     return {
-      articles: articlesData?.articles || initialArticles,
-      pagination: articlesData?.pagination || initialPagination,
+      articles: articlesData.articles,
+      pagination: articlesData.pagination,
       categoryCounts: counts,
       totalCount: calculatedTotalCount || initialTotalCount,
     };
   }, [
+    mounted,
     articlesData,
     countsData,
     initialArticles,
@@ -108,70 +155,129 @@ export default function AllArticlesContent({
     initialTotalCount,
   ]);
 
-  // 隣接ページのプリフェッチ
-  useEffect(() => {
-    if (!articlesLoading && pagination) {
-      const prefetchPage = (page: number) => {
-        const params = new URLSearchParams({
-          published: "true",
-          page: page.toString(),
-          pageSize: pagination.pageSize.toString(),
-        });
-        if (currentCategory) params.append("category", currentCategory);
+  // プリフェッチ関数
+  const prefetchPage = useCallback(
+    async (page: number) => {
+      if (
+        !mounted ||
+        page < 1 ||
+        page > pagination.pageCount ||
+        prefetchedPages.has(page)
+      )
+        return;
 
-        // プリフェッチ（キャッシュに保存のみ、画面更新なし）
-        mutateArticles(`/api/articles?${params.toString()}`, {
-          revalidate: false,
-        });
-      };
-
-      // 前後のページをプリフェッチ
-      if (currentPage > 1) {
-        prefetchPage(currentPage - 1);
-      }
-      if (currentPage < pagination.pageCount) {
-        prefetchPage(currentPage + 1);
-      }
-    }
-  }, [
-    currentPage,
-    currentCategory,
-    pagination,
-    articlesLoading,
-    mutateArticles,
-  ]);
-
-  const updateQuery = (key: string, value: string) => {
-    setIsTransitioning(true);
-
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) params.set(key, value);
-    else params.delete(key);
-    if (key !== "page") params.set("page", "1");
-
-    // 新しいページのデータをプリフェッチ
-    if (key === "category" || key === "page") {
-      const newPage = key === "page" ? value : "1";
-      const newCategory = key === "category" ? value : currentCategory;
-
-      const prefetchParams = new URLSearchParams({
+      const params = new URLSearchParams({
         published: "true",
-        page: newPage,
+        page: page.toString(),
         pageSize: pagination.pageSize.toString(),
       });
-      if (newCategory) prefetchParams.append("category", newCategory);
+      if (currentCategory) params.append("category", currentCategory);
 
-      // プリフェッチして即座にページ遷移
-      mutateArticles(`/api/articles?${prefetchParams.toString()}`, {
-        revalidate: false,
+      const apiUrl = `/api/articles?${params.toString()}`;
+
+      try {
+        const data = await fetcher(apiUrl);
+        await mutate(apiUrl, data, { revalidate: false });
+        setPrefetchedPages((prev) => new Set([...prev, page]));
+      } catch {
+        // エラーは静かに処理
+      }
+    },
+    [
+      mounted,
+      pagination.pageCount,
+      pagination.pageSize,
+      currentCategory,
+      prefetchedPages,
+    ]
+  );
+
+  // プリフェッチ戦略
+  useEffect(() => {
+    if (!mounted || (!articlesLoading && pagination)) {
+      const pagesToPrefetch = [];
+
+      if (currentPage > 1) {
+        pagesToPrefetch.push({ page: currentPage - 1, delay: 0 });
+      }
+      if (currentPage < pagination.pageCount) {
+        pagesToPrefetch.push({ page: currentPage + 1, delay: 50 });
+      }
+
+      if (currentPage > 2) {
+        pagesToPrefetch.push({ page: currentPage - 2, delay: 200 });
+      }
+      if (currentPage + 2 <= pagination.pageCount) {
+        pagesToPrefetch.push({ page: currentPage + 2, delay: 250 });
+      }
+
+      pagesToPrefetch.forEach(({ page, delay }) => {
+        setTimeout(() => prefetchPage(page), delay);
       });
     }
+  }, [mounted, currentPage, pagination, articlesLoading, prefetchPage]);
 
-    router.push(`/all-articles?${params.toString()}`, { scroll: false });
+  // ホバー時プリフェッチ
+  const handlePageHover = useCallback(
+    (page: number) => {
+      if (!mounted) return;
 
-    // 遷移アニメーション
-    setTimeout(() => setIsTransitioning(false), 200);
-  };
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+
+      hoverTimeoutRef.current = setTimeout(() => {
+        prefetchPage(page);
+      }, 150);
+    },
+    [mounted, prefetchPage]
+  );
+
+  // ページ遷移処理
+  const updateQuery = useCallback(
+    async (key: string, value: string) => {
+      if (!mounted || isTransitioning) return;
+
+      const newPage = key === "page" ? parseInt(value) : 1;
+
+      setIsTransitioning(true);
+
+      if (key === "page" && !prefetchedPages.has(newPage)) {
+        try {
+          await prefetchPage(newPage);
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        } catch {
+          // エラーは静かに処理
+        }
+      }
+
+      const params = new URLSearchParams(searchParams.toString());
+      if (value) params.set(key, value);
+      else params.delete(key);
+      if (key !== "page") params.set("page", "1");
+
+      router.push(`/all-articles?${params.toString()}`, { scroll: false });
+
+      const transitionTime =
+        key === "page" && prefetchedPages.has(newPage) ? 100 : 250;
+      setTimeout(() => setIsTransitioning(false), transitionTime);
+    },
+    [
+      mounted,
+      isTransitioning,
+      searchParams,
+      router,
+      prefetchedPages,
+      prefetchPage,
+    ]
+  );
+
+  // クリーンアップ
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // エラーハンドリング
   if (articlesError || countsError) {
@@ -181,6 +287,7 @@ export default function AllArticlesContent({
           <p className="text-xl mb-4">記事の読み込みに失敗しました</p>
           <Button
             onClick={() => {
+              setPrefetchedPages(new Set());
               mutateArticles();
               window.location.reload();
             }}
@@ -193,11 +300,11 @@ export default function AllArticlesContent({
     );
   }
 
-  const isLoading = articlesLoading && !articles.length;
+  const isLoading = articlesLoading && !articles.length && mounted;
 
   return (
     <div
-      className={`transition-opacity duration-200 ${
+      className={`transition-opacity duration-150 ${
         isTransitioning ? "opacity-75" : "opacity-100"
       }`}
     >
@@ -223,7 +330,7 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* カテゴリーフィルター - スティッキー */}
+          {/* カテゴリーフィルター */}
           <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
             <Button
               variant={!currentCategory ? "default" : "outline"}
@@ -264,11 +371,13 @@ export default function AllArticlesContent({
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {articles.map((article: articleType) => (
-                    <ArticleCard key={article.id} article={article} />
+                    <ArticleCard
+                      key={`${article.id}-${mounted}`}
+                      article={article}
+                    />
                   ))}
                 </div>
 
-                {/* 記事数表示 */}
                 <div className="mt-8 text-center text-white">
                   Showing {(currentPage - 1) * pagination.pageSize + 1} -
                   {Math.min(
@@ -306,6 +415,7 @@ export default function AllArticlesContent({
                   currentPage={currentPage}
                   totalPages={pagination.pageCount}
                   onPageChange={(page) => updateQuery("page", page.toString())}
+                  onPageHover={handlePageHover}
                 />
               </div>
             )}
