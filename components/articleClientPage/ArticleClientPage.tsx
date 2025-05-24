@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
@@ -40,33 +41,67 @@ export type TocItem = {
   level: number;
 };
 
-// ⭐ シンプルな画像コンポーネント（SSR安全）
-const SimpleImage = ({
+// ⭐ 改良された画像コンポーネント（unoptimized + キャッシュ対応）
+const OptimizedImage = ({
   src,
   alt,
   className,
   priority = false,
+  width = 800,
+  height = 400,
 }: {
   src: string;
   alt: string;
   className?: string;
   priority?: boolean;
+  width?: number;
+  height?: number;
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [shouldShowLoader, setShouldShowLoader] = useState(true);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // ⭐ マウント時にキャッシュ確認
+  useEffect(() => {
+    // 短い遅延でローダーを非表示にする（UX改善）
+    const timer = setTimeout(() => {
+      setShouldShowLoader(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ⭐ src変更時の状態リセット
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+    setShouldShowLoader(true);
+
+    const timer = setTimeout(() => {
+      setShouldShowLoader(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [src]);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    setShouldShowLoader(false);
   }, []);
 
   const handleError = useCallback(() => {
     setHasError(true);
-    setIsLoaded(true);
+    setIsLoaded(false);
+    setShouldShowLoader(false);
   }, []);
 
   if (hasError) {
     return (
-      <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 min-h-[200px] flex items-center justify-center">
+      <div
+        className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 flex items-center justify-center"
+        style={{ minHeight: "200px" }}
+      >
         <div className="text-center">
           <div className="text-gray-400 text-4xl mb-2">📷</div>
           <div>画像を読み込めませんでした</div>
@@ -78,21 +113,27 @@ const SimpleImage = ({
   return (
     <div className="relative">
       {/* スケルトンローダー */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center">
+      {shouldShowLoader && !isLoaded && (
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center z-10"
+          style={{ minHeight: "200px" }}
+        >
           <div className="text-gray-400">Loading...</div>
         </div>
       )}
 
-      {/* 実際の画像 */}
-      <img
+      {/* Next.js Image (unoptimized) */}
+      <Image
+        ref={imgRef}
         src={src}
         alt={alt}
+        width={width}
+        height={height}
+        unoptimized={true} // ⭐ Vercel最適化を無効化
         className={`transition-opacity duration-500 ${
           isLoaded ? "opacity-100" : "opacity-0"
         } ${className || ""}`}
-        loading={priority ? "eager" : "lazy"}
-        decoding="async"
+        priority={priority}
         onLoad={handleLoad}
         onError={handleError}
         style={{
@@ -116,7 +157,7 @@ const safeId = (text: unknown): string => {
     .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-");
 };
 
-// ⭐ シンプルなインライン処理
+// ⭐ 改良されたインライン処理（画像の動的管理）
 const processInlineMarkdown = (text: string): string => {
   if (!text) return "";
 
@@ -136,10 +177,14 @@ const processInlineMarkdown = (text: string): string => {
         /`([^`]+)`/g,
         '<code class="japanese-style-modern-code">$1</code>'
       )
-      // ⭐ シンプル画像処理
+      // ⭐ シンプル化された画像処理（動的管理に変更）
       .replace(
         /!\[([^\]]*)\]\(([^)]+)\)/g,
-        '<img src="$2" alt="$1" loading="lazy" decoding="async" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 1.5rem 0; display: block;">'
+        `<div class="markdown-image-container" data-src="$2" data-alt="$1">
+          <div class="markdown-image-loader">
+            <div style="color: #9ca3af;">Loading...</div>
+          </div>
+        </div>`
       )
   );
 };
@@ -277,7 +322,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     }
   }, [article.content]);
 
-  // ⭐ シンプルなスクロール処理
+  // ⭐ スクロール処理
   const handleScroll = useCallback(() => {
     if (typeof window === "undefined") return;
 
@@ -304,7 +349,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // ⭐ シンプルなスクロールイベント
     const handleScrollEvent = () => handleScroll();
 
     window.addEventListener("scroll", handleScrollEvent, { passive: true });
@@ -318,6 +362,101 @@ export default function ArticleClientPage({ article }: { article: Article }) {
       window.removeEventListener("resize", handleScrollEvent);
     };
   }, [handleScroll]);
+
+  // ⭐ Markdown内画像の動的管理
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    const processMarkdownImages = () => {
+      const imageContainers = contentRef.current?.querySelectorAll(
+        ".markdown-image-container"
+      );
+      if (!imageContainers) return;
+
+      imageContainers.forEach((container) => {
+        const existingImg = container.querySelector("img");
+        if (existingImg) return; // 既に処理済み
+
+        const src = container.getAttribute("data-src");
+        const alt = container.getAttribute("data-alt") || "";
+        const loader = container.querySelector(
+          ".markdown-image-loader"
+        ) as HTMLElement;
+
+        if (!src || !loader) return;
+
+        // 画像要素を作成
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = alt;
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.style.cssText = `
+          max-width: 100%; 
+          height: auto; 
+          border-radius: 8px; 
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+          display: block; 
+          opacity: 0; 
+          transition: opacity 0.5s ease;
+          margin: 0;
+        `;
+
+        // 読み込み完了時の処理
+        const handleLoad = () => {
+          img.style.opacity = "1";
+          if (loader) {
+            loader.style.display = "none";
+          }
+        };
+
+        // エラー時の処理
+        const handleError = () => {
+          img.style.display = "none";
+          if (loader) {
+            loader.innerHTML = `
+              <div style="text-align: center; color: #9ca3af;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
+                <div>画像を読み込めませんでした</div>
+              </div>
+            `;
+            loader.style.background =
+              "linear-gradient(135deg, #262626, #1a1a1a)";
+            loader.style.animation = "none";
+          }
+        };
+
+        // ⭐ キャッシュされた画像の即座チェック
+        if (img.complete && img.naturalHeight !== 0) {
+          handleLoad();
+        } else {
+          img.addEventListener("load", handleLoad);
+          img.addEventListener("error", handleError);
+        }
+
+        // 画像をコンテナに追加
+        container.appendChild(img);
+      });
+    };
+
+    // DOM更新後に実行
+    const timer = setTimeout(processMarkdownImages, 100);
+
+    // MutationObserverで動的コンテンツの変更を監視
+    const observer = new MutationObserver(() => {
+      processMarkdownImages();
+    });
+
+    observer.observe(contentRef.current, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [renderedContent]); // renderedContentが変更されたときに再実行
 
   const scrollToTop = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -359,15 +498,17 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
   return (
     <div className="bg-slate-950 min-h-screen article-page-container">
-      {/* ⭐ Hero image - シンプル版 */}
+      {/* ⭐ Hero image - OptimizedImage使用 */}
       {hasFeaturedImage && (
         <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[500px] w-full flex justify-center">
-            <SimpleImage
+            <OptimizedImage
               src={featuredImage}
               alt={article.title}
               className="h-auto max-h-[500px] w-full max-w-[800px] object-contain rounded-md"
               priority={true}
+              width={800}
+              height={500}
             />
           </div>
           <WhiteLine />

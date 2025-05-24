@@ -284,6 +284,7 @@
   border-radius: 0.25rem;
   position: relative;
   border: 1px solid #2b2b2b; /* 蝋色 */
+  contain: layout style; /* パフォーマンス向上 */
 }
 
 /* パラグラフスタイル */
@@ -460,15 +461,168 @@
   margin: 2rem 0;
 }
 
-/* 画像スタイル */
+/* ⭐ 改良された画像スタイル（ローディング対応） */
 .japanese-style-modern img,
 .japanese-style-modern-img {
   max-width: 100%;
   height: auto;
-  border-radius: 0.25rem;
+  border-radius: 8px;
   margin: 1.5rem auto;
   display: block;
   border: 1px solid #262626;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: opacity 0.5s ease;
+  content-visibility: auto;
+  contain: layout;
+}
+
+/* ⭐ Markdown内画像コンテナ（動的管理用） */
+.markdown-image-container {
+  position: relative;
+  margin: 1.5rem 0;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  contain: layout style paint;
+}
+
+/* ⭐ Markdown内画像ローダー */
+.markdown-image-loader {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  z-index: 10;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ⭐ 画像コンテナ（既存の画像コンテナ） */
+.image-container {
+  position: relative;
+  margin: 1.5rem 0;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  contain: layout style paint;
+}
+
+/* ⭐ 画像ローダー */
+.image-loader {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  z-index: 10;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* ⭐ パルスアニメーション（ダークテーマ対応） */
+@keyframes pulse {
+  0%,
+  100% {
+    background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
+  }
+  50% {
+    background: linear-gradient(135deg, #1a1a1a, #2b2b2b, #1a1a1a);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ⭐ 画像エラー状態（ダークテーマ対応） */
+.image-error {
+  background: linear-gradient(135deg, #262626, #1a1a1a);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  color: #9ca3af;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #383838;
+}
+
+/* ⭐ フェードイン効果 */
+.fade-in {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in.loaded {
+  opacity: 1;
+}
+
+/* 高パフォーマンス画像最適化（既存の改良版） */
+.article-content-img {
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin: 1.5rem 0;
+  transition: opacity 0.5s ease, transform 0.3s ease;
+  will-change: opacity;
+  content-visibility: auto;
+  contain: layout style paint;
+}
+
+.article-content-img[loading="lazy"] {
+  background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.article-content-img:hover {
+  transform: scale(1.02);
+}
+
+/* ⭐ スケルトンアニメーション（ダークテーマ対応） */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #2b2b2b 25%, #1a1a1a 50%, #2b2b2b 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Intersection Observer最適化 */
+.high-perf-img-container {
+  contain: layout style paint;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  border-radius: 8px;
+}
+
+/* 記事カード最適化 */
+.article-card-image {
+  content-visibility: auto;
+  contain: layout style paint;
+  background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
 }
 
 /* 目次ボタン（モバイル用） - デスクトップでは非表示 */
@@ -541,6 +695,23 @@
     width: 2.8rem;
     height: 2.8rem;
   }
+
+  /* ⭐ モバイル画像最適化 */
+  .markdown-image-container,
+  .image-container {
+    margin: 1rem 0;
+    min-height: 150px;
+  }
+
+  .markdown-image-loader,
+  .image-loader {
+    min-height: 150px;
+  }
+
+  .japanese-style-modern img,
+  .japanese-style-modern-img {
+    margin: 1rem 0;
+  }
 }
 
 /* 特別な和風装飾要素 - 流派名 */
@@ -553,64 +724,7 @@
   letter-spacing: 0.08em;
 }
 
-/* 高パフォーマンス画像最適化 */
-.article-content-img {
-  max-width: 100% !important;
-  height: auto !important;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin: 1.5rem 0;
-  transition: opacity 0.5s ease, transform 0.3s ease;
-  background: linear-gradient(90deg, #f0f0f0, #e0e0e0, #f0f0f0);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-
-.article-content-img[loading="lazy"] {
-  will-change: opacity;
-}
-
-.article-content-img:hover {
-  transform: scale(1.02);
-}
-
-/* スケルトンアニメーション */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-/* Intersection Observer最適化 */
-.high-perf-img-container {
-  contain: layout style paint;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 記事カード最適化 */
-.article-card-image {
-  content-visibility: auto;
-  contain: layout style paint;
-  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-}
-
 /* パフォーマンス向上のための一般的な最適化 */
 .japanese-style-modern * {
   box-sizing: border-box;
-}
-
-.japanese-style-modern img {
-  content-visibility: auto;
-  contain: layout;
-}
-
-/* レイアウトシフト防止 */
-.japanese-style-modern-section {
-  contain: layout style;
 }
