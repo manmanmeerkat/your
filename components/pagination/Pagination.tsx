@@ -162,7 +162,7 @@ export function Pagination({
               <Button
                 variant={isCurrent ? "default" : "outline"}
                 size="sm"
-                className={`${getButtonClass(isCurrent)} min-w-[40px]`}
+                className={`${getButtonClass(isCurrent)} min-w-[20px]`}
                 onClick={() => onPageChange(page)}
                 onMouseEnter={() => handlePageHover(page)}
                 disabled={isCurrent}
@@ -204,11 +204,11 @@ export function Pagination({
             className={`
               w-16 px-2 py-1 text-center text-sm
               bg-slate-800 border rounded
-              focus:outline-none focus:ring-1 focus:ring-rose-500
+              focus:outline-none 
               ${
                 inputError
                   ? "border-red-500"
-                  : "border-gray-600 focus:border-rose-500"
+                  : "border-gray-400 focus:border-white"
               }
               transition-colors duration-200
             `}
@@ -221,7 +221,7 @@ export function Pagination({
           )}
         </div>
 
-        <span className="text-gray-400">of {totalPages}</span>
+        <span className="text-white">of {totalPages}</span>
       </div>
     </div>
   );
