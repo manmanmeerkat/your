@@ -138,7 +138,7 @@ export default function ArticleCard({ article }: { article: articleType }) {
           <span className="text-xs inline-flex w-auto max-w-max bg-slate-800 text-white px-2 py-0.5 rounded mb-2">
             {categoryLabel}
           </span>
-          <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
+          <h3 className="text-lg font-semibold mb-1 leading-tight">{title}</h3>
           <p className="text-sm text-gray-700 line-clamp-3 flex-grow">
             {summary ||
               content?.slice(0, 100) + "..." ||
