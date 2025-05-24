@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import { SLIDE_IMAGES } from "@/constants/constants";
 import Image from "next/image";
