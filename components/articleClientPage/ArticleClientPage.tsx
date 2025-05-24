@@ -157,120 +157,195 @@ const safeId = (text: unknown): string => {
     .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-");
 };
 
-// ⭐ 改良されたインライン処理（画像の動的管理）
+// ⭐ より堅牢なインライン処理関数
 const processInlineMarkdown = (text: string): string => {
-  if (!text) return "";
+  if (!text || typeof text !== "string") return "";
 
-  return (
-    text
-      .replace(
-        /\[([^\]]+)\]\(([^)]+)\)/g,
-        '<a href="$2" class="japanese-style-modern-a">$1</a>'
-      )
-      .replace(/\*\*(.*?-ryu)\*\*/g, '<strong class="ryu-name">$1</strong>')
-      .replace(
-        /\*\*(.*?)\*\*/g,
-        '<strong class="japanese-style-modern-strong">$1</strong>'
-      )
-      .replace(/\*(.*?)\*/g, '<em class="japanese-style-modern-em">$1</em>')
-      .replace(
-        /`([^`]+)`/g,
-        '<code class="japanese-style-modern-code">$1</code>'
-      )
-      // ⭐ シンプル化された画像処理（動的管理に変更）
-      .replace(
-        /!\[([^\]]*)\]\(([^)]+)\)/g,
-        `<div class="markdown-image-container" data-src="$2" data-alt="$1">
-          <div class="markdown-image-loader">
-            <div style="color: #9ca3af;">Loading...</div>
-          </div>
-        </div>`
-      )
-  );
+  try {
+    return (
+      text
+        // ⭐ 1. コードブロック（最初に処理してエスケープ）
+        .replace(
+          /`([^`]+)`/g,
+          '<code class="japanese-style-modern-code">$1</code>'
+        )
+
+        // ⭐ 2. リンク処理（より厳密な正規表現）
+        .replace(
+          /\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
+          '<a href="$2" class="japanese-style-modern-a" title="$3">$1</a>'
+        )
+
+        // ⭐ 3. 画像処理（リンクの後に処理）
+        .replace(
+          /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
+          '<div class="markdown-image-container" data-src="$2" data-alt="$1" data-title="$3"><div class="markdown-image-loader"><div style="color: #9ca3af;">Loading...</div></div></div>'
+        )
+
+        // ⭐ 4. 強調テキスト（流派名の特別処理）
+        .replace(
+          /\*\*([^*]*-ryu[^*]*)\*\*/g,
+          '<strong class="ryu-name">$1</strong>'
+        )
+        .replace(
+          /\*\*([^*]+)\*\*/g,
+          '<strong class="japanese-style-modern-strong">$1</strong>'
+        )
+
+        // ⭐ 5. 斜体（強調の後に処理）
+        .replace(/\*([^*]+)\*/g, '<em class="japanese-style-modern-em">$1</em>')
+
+        // ⭐ 6. 特殊文字のエスケープ解除
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+    );
+  } catch (error) {
+    console.warn("Error processing inline markdown:", error, text);
+    return text; // エラー時は元のテキストを返す
+  }
 };
 
+// ⭐ より堅牢なMarkdownレンダリング関数
 const renderEnhancedMarkdown = (content: string): string => {
-  if (!content) return "";
-
-  let html = '<section class="japanese-style-modern-section">';
-  const paragraphs = content.split(/\n\s*\n/).filter((p) => p.trim());
-
-  for (let i = 0; i < paragraphs.length; i++) {
-    const paragraph = paragraphs[i].trim();
-    if (!paragraph) continue;
-
-    if (paragraph.startsWith("## ")) {
-      const headingText = paragraph.substring(3).trim();
-      const id = safeId(headingText);
-      html += `<h2 id="${id}" class="japanese-style-modern-h2">${processInlineMarkdown(
-        headingText
-      )}</h2>`;
-    } else if (paragraph.startsWith("### ")) {
-      const headingText = paragraph.substring(4).trim();
-      const id = safeId(headingText);
-      html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
-        headingText
-      )}</h3>`;
-    } else if (paragraph.startsWith("# ")) {
-      const headingText = paragraph.substring(2).trim();
-      const id = safeId(headingText);
-      if (i > 0) {
-        html += '</section><section class="japanese-style-modern-section">';
-      }
-      html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
-        headingText
-      )}</h1>`;
-    } else if (paragraph.startsWith("> ")) {
-      const quoteContent = paragraph
-        .split("\n")
-        .map((line) => (line.startsWith("> ") ? line.substring(2) : line))
-        .join("\n");
-      html += `<blockquote class="japanese-style-modern-blockquote"><p class="japanese-style-modern-p">${processInlineMarkdown(
-        quoteContent
-      )}</p></blockquote>`;
-    } else if (/^\s*-\s/.test(paragraph)) {
-      const listItems = paragraph
-        .split(/\n\s*-\s/)
-        .filter((item) => item.trim());
-      let listHtml = '<ul class="japanese-style-modern-ul">';
-      listItems.forEach((item) => {
-        if (item.trim()) {
-          listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-            item.trim()
-          )}</li>`;
-        }
-      });
-      listHtml += "</ul>";
-      html += listHtml;
-    } else if (/^\s*\d+\.\s/.test(paragraph)) {
-      const listItems = paragraph
-        .split(/\n\s*\d+\.\s/)
-        .filter((item) => item.trim());
-      let listHtml = '<ol class="japanese-style-modern-ol">';
-      listItems.forEach((item) => {
-        if (item.trim()) {
-          listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-            item.trim()
-          )}</li>`;
-        }
-      });
-      listHtml += "</ol>";
-      html += listHtml;
-    } else if (
-      paragraph === "---" ||
-      paragraph === "***" ||
-      paragraph === "___"
-    ) {
-      html += '<hr class="japanese-style-modern-hr" />';
-    } else {
-      html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
-        paragraph
-      )}</p>`;
-    }
+  if (!content || typeof content !== "string") {
+    console.warn("Invalid content provided to renderEnhancedMarkdown");
+    return '<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">No content available</p></section>';
   }
 
-  html += "</section>";
-  return html;
+  try {
+    let html = '<section class="japanese-style-modern-section">';
+
+    // ⭐ より堅牢な段落分割
+    const paragraphs = content
+      .split(/\n\s*\n/)
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+
+    if (paragraphs.length === 0) {
+      return '<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">No content available</p></section>';
+    }
+
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i];
+      if (!paragraph) continue;
+
+      try {
+        // ⭐ 見出し1
+        if (paragraph.match(/^#\s+/)) {
+          const headingText = paragraph.replace(/^#\s+/, "").trim();
+          const id = safeId(headingText);
+          if (i > 0) {
+            html += '</section><section class="japanese-style-modern-section">';
+          }
+          html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
+            headingText
+          )}</h1>`;
+        }
+        // ⭐ 見出し2
+        else if (paragraph.match(/^##\s+/)) {
+          const headingText = paragraph.replace(/^##\s+/, "").trim();
+          const id = safeId(headingText);
+          html += `<h2 id="${id}" class="japanese-style-modern-h2">${processInlineMarkdown(
+            headingText
+          )}</h2>`;
+        }
+        // ⭐ 見出し3
+        else if (paragraph.match(/^###\s+/)) {
+          const headingText = paragraph.replace(/^###\s+/, "").trim();
+          const id = safeId(headingText);
+          html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
+            headingText
+          )}</h3>`;
+        }
+        // ⭐ 引用ブロック
+        else if (paragraph.match(/^>\s/)) {
+          const quoteLines = paragraph
+            .split("\n")
+            .map((line) => line.replace(/^>\s?/, "").trim())
+            .filter((line) => line.length > 0)
+            .join(" ");
+          html += `<blockquote class="japanese-style-modern-blockquote"><p class="japanese-style-modern-p">${processInlineMarkdown(
+            quoteLines
+          )}</p></blockquote>`;
+        }
+        // ⭐ 箇条書きリスト（改良版）
+        else if (paragraph.match(/^\s*-\s/)) {
+          const lines = paragraph.split("\n").filter((line) => line.trim());
+          let listHtml = '<ul class="japanese-style-modern-ul">';
+
+          lines.forEach((line) => {
+            const trimmedLine = line.trim();
+            if (trimmedLine.match(/^-\s+/)) {
+              const content = trimmedLine.replace(/^-\s+/, "");
+              if (content) {
+                listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
+                  content
+                )}</li>`;
+              }
+            }
+          });
+
+          listHtml += "</ul>";
+          html += listHtml;
+        }
+        // ⭐ 番号付きリスト（改良版）
+        else if (paragraph.match(/^\s*\d+\.\s/)) {
+          const lines = paragraph.split("\n").filter((line) => line.trim());
+          let listHtml = '<ol class="japanese-style-modern-ol">';
+
+          lines.forEach((line) => {
+            const trimmedLine = line.trim();
+            const match = trimmedLine.match(/^\d+\.\s+(.+)$/);
+            if (match && match[1]) {
+              listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
+                match[1]
+              )}</li>`;
+            }
+          });
+
+          listHtml += "</ol>";
+          html += listHtml;
+        }
+        // ⭐ 水平線
+        else if (paragraph.match(/^(-{3,}|\*{3,}|_{3,})$/)) {
+          html += '<hr class="japanese-style-modern-hr" />';
+        }
+        // ⭐ 通常の段落
+        else {
+          // 複数行の段落を正しく処理
+          const lines = paragraph
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line);
+          if (lines.length > 0) {
+            const content = lines.join(" ");
+            html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
+              content
+            )}</p>`;
+          }
+        }
+      } catch (paragraphError) {
+        console.warn("Error processing paragraph:", paragraphError, paragraph);
+        // エラーが発生した段落は通常のテキストとして表示
+        html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
+          paragraph
+        )}</p>`;
+      }
+    }
+
+    html += "</section>";
+    return html;
+  } catch (error) {
+    console.error("Critical error in renderEnhancedMarkdown:", error);
+    return `<section class="japanese-style-modern-section">
+      <p class="japanese-style-modern-p">Content rendering error. Please check the markdown format.</p>
+      <pre style="background: #1a1a1a; padding: 1rem; border-radius: 4px; color: #f3f3f2; font-size: 0.9rem; white-space: pre-wrap;">${content.slice(
+        0,
+        500
+      )}${content.length > 500 ? "..." : ""}</pre>
+    </section>`;
+  }
 };
 
 const extractHeaders = (content: string): TocItem[] => {
