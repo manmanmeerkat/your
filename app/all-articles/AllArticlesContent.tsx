@@ -84,8 +84,13 @@ export default function AllArticlesContent({
   const currentCategory = searchParams.get("category") || initialCategory;
   const pageSize = initialPagination.pageSize;
 
+  // 🚀 初期データの存在確認
+  const hasInitialData = initialArticles.length > 0;
+
   // 🚀 PaginationWrapper級の即座表示用データ
   const quickTotalPages = useMemo(() => {
+    if (!hasInitialData) return 1; // 初期データがない場合はデフォルト値
+
     if (initialCategory !== currentCategory) {
       // カテゴリが変わった場合のみ再計算
       const filtered = initialArticles.filter(
@@ -96,6 +101,7 @@ export default function AllArticlesContent({
     // 初期状態では既に計算済みの値を使用（PaginationWrapper方式）
     return initialPagination.pageCount;
   }, [
+    hasInitialData,
     initialCategory,
     currentCategory,
     initialArticles,
@@ -105,6 +111,16 @@ export default function AllArticlesContent({
 
   // 🚀 初期データで即座表示（mythology/page.tsx方式）
   const currentDisplayData = useMemo(() => {
+    if (!hasInitialData) {
+      // 初期データがない場合は空の表示データを返す
+      return {
+        articles: [],
+        filteredCount: 0,
+        totalCount: 0,
+        categoryCounts: initialCategoryCounts,
+      };
+    }
+
     const filtered = currentCategory
       ? initialArticles.filter(
           (article: articleType) => article.category === currentCategory
@@ -128,6 +144,7 @@ export default function AllArticlesContent({
       categoryCounts: initialCategoryCounts,
     };
   }, [
+    hasInitialData,
     currentCategory,
     currentPage,
     pageSize,
@@ -158,6 +175,8 @@ export default function AllArticlesContent({
 
   // 🚀 フルデータ読み込み後の更新表示データ（背景更新）
   const enhancedDisplayData = useMemo(() => {
+    if (!hasInitialData) return currentDisplayData; // 初期データがない場合は現在のデータを返す
+
     if (
       !fullData?.articles ||
       fullData.articles.length <= initialArticles.length
@@ -190,6 +209,7 @@ export default function AllArticlesContent({
       categoryCounts: counts,
     };
   }, [
+    hasInitialData,
     fullData,
     countsData,
     currentCategory,
@@ -202,6 +222,8 @@ export default function AllArticlesContent({
 
   // 🚀 フルデータ読み込み後のページ数計算
   const enhancedTotalPages = useMemo(() => {
+    if (!hasInitialData) return quickTotalPages; // 初期データがない場合はデフォルト値
+
     if (
       !fullData?.articles ||
       fullData.articles.length <= initialArticles.length
@@ -217,7 +239,14 @@ export default function AllArticlesContent({
       : allArticles;
 
     return Math.ceil(filtered.length / pageSize);
-  }, [fullData, currentCategory, pageSize, initialArticles, quickTotalPages]);
+  }, [
+    hasInitialData,
+    fullData,
+    currentCategory,
+    pageSize,
+    initialArticles,
+    quickTotalPages,
+  ]);
 
   // 表示用データ
   const displayData = enhancedDisplayData;
@@ -289,7 +318,7 @@ export default function AllArticlesContent({
               <CategoryButton
                 category={null}
                 currentCategory={currentCategory}
-                count={displayData.totalCount}
+                count={hasInitialData ? displayData.totalCount : 0}
                 onClick={categoryHandlers[""]}
               />
 
@@ -298,7 +327,11 @@ export default function AllArticlesContent({
                   key={category.id}
                   category={category}
                   currentCategory={currentCategory}
-                  count={displayData.categoryCounts[category.id] || 0}
+                  count={
+                    hasInitialData
+                      ? displayData.categoryCounts[category.id] || 0
+                      : 0
+                  }
                   onClick={categoryHandlers[category.id]}
                 />
               ))}
@@ -307,7 +340,15 @@ export default function AllArticlesContent({
 
           {/* 記事コンテンツ */}
           <div className="flex-1 overflow-y-auto px-4 py-8">
-            {displayData.articles.length > 0 ? (
+            {/* 🚀 初期データ読み込み中はローディング表示 */}
+            {!hasInitialData ? (
+              <div className="flex justify-center py-20">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+                  <span className="text-white">Loading articles...</span>
+                </div>
+              </div>
+            ) : displayData.articles.length > 0 ? (
               <>
                 {/* 記事グリッド */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
