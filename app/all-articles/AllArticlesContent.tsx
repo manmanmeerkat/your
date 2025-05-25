@@ -122,19 +122,36 @@ export default function AllArticlesContent({
     refreshInterval: 0,
   });
 
-  // 🚀 ハイブリッド方式：初期データ即座表示 + 全データ読み込み後更新
+  // 🚀 即座ページネーション用の初期値
+  const initialTotalPages = useMemo(() => {
+    if (initialCategory && initialCategory !== currentCategory) {
+      // カテゴリが変わった場合は再計算
+      const filtered = initialArticles.filter(
+        (article) => article.category === currentCategory
+      );
+      return Math.ceil(filtered.length / pageSize);
+    }
+    return initialPagination.pageCount;
+  }, [
+    initialCategory,
+    currentCategory,
+    initialArticles,
+    initialPagination.pageCount,
+    pageSize,
+  ]);
+
+  // 🚀 完全即座表示：初期データ優先 + 背景で全データ読み込み
   const {
     paginatedArticles,
     totalPages,
     filteredCount,
     totalCount,
     categoryCounts,
-    isLoadingArticles,
+    hasInitialData,
   } = useMemo(() => {
     const allArticles = allArticlesData?.articles || initialArticles;
     const counts = countsData?.counts || initialCategoryCounts;
-    const hasFullData =
-      allArticlesData?.articles?.length > initialArticles.length;
+    const hasInitial = initialArticles.length > 0;
 
     // 🚀 フィルタリング（初期データまたは全データ）
     const filtered = currentCategory
@@ -164,8 +181,7 @@ export default function AllArticlesContent({
       filteredCount: filtered.length,
       totalCount: total,
       categoryCounts: counts,
-      isLoadingArticles:
-        !hasFullData && allArticles.length === initialArticles.length, // 初期データのみの場合
+      hasInitialData: hasInitial, // 初期データ存在フラグ
     };
   }, [
     allArticlesData,
@@ -286,9 +302,17 @@ export default function AllArticlesContent({
 
           {/* 記事コンテンツ */}
           <div className="flex-1 overflow-y-auto px-4 py-8">
-            {paginatedArticles.length > 0 ? (
+            {/* 🚀 初期データがある場合は即座表示、ない場合のみローディング */}
+            {!hasInitialData ? (
+              <div className="flex justify-center py-20">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+                  <span className="text-white">Loading articles...</span>
+                </div>
+              </div>
+            ) : paginatedArticles.length > 0 ? (
               <>
-                {/* 🚀 記事グリッド（初期データで即座表示） */}
+                {/* 🚀 記事グリッド（即座表示） */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedArticles.map((article: articleType) => (
                     <ArticleCard
@@ -297,16 +321,6 @@ export default function AllArticlesContent({
                     />
                   ))}
                 </div>
-
-                {/* 全データ読み込み中の小さなインジケーター */}
-                {isLoadingArticles && (
-                  <div className="flex justify-center mt-4">
-                    <div className="flex items-center gap-2 text-gray-400 text-sm">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400" />
-                      <span>Loading more articles...</span>
-                    </div>
-                  </div>
-                )}
 
                 {/* 結果表示 */}
                 <div className="mt-8 text-center text-white">
@@ -323,13 +337,6 @@ export default function AllArticlesContent({
                   )}
                 </div>
               </>
-            ) : isLoadingArticles ? (
-              <div className="flex justify-center py-20">
-                <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
-                  <span className="text-white">Loading articles...</span>
-                </div>
-              </div>
             ) : (
               <div className="text-center py-20">
                 <p className="text-white text-xl">
@@ -350,12 +357,12 @@ export default function AllArticlesContent({
               </div>
             )}
 
-            {/* 🚀 即座表示ページネーション（初期データで即座表示） */}
-            {totalPages > 1 && (
+            {/* 🚀 最速ページネーション（初期値で即座表示） */}
+            {(initialTotalPages > 1 || totalPages > 1) && (
               <div className="mt-12 flex justify-center">
                 <Pagination
                   currentPage={currentPage}
-                  totalPages={totalPages}
+                  totalPages={hasInitialData ? totalPages : initialTotalPages}
                   onPageChange={handlePageChange}
                 />
               </div>
