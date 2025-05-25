@@ -1,5 +1,12 @@
-// components/pagination/Pagination.tsx (瞬時表示版)
-import React, { useState, useRef, useEffect, useCallback, memo } from "react";
+// components/pagination/Pagination.tsx (プリレンダリング最適化版)
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  memo,
+} from "react";
 import { Button } from "@/components/ui/button";
 
 interface PaginationProps {
@@ -10,7 +17,7 @@ interface PaginationProps {
   disabled?: boolean;
 }
 
-// 🚀 超軽量ページボタン（最小限の処理）
+// 🚀 CSS最適化：軽量スタイル版ページボタン
 const PageButton = memo(
   ({
     page,
@@ -28,14 +35,21 @@ const PageButton = memo(
     <Button
       variant={isCurrent ? "default" : "outline"}
       size="sm"
-      className={
-        isCurrent
-          ? "bg-rose-700 text-white border-rose-700 hover:bg-rose-800 min-w-[40px]"
-          : "border-white text-white hover:bg-white hover:text-slate-900 min-w-[40px]"
-      }
+      // 🚀 CSS最適化：複雑なクラス計算を簡素化
+      className={isCurrent ? "pagination-current" : "pagination-normal"}
       onClick={onClick}
       onMouseEnter={onHover}
       disabled={isCurrent || disabled}
+      aria-label={`Go to page ${page}`}
+      aria-current={isCurrent ? "page" : undefined}
+      // 🚀 スタイル直接指定で計算時間削減
+      style={{
+        minWidth: "40px",
+        backgroundColor: isCurrent ? "#be185d" : "transparent",
+        color: isCurrent ? "white" : "white",
+        borderColor: isCurrent ? "#be185d" : "white",
+        transition: "all 0.1s ease", // アニメーション時間短縮
+      }}
     >
       {page}
     </Button>
@@ -44,13 +58,67 @@ const PageButton = memo(
 
 PageButton.displayName = "PageButton";
 
-// 🚀 瞬時計算：ページ番号配列生成（複雑な条件分岐を削除）
-const getPageNumbers = (current: number, total: number): number[] => {
-  if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-  if (current <= 3) return [1, 2, 3, 4, total];
-  if (current >= total - 2) return [1, total - 3, total - 2, total - 1, total];
-  return [1, current - 1, current, current + 1, total];
-};
+// 🚀 CSS最適化：軽量ナビボタン
+const NavButton = memo(
+  ({
+    direction,
+    onClick,
+    onHover,
+    disabled,
+    children,
+  }: {
+    direction: "prev" | "next";
+    onClick: () => void;
+    onHover?: () => void;
+    disabled: boolean;
+    children: React.ReactNode;
+  }) => (
+    <Button
+      variant="outline"
+      size="sm"
+      className="pagination-nav"
+      onClick={onClick}
+      onMouseEnter={onHover}
+      disabled={disabled}
+      aria-label={`Go to ${direction === "prev" ? "previous" : "next"} page`}
+      style={{
+        borderColor: "white",
+        color: "white",
+        transition: "all 0.1s ease",
+      }}
+    >
+      {children}
+    </Button>
+  )
+);
+
+NavButton.displayName = "NavButton";
+
+// 🚀 プリレンダリング用のスケルトン
+const PaginationSkeleton = memo(() => (
+  <div className="flex flex-col items-center gap-3">
+    <nav
+      className="flex justify-center items-center gap-2"
+      aria-label="Pagination"
+    >
+      {/* スケルトンボタン（瞬時表示） */}
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="w-10 h-8 bg-slate-700 rounded animate-pulse"
+          style={{ minWidth: "40px" }}
+        />
+      ))}
+    </nav>
+    <div className="flex items-center gap-2 text-white text-sm">
+      <span>Go to:</span>
+      <div className="w-16 h-6 bg-slate-700 rounded animate-pulse" />
+      <span>of -</span>
+    </div>
+  </div>
+));
+
+PaginationSkeleton.displayName = "PaginationSkeleton";
 
 export function Pagination({
   currentPage,
@@ -61,19 +129,49 @@ export function Pagination({
 }: PaginationProps) {
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState("");
+  const [isRendered, setIsRendered] = useState(false); // 🚀 レンダリング状態
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 🚀 瞬時計算：複雑なuseMemoを削除して直接計算
-  const pageNumbers = getPageNumbers(currentPage, totalPages);
+  // 🚀 プリレンダリング：初回レンダリング後に実際のUIを表示
+  useEffect(() => {
+    // 非同期でレンダリング状態を更新（ブロッキングしない）
+    const timeoutId = setTimeout(() => {
+      setIsRendered(true);
+    }, 0); // 次のティックで実行
 
-  // 🚀 シンプルなハンドラー（メモ化を最小限に）
-  const handlePageClick = useCallback(
+    return () => clearTimeout(timeoutId);
+  }, [currentPage, totalPages]);
+
+  // 🚀 既存の高機能ロジックをすべて保持
+  const pageNumbers = useMemo((): number[] => {
+    if (!totalPages || totalPages < 1 || !currentPage || currentPage < 1) {
+      return [1];
+    }
+
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = useCallback(
     (page: number) => {
       if (
-        page !== currentPage &&
-        !disabled &&
         page >= 1 &&
-        page <= totalPages
+        page <= totalPages &&
+        page !== currentPage &&
+        !disabled
       ) {
         onPageChange(page);
       }
@@ -83,37 +181,85 @@ export function Pagination({
 
   const handlePageHover = useCallback(
     (page: number) => {
-      if (onPageHover && !disabled && page !== currentPage) {
-        onPageHover(page);
-      }
+      if (
+        !onPageHover ||
+        disabled ||
+        page === currentPage ||
+        page < 1 ||
+        page > totalPages
+      )
+        return;
+
+      const timeoutId = setTimeout(() => {
+        try {
+          onPageHover(page);
+        } catch {
+          // エラーは静かに処理
+        }
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     },
-    [onPageHover, currentPage, disabled]
+    [onPageHover, currentPage, totalPages, disabled]
   );
 
-  // 🚀 入力関連も軽量化
-  const validateAndSetError = useCallback(
-    (value: string) => {
-      if (!value.trim()) {
-        setInputError("");
-        return null;
+  const { pageHandlers, hoverHandlers } = useMemo(() => {
+    const clickHandlers: Record<number, () => void> = {};
+    const mouseHandlers: Record<number, () => void> = {};
+
+    pageNumbers.forEach((page) => {
+      clickHandlers[page] = () => handlePageChange(page);
+      mouseHandlers[page] = () => handlePageHover(page);
+    });
+
+    return {
+      pageHandlers: clickHandlers,
+      hoverHandlers: mouseHandlers,
+    };
+  }, [pageNumbers, handlePageChange, handlePageHover]);
+
+  const handlePrevious = useCallback(() => {
+    handlePageChange(currentPage - 1);
+  }, [currentPage, handlePageChange]);
+
+  const handleNext = useCallback(() => {
+    handlePageChange(currentPage + 1);
+  }, [currentPage, handlePageChange]);
+
+  const handlePrevHover = useCallback(() => {
+    if (currentPage > 1) handlePageHover(currentPage - 1);
+  }, [currentPage, handlePageHover]);
+
+  const handleNextHover = useCallback(() => {
+    if (currentPage < totalPages) handlePageHover(currentPage + 1);
+  }, [currentPage, totalPages, handlePageHover]);
+
+  const validateInput = useCallback(
+    (
+      value: string
+    ): {
+      valid: boolean;
+      page?: number;
+      error?: string;
+    } => {
+      const trimmed = value.trim();
+      if (!trimmed) return { valid: false };
+
+      const page = parseInt(trimmed, 10);
+
+      if (isNaN(page) || !Number.isInteger(page) || page < 1) {
+        return { valid: false, error: "Invalid number" };
       }
 
-      const page = parseInt(value, 10);
-      if (isNaN(page) || page < 1) {
-        setInputError("Invalid");
-        return null;
-      }
       if (page > totalPages) {
-        setInputError(`Max: ${totalPages}`);
-        return null;
-      }
-      if (page === currentPage) {
-        setInputError("Current");
-        return null;
+        return { valid: false, error: `Max: ${totalPages}` };
       }
 
-      setInputError("");
-      return page;
+      if (page === currentPage) {
+        return { valid: false, error: "Current page" };
+      }
+
+      return { valid: true, page };
     },
     [totalPages, currentPage]
   );
@@ -122,132 +268,218 @@ export function Pagination({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
       setInputValue(value);
-      const validPage = validateAndSetError(value);
-      if (validPage && onPageHover) {
-        handlePageHover(validPage);
+
+      const validation = validateInput(value);
+      setInputError(validation.error || "");
+
+      if (validation.valid && validation.page) {
+        handlePageHover(validation.page);
       }
     },
-    [validateAndSetError, onPageHover, handlePageHover]
+    [validateInput, handlePageHover]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
-        const page = validateAndSetError(inputValue);
-        if (page) {
-          handlePageClick(page);
+        e.preventDefault();
+
+        const validation = validateInput(inputValue);
+
+        if (validation.valid && validation.page) {
+          handlePageChange(validation.page);
           setInputValue("");
           setInputError("");
           inputRef.current?.blur();
         }
       }
     },
-    [inputValue, validateAndSetError, handlePageClick]
+    [inputValue, validateInput, handlePageChange]
   );
 
-  // 🚀 キーボードショートカット（軽量版）
+  const handleFocus = useCallback(() => {
+    if (!disabled) {
+      setInputValue(currentPage.toString());
+    }
+  }, [currentPage, disabled]);
+
+  const handleBlur = useCallback(() => {
+    setInputValue("");
+    setInputError("");
+  }, []);
+
   useEffect(() => {
     if (disabled) return;
-    const handler = (e: KeyboardEvent) => {
+
+    const handleKeydown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "g") {
         e.preventDefault();
         inputRef.current?.focus();
       }
     };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+
+    document.addEventListener("keydown", handleKeydown, { passive: false });
+    return () => document.removeEventListener("keydown", handleKeydown);
   }, [disabled]);
 
-  // 🚀 早期リターン（計算を最小限に）
+  // 不正な状態での安全な表示
+  if (!totalPages || totalPages < 1 || !currentPage || currentPage < 1) {
+    return null;
+  }
+
+  // 1ページのみの場合は表示しない
   if (totalPages <= 1) return null;
 
+  // 🚀 プリレンダリング：スケルトンを最初に表示
+  if (!isRendered) {
+    return <PaginationSkeleton />;
+  }
+
+  const canGoPrev = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
+  const isOperationDisabled = disabled;
+
   return (
-    <div className="flex flex-col items-center gap-3">
-      {/* 🚀 メインナビゲーション（直接レンダリング） */}
-      <nav
-        className="flex flex-wrap justify-center items-center gap-2"
-        aria-label="Pagination"
-      >
-        {/* Previous button */}
-        {currentPage > 1 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-white text-white hover:bg-white hover:text-slate-900"
-            onClick={() => handlePageClick(currentPage - 1)}
-            onMouseEnter={() => handlePageHover(currentPage - 1)}
-            disabled={disabled}
-          >
-            &lt; Prev
-          </Button>
-        )}
+    <>
+      {/* 🚀 CSS最適化：インラインスタイルで高速化 */}
+      <style jsx>{`
+        .pagination-current {
+          background-color: #be185d !important;
+          color: white !important;
+          border-color: #be185d !important;
+        }
+        .pagination-normal {
+          background-color: transparent !important;
+          color: white !important;
+          border-color: white !important;
+        }
+        .pagination-normal:hover {
+          background-color: white !important;
+          color: #0f172a !important;
+        }
+        .pagination-nav {
+          border-color: white !important;
+          color: white !important;
+        }
+        .pagination-nav:hover {
+          background-color: white !important;
+          color: #0f172a !important;
+        }
+      `}</style>
 
-        {/* 🚀 ページボタン（直接マップ、複雑な計算なし） */}
-        {pageNumbers.map((page, i) => (
-          <React.Fragment key={page}>
-            {/* 省略記号（シンプルな条件） */}
-            {i > 0 && page - pageNumbers[i - 1] > 1 && (
-              <span className="text-white mx-1">...</span>
-            )}
-
-            <PageButton
-              page={page}
-              isCurrent={page === currentPage}
-              onClick={() => handlePageClick(page)}
-              onHover={() => handlePageHover(page)}
-              disabled={disabled}
-            />
-          </React.Fragment>
-        ))}
-
-        {/* Next button */}
-        {currentPage < totalPages && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-white text-white hover:bg-white hover:text-slate-900"
-            onClick={() => handlePageClick(currentPage + 1)}
-            onMouseEnter={() => handlePageHover(currentPage + 1)}
-            disabled={disabled}
-          >
-            Next &gt;
-          </Button>
-        )}
-      </nav>
-
-      {/* 🚀 ページジャンプ（シンプル版） */}
-      <div className="flex items-center gap-2 text-white text-sm">
-        <span>Go to:</span>
-        <div className="relative">
-          <input
-            ref={inputRef}
-            type="text"
-            inputMode="numeric"
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setInputValue(currentPage.toString())}
-            onBlur={() => {
-              setInputValue("");
-              setInputError("");
-            }}
-            placeholder={`1-${totalPages}`}
-            disabled={disabled}
-            className={`w-16 px-2 py-1 text-center text-sm bg-slate-800 border rounded focus:outline-none ${
-              inputError
-                ? "border-red-500"
-                : "border-gray-400 focus:border-white"
-            }`}
-          />
-          {inputError && (
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-red-600 text-white text-xs rounded">
-              {inputError}
-            </div>
+      <div className="flex flex-col items-center gap-3">
+        {/* メインナビゲーション */}
+        <nav
+          className={`flex flex-wrap justify-center items-center gap-2 transition-opacity duration-200 ${
+            isOperationDisabled
+              ? "opacity-50 pointer-events-none"
+              : "opacity-100"
+          }`}
+          aria-label="Pagination navigation"
+        >
+          {/* Previous button */}
+          {canGoPrev && (
+            <NavButton
+              direction="prev"
+              onClick={handlePrevious}
+              onHover={handlePrevHover}
+              disabled={isOperationDisabled}
+            >
+              &lt; Prev
+            </NavButton>
           )}
+
+          {/* ページ番号ボタン */}
+          {pageNumbers.map((page, index) => {
+            const isCurrent = page === currentPage;
+
+            return (
+              <React.Fragment key={page}>
+                {/* 省略記号 */}
+                {index > 0 && page - pageNumbers[index - 1] > 1 && (
+                  <span
+                    className="text-white mx-1 select-none"
+                    aria-hidden="true"
+                  >
+                    ...
+                  </span>
+                )}
+
+                <PageButton
+                  page={page}
+                  isCurrent={isCurrent}
+                  onClick={pageHandlers[page]}
+                  onHover={hoverHandlers[page]}
+                  disabled={isOperationDisabled}
+                />
+              </React.Fragment>
+            );
+          })}
+
+          {/* Next button */}
+          {canGoNext && (
+            <NavButton
+              direction="next"
+              onClick={handleNext}
+              onHover={handleNextHover}
+              disabled={isOperationDisabled}
+            >
+              Next &gt;
+            </NavButton>
+          )}
+        </nav>
+
+        {/* ページジャンプ機能 */}
+        <div
+          className={`flex items-center gap-2 text-white text-sm transition-opacity duration-200 ${
+            isOperationDisabled ? "opacity-50" : "opacity-100"
+          }`}
+        >
+          <span>Go to:</span>
+
+          <div className="relative">
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder={`1-${totalPages}`}
+              disabled={isOperationDisabled}
+              className={`
+                w-16 px-2 py-1 text-center text-sm
+                bg-slate-800 border rounded
+                focus:outline-none focus:ring-1
+                disabled:opacity-50 disabled:cursor-not-allowed
+                ${
+                  inputError
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-400 focus:border-white focus:ring-white"
+                }
+                transition-all duration-200
+              `}
+              aria-label="Jump to page number"
+            />
+
+            {/* エラーツールチップ */}
+            {inputError && (
+              <div
+                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-red-600 text-white text-xs rounded whitespace-nowrap z-10"
+                role="alert"
+              >
+                {inputError}
+              </div>
+            )}
+          </div>
+
+          <span className="text-white">of {totalPages}</span>
+          <span className="text-gray-400 text-xs">(Ctrl+G)</span>
         </div>
-        <span>of {totalPages}</span>
-        <span className="text-gray-400 text-xs">(Ctrl+G)</span>
       </div>
-    </div>
+    </>
   );
 }
