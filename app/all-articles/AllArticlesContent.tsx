@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef, memo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/articleCard/articleCard";
@@ -12,7 +12,54 @@ import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
 import useSWR, { mutate } from "swr";
 
-// フェッチャー関数（3つ目ベース）
+// 🚀 メモ化されたカテゴリーボタン（パフォーマンス最適化）
+const CategoryFilter = memo(
+  ({
+    currentCategory,
+    totalCount,
+    categoryCounts,
+    onCategoryChange,
+    isTransitioning,
+  }: {
+    currentCategory: string;
+    totalCount: number;
+    categoryCounts: Record<string, number>;
+    onCategoryChange: (category: string) => void;
+    isTransitioning: boolean;
+  }) => (
+    <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
+      <Button
+        variant={!currentCategory ? "default" : "outline"}
+        className={
+          !currentCategory
+            ? "bg-rose-700 text-white hover:bg-rose-800"
+            : "text-white border-white hover:bg-white hover:text-slate-900"
+        }
+        onClick={() => onCategoryChange("")}
+        disabled={isTransitioning}
+      >
+        All ({totalCount})
+      </Button>
+      {CATEGORIES.map(({ id, name }) => (
+        <Button
+          key={id}
+          variant={currentCategory === id ? "default" : "outline"}
+          className={
+            currentCategory === id
+              ? "bg-rose-700 text-white hover:bg-rose-800"
+              : "text-white border-white hover:bg-white hover:text-slate-900"
+          }
+          onClick={() => onCategoryChange(id)}
+          disabled={isTransitioning}
+        >
+          {name} ({categoryCounts[id] || 0})
+        </Button>
+      ))}
+    </div>
+  )
+);
+
+CategoryFilter.displayName = "CategoryFilter";
 const fetcher = async (url: string) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -208,33 +255,50 @@ export default function AllArticlesContent({
     [prefetchPage]
   );
 
-  // ページ遷移処理（3つ目ベース）
-  const updateQuery = useCallback(
-    async (key: string, value: string) => {
+  // 🚀 高速カテゴリー変更処理
+  const handleCategoryChange = useCallback(
+    (category: string) => {
       if (isTransitioning) return;
-
-      const newPage = key === "page" ? parseInt(value) : 1;
 
       setIsTransitioning(true);
 
-      if (key === "page" && !prefetchedPages.has(newPage)) {
+      const params = new URLSearchParams(searchParams.toString());
+      if (category) params.set("category", category);
+      else params.delete("category");
+      params.set("page", "1"); // カテゴリー変更時は1ページ目に戻る
+
+      router.push(`/all-articles?${params.toString()}`, { scroll: false });
+
+      // カテゴリー変更は高速化（100ms）
+      setTimeout(() => setIsTransitioning(false), 100);
+    },
+    [isTransitioning, searchParams, router]
+  );
+
+  // 🚀 高速ページ変更処理（プリフェッチ考慮）
+  const handlePageChange = useCallback(
+    async (page: number) => {
+      if (isTransitioning) return;
+
+      setIsTransitioning(true);
+
+      // プリフェッチ済みでない場合のみ事前読み込み
+      if (!prefetchedPages.has(page)) {
         try {
-          await prefetchPage(newPage);
-          await new Promise((resolve) => setTimeout(resolve, 100));
+          await prefetchPage(page);
+          await new Promise((resolve) => setTimeout(resolve, 50)); // 短縮
         } catch {
           // エラーは静かに処理
         }
       }
 
       const params = new URLSearchParams(searchParams.toString());
-      if (value) params.set(key, value);
-      else params.delete(key);
-      if (key !== "page") params.set("page", "1");
+      params.set("page", page.toString());
 
       router.push(`/all-articles?${params.toString()}`, { scroll: false });
 
-      const transitionTime =
-        key === "page" && prefetchedPages.has(newPage) ? 100 : 250;
+      // プリフェッチ済みなら高速化
+      const transitionTime = prefetchedPages.has(page) ? 50 : 150;
       setTimeout(() => setIsTransitioning(false), transitionTime);
     },
     [isTransitioning, searchParams, router, prefetchedPages, prefetchPage]
@@ -301,36 +365,14 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* カテゴリーフィルター（3つ目ベース） */}
-          <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
-            <Button
-              variant={!currentCategory ? "default" : "outline"}
-              className={
-                !currentCategory
-                  ? "bg-rose-700 text-white hover:bg-rose-800"
-                  : "text-white border-white hover:bg-white hover:text-slate-900"
-              }
-              onClick={() => updateQuery("category", "")}
-              disabled={isTransitioning}
-            >
-              All ({totalCount})
-            </Button>
-            {CATEGORIES.map(({ id, name }) => (
-              <Button
-                key={id}
-                variant={currentCategory === id ? "default" : "outline"}
-                className={
-                  currentCategory === id
-                    ? "bg-rose-700 text-white hover:bg-rose-800"
-                    : "text-white border-white hover:bg-white hover:text-slate-900"
-                }
-                onClick={() => updateQuery("category", id)}
-                disabled={isTransitioning}
-              >
-                {name} ({categoryCounts[id] || 0})
-              </Button>
-            ))}
-          </div>
+          {/* 🚀 高速カテゴリーフィルター */}
+          <CategoryFilter
+            currentCategory={currentCategory}
+            totalCount={totalCount}
+            categoryCounts={categoryCounts}
+            onCategoryChange={handleCategoryChange}
+            isTransitioning={isTransitioning}
+          />
 
           {/* 記事グリッド（3つ目ベース） */}
           <div className="flex-1 overflow-y-auto px-4 py-8">
@@ -368,7 +410,7 @@ export default function AllArticlesContent({
                 {currentCategory && (
                   <Button
                     className="mt-4 bg-rose-700 hover:bg-rose-800 text-white"
-                    onClick={() => updateQuery("category", "")}
+                    onClick={() => handleCategoryChange("")}
                     disabled={isTransitioning}
                   >
                     View all articles
@@ -377,13 +419,13 @@ export default function AllArticlesContent({
               </div>
             )}
 
-            {/* ページネーション（3つ目ベース） */}
+            {/* 🚀 高速ページネーション */}
             {pagination.pageCount > 1 && (
               <div className="mt-12 flex justify-center">
                 <Pagination
                   currentPage={currentPage}
                   totalPages={pagination.pageCount}
-                  onPageChange={(page) => updateQuery("page", page.toString())}
+                  onPageChange={handlePageChange}
                   onPageHover={handlePageHover}
                 />
               </div>
