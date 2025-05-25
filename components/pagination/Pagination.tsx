@@ -1,10 +1,11 @@
-// components/pagination/Pagination.tsx
+// components/pagination/Pagination.tsx (最適化版)
 import React, {
   useState,
   useRef,
   useEffect,
   useCallback,
   useMemo,
+  memo,
 } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -13,8 +14,75 @@ interface PaginationProps {
   totalPages: number;
   onPageChange: (page: number) => void;
   onPageHover?: (page: number) => void;
-  disabled?: boolean; // 新しい prop で外部から制御可能
+  disabled?: boolean;
 }
+
+// 🚀 メモ化されたページボタンコンポーネント
+const PageButton = memo(
+  ({
+    page,
+    isCurrent,
+    onClick,
+    onHover,
+    disabled,
+  }: {
+    page: number;
+    isCurrent: boolean;
+    onClick: () => void;
+    onHover?: () => void;
+    disabled: boolean;
+  }) => (
+    <Button
+      variant={isCurrent ? "default" : "outline"}
+      size="sm"
+      className={
+        isCurrent
+          ? "bg-rose-700 text-white border-rose-700 hover:bg-rose-800 min-w-[40px]"
+          : "border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-150 min-w-[40px]"
+      }
+      onClick={onClick}
+      onMouseEnter={onHover}
+      disabled={isCurrent || disabled}
+      aria-label={`Go to page ${page}`}
+      aria-current={isCurrent ? "page" : undefined}
+    >
+      {page}
+    </Button>
+  )
+);
+
+PageButton.displayName = "PageButton";
+
+// 🚀 メモ化されたナビゲーションボタン
+const NavButton = memo(
+  ({
+    direction,
+    onClick,
+    onHover,
+    disabled,
+    children,
+  }: {
+    direction: "prev" | "next";
+    onClick: () => void;
+    onHover?: () => void;
+    disabled: boolean;
+    children: React.ReactNode;
+  }) => (
+    <Button
+      variant="outline"
+      size="sm"
+      className="border-white text-white hover:bg-white hover:text-slate-900 transition-colors duration-150"
+      onClick={onClick}
+      onMouseEnter={onHover}
+      disabled={disabled}
+      aria-label={`Go to ${direction === "prev" ? "previous" : "next"} page`}
+    >
+      {children}
+    </Button>
+  )
+);
+
+NavButton.displayName = "NavButton";
 
 export function Pagination({
   currentPage,
@@ -25,13 +93,10 @@ export function Pagination({
 }: PaginationProps) {
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState("");
-  const [isChanging, setIsChanging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
 
-  // ページ番号配列の生成（安定版）
+  // 🚀 ページ番号配列をメモ化
   const pageNumbers = useMemo((): number[] => {
-    // 基本的な検証
     if (!totalPages || totalPages < 1 || !currentPage || currentPage < 1) {
       return [1];
     }
@@ -53,56 +118,81 @@ export function Pagination({
     return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
   }, [currentPage, totalPages]);
 
-  // 安全なページ変更ハンドラー
+  // 🚀 ページ変更ハンドラーをメモ化
   const handlePageChange = useCallback(
-    async (page: number) => {
-      // 二重実行防止
-      if (isChanging || disabled) return;
-
-      // 範囲チェック
-      if (page < 1 || page > totalPages || page === currentPage) return;
-
-      try {
-        setIsChanging(true);
-
-        // 短時間の遅延でUI応答性を向上
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
+    (page: number) => {
+      if (
+        page >= 1 &&
+        page <= totalPages &&
+        page !== currentPage &&
+        !disabled
+      ) {
         onPageChange(page);
-      } catch (error) {
-        console.error("Page change error:", error);
-      } finally {
-        // 最小限の遅延後にロック解除
-        setTimeout(() => setIsChanging(false), 200);
       }
     },
-    [currentPage, totalPages, onPageChange, isChanging, disabled]
+    [currentPage, totalPages, onPageChange, disabled]
   );
 
-  // 安全なホバーハンドラー（デバウンス付き）
+  // 🚀 ホバーハンドラーをメモ化（デバウンス付き）
   const handlePageHover = useCallback(
     (page: number) => {
-      if (!onPageHover || disabled || isChanging) return;
-      if (page === currentPage || page < 1 || page > totalPages) return;
+      if (
+        !onPageHover ||
+        disabled ||
+        page === currentPage ||
+        page < 1 ||
+        page > totalPages
+      )
+        return;
 
-      // 既存のタイムアウトをクリア
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      // デバウンス処理
-      timeoutRef.current = setTimeout(() => {
+      // 軽量化：デバウンスタイムを短縮
+      const timeoutId = setTimeout(() => {
         try {
           onPageHover(page);
-        } catch (error) {
-          console.error("Page hover error:", error);
+        } catch {
+          // エラーは静かに処理
         }
-      }, 100);
+      }, 100); // 150ms → 100ms に短縮
+
+      return () => clearTimeout(timeoutId);
     },
-    [onPageHover, currentPage, totalPages, disabled, isChanging]
+    [onPageHover, currentPage, totalPages, disabled]
   );
 
-  // 入力検証（堅牢版）
+  // 🚀 事前生成されたイベントハンドラー
+  const { pageHandlers, hoverHandlers } = useMemo(() => {
+    const clickHandlers: Record<number, () => void> = {};
+    const mouseHandlers: Record<number, () => void> = {};
+
+    pageNumbers.forEach((page) => {
+      clickHandlers[page] = () => handlePageChange(page);
+      mouseHandlers[page] = () => handlePageHover(page);
+    });
+
+    return {
+      pageHandlers: clickHandlers,
+      hoverHandlers: mouseHandlers,
+    };
+  }, [pageNumbers, handlePageChange, handlePageHover]);
+
+  // 前/次ボタンのハンドラー
+  const handlePrevious = useCallback(() => {
+    handlePageChange(currentPage - 1);
+  }, [currentPage, handlePageChange]);
+
+  const handleNext = useCallback(() => {
+    handlePageChange(currentPage + 1);
+  }, [currentPage, handlePageChange]);
+
+  const handlePrevHover = useCallback(() => {
+    if (currentPage > 1) handlePageHover(currentPage - 1);
+  }, [currentPage, handlePageHover]);
+
+  const handleNextHover = useCallback(() => {
+    if (currentPage < totalPages) handlePageHover(currentPage + 1);
+  }, [currentPage, totalPages, handlePageHover]);
+
+  // 🚀 入力検証をメモ化
   const validateInput = useCallback(
     (
       value: string
@@ -133,7 +223,7 @@ export function Pagination({
     [totalPages, currentPage]
   );
 
-  // 入力変更ハンドラー
+  // 🚀 入力関連ハンドラーをメモ化
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
@@ -142,7 +232,7 @@ export function Pagination({
       const validation = validateInput(value);
       setInputError(validation.error || "");
 
-      // 有効なページのホバー（軽量版）
+      // 有効なページのホバー
       if (validation.valid && validation.page) {
         handlePageHover(validation.page);
       }
@@ -150,7 +240,6 @@ export function Pagination({
     [validateInput, handlePageHover]
   );
 
-  // Enterキー処理
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
@@ -169,7 +258,6 @@ export function Pagination({
     [inputValue, validateInput, handlePageChange]
   );
 
-  // フォーカス管理
   const handleFocus = useCallback(() => {
     if (!disabled) {
       setInputValue(currentPage.toString());
@@ -181,23 +269,19 @@ export function Pagination({
     setInputError("");
   }, []);
 
-  // ショートカットキー
+  // 🚀 キーボードショートカット（軽量化）
   useEffect(() => {
+    if (disabled) return;
+
     const handleKeydown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "g" && !disabled) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "g") {
         e.preventDefault();
         inputRef.current?.focus();
       }
     };
 
-    document.addEventListener("keydown", handleKeydown);
-    return () => {
-      document.removeEventListener("keydown", handleKeydown);
-      // クリーンアップ
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    document.addEventListener("keydown", handleKeydown, { passive: false });
+    return () => document.removeEventListener("keydown", handleKeydown);
   }, [disabled]);
 
   // 不正な状態での安全な表示
@@ -208,18 +292,12 @@ export function Pagination({
   // 1ページのみの場合は表示しない
   if (totalPages <= 1) return null;
 
-  const isOperationDisabled = disabled || isChanging;
+  const canGoPrev = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
+  const isOperationDisabled = disabled;
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* ロード状態インジケーター */}
-      {isChanging && (
-        <div className="flex items-center gap-2 text-white text-sm">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          <span>Loading...</span>
-        </div>
-      )}
-
       {/* メインナビゲーション */}
       <nav
         className={`flex flex-wrap justify-center items-center gap-2 transition-opacity duration-200 ${
@@ -228,18 +306,15 @@ export function Pagination({
         aria-label="Pagination navigation"
       >
         {/* Previous button */}
-        {currentPage > 1 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-white text-white hover:bg-white hover:text-slate-900 transition-colors duration-150"
-            onClick={() => handlePageChange(currentPage - 1)}
-            onMouseEnter={() => handlePageHover(currentPage - 1)}
+        {canGoPrev && (
+          <NavButton
+            direction="prev"
+            onClick={handlePrevious}
+            onHover={handlePrevHover}
             disabled={isOperationDisabled}
-            aria-label="Go to previous page"
           >
             &lt; Prev
-          </Button>
+          </NavButton>
         )}
 
         {/* ページ番号ボタン */}
@@ -247,7 +322,7 @@ export function Pagination({
           const isCurrent = page === currentPage;
 
           return (
-            <React.Fragment key={`page-${page}`}>
+            <React.Fragment key={page}>
               {/* 省略記号 */}
               {index > 0 && page - pageNumbers[index - 1] > 1 && (
                 <span
@@ -258,39 +333,27 @@ export function Pagination({
                 </span>
               )}
 
-              <Button
-                variant={isCurrent ? "default" : "outline"}
-                size="sm"
-                className={
-                  isCurrent
-                    ? "bg-rose-700 text-white border-rose-700 hover:bg-rose-800 min-w-[40px]"
-                    : "border-white text-white hover:bg-white hover:text-slate-900 transition-all duration-150 min-w-[40px]"
-                }
-                onClick={() => handlePageChange(page)}
-                onMouseEnter={() => handlePageHover(page)}
-                disabled={isCurrent || isOperationDisabled}
-                aria-label={`Go to page ${page}`}
-                aria-current={isCurrent ? "page" : undefined}
-              >
-                {page}
-              </Button>
+              <PageButton
+                page={page}
+                isCurrent={isCurrent}
+                onClick={pageHandlers[page]}
+                onHover={hoverHandlers[page]}
+                disabled={isOperationDisabled}
+              />
             </React.Fragment>
           );
         })}
 
         {/* Next button */}
-        {currentPage < totalPages && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-white text-white hover:bg-white hover:text-slate-900 transition-colors duration-150"
-            onClick={() => handlePageChange(currentPage + 1)}
-            onMouseEnter={() => handlePageHover(currentPage + 1)}
+        {canGoNext && (
+          <NavButton
+            direction="next"
+            onClick={handleNext}
+            onHover={handleNextHover}
             disabled={isOperationDisabled}
-            aria-label="Go to next page"
           >
             Next &gt;
-          </Button>
+          </NavButton>
         )}
       </nav>
 
