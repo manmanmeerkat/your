@@ -98,11 +98,7 @@ export default function AllArticlesContent({
   const pageSize = initialPagination.pageSize;
 
   // 🚀 全記事データを一括取得（超高速化の核心）
-  const {
-    data: allArticlesData,
-    error: articlesError,
-    isLoading,
-  } = useSWR(
+  const { data: allArticlesData, error: articlesError } = useSWR(
     "/api/articles?published=true&pageSize=1000", // 全件一括取得
     fetcher,
     {
@@ -126,30 +122,32 @@ export default function AllArticlesContent({
     refreshInterval: 0,
   });
 
-  // 🚀 完全クライアントサイドでの瞬時フィルタリング & ページネーション
+  // 🚀 ハイブリッド方式：初期データ + 全データ読み込み
   const {
     paginatedArticles,
     totalPages,
     filteredCount,
     totalCount,
     categoryCounts,
+    isDataReady,
   } = useMemo(() => {
     const allArticles = allArticlesData?.articles || initialArticles;
     const counts = countsData?.counts || initialCategoryCounts;
+    const hasFullData = allArticlesData?.articles?.length > 0;
 
-    // 🚀 メモリ内で瞬時フィルタリング
+    // 🚀 フィルタリング（初期データまたは全データ）
     const filtered = currentCategory
       ? allArticles.filter(
           (article: articleType) => article.category === currentCategory
         )
       : allArticles;
 
-    // 🚀 メモリ内で瞬時ページネーション
+    // 🚀 ページネーション
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginated = filtered.slice(startIndex, endIndex);
 
-    // ページ数計算
+    // ページ数計算（初期データで即座計算、後で更新）
     const pages = Math.ceil(filtered.length / pageSize);
 
     // 総記事数の計算
@@ -165,6 +163,7 @@ export default function AllArticlesContent({
       filteredCount: filtered.length,
       totalCount: total,
       categoryCounts: counts,
+      isDataReady: hasFullData, // 全データ読み込み完了フラグ
     };
   }, [
     allArticlesData,
@@ -285,8 +284,8 @@ export default function AllArticlesContent({
 
           {/* 記事コンテンツ */}
           <div className="flex-1 overflow-y-auto px-4 py-8">
-            {/* 初回ローディング */}
-            {isLoading && !allArticlesData ? (
+            {/* 🚀 全データ読み込み中のローディング */}
+            {!isDataReady ? (
               <div className="flex justify-center py-20">
                 <div className="flex items-center gap-3">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
@@ -319,17 +318,6 @@ export default function AllArticlesContent({
                     </p>
                   )}
                 </div>
-
-                {/* 🚀 瞬時ページネーション */}
-                {totalPages > 1 && (
-                  <div className="mt-12 flex justify-center">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
-                )}
               </>
             ) : (
               <div className="text-center py-20">
@@ -348,6 +336,17 @@ export default function AllArticlesContent({
                     View all articles
                   </Button>
                 )}
+              </div>
+            )}
+
+            {/* 🚀 即座表示ページネーション（初期データ使用） */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </div>
             )}
           </div>
