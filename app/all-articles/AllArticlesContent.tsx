@@ -1,3 +1,4 @@
+// app/all-articles/AllArticlesContent.tsx (最小限修正版)
 "use client";
 
 import { useMemo, useCallback, memo } from "react";
@@ -21,7 +22,7 @@ const fetcher = async (url: string) => {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "Cache-Control": "max-age=600", // 10分キャッシュ
+        "Cache-Control": "max-age=600",
       },
     });
     clearTimeout(timeoutId);
@@ -70,6 +71,33 @@ const CategoryButton = memo(
 
 CategoryButton.displayName = "CategoryButton";
 
+// 🚀 改善されたローディングコンポーネント
+const LoadingState = memo(() => (
+  <div className="py-8">
+    <div className="flex justify-center py-20">
+      <div className="flex items-center gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+        <span className="text-white">Loading articles...</span>
+      </div>
+    </div>
+  </div>
+));
+
+LoadingState.displayName = "LoadingState";
+
+// 🚀 スケルトンローディング（ページネーション用）
+const PaginationSkeleton = memo(() => (
+  <div className="mt-12 flex justify-center">
+    <div className="flex items-center gap-2">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="w-10 h-8 bg-slate-700 rounded animate-pulse" />
+      ))}
+    </div>
+  </div>
+));
+
+PaginationSkeleton.displayName = "PaginationSkeleton";
+
 interface AllArticlesContentProps {
   initialArticles: articleType[];
   initialPagination: {
@@ -101,21 +129,17 @@ export default function AllArticlesContent({
   const {
     data: allArticlesData,
     error: articlesError,
-    isLoading,
-  } = useSWR(
-    "/api/articles?published=true&pageSize=1000", // 大きなページサイズで全件取得
-    fetcher,
-    {
-      fallbackData: {
-        articles: initialArticles,
-        pagination: initialPagination,
-      },
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 600000, // 10分間キャッシュ
-      refreshInterval: 0,
-    }
-  );
+    isLoading: articlesLoading,
+  } = useSWR("/api/articles?published=true&pageSize=1000", fetcher, {
+    fallbackData: {
+      articles: initialArticles,
+      pagination: initialPagination,
+    },
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 600000,
+    refreshInterval: 0,
+  });
 
   // カテゴリ数データ
   const { data: countsData } = useSWR("/api/article-counts", fetcher, {
@@ -126,33 +150,53 @@ export default function AllArticlesContent({
     refreshInterval: 0,
   });
 
-  // 🚀 完全にクライアントサイドでフィルタリング & ページネーション
+  // 🚀 計算を軽量化（早期リターンで最適化）
   const {
     paginatedArticles,
     totalPages,
     filteredCount,
     totalCount,
     categoryCounts,
+    isDataReady,
   } = useMemo(() => {
-    const allArticles = allArticlesData?.articles || initialArticles;
+    // 🚀 初期データすらない場合は明確にfalse
+    const hasInitialData = initialArticles.length > 0;
+    const hasFetchedData = allArticlesData?.articles?.length > 0;
+
+    // データの準備状況を判定
+    const dataReady = hasInitialData || hasFetchedData;
+
+    // データがない場合は早期リターン
+    if (!dataReady) {
+      return {
+        paginatedArticles: [],
+        totalPages: 1,
+        filteredCount: 0,
+        totalCount: 0,
+        categoryCounts: initialCategoryCounts,
+        isDataReady: false,
+      };
+    }
+
+    // 使用するデータソースを決定
+    const allArticles = hasFetchedData
+      ? allArticlesData.articles
+      : initialArticles;
     const counts = countsData?.counts || initialCategoryCounts;
 
-    // カテゴリでフィルタリング
+    // 🚀 フィルタリングを軽量化
     const filtered = currentCategory
       ? allArticles.filter(
           (article: articleType) => article.category === currentCategory
         )
       : allArticles;
 
-    // ページネーション
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginated = filtered.slice(startIndex, endIndex);
-
-    // ページ数計算
+    // 🚀 ページネーション（シンプル計算）
+    const start = (currentPage - 1) * pageSize;
+    const paginated = filtered.slice(start, start + pageSize);
     const pages = Math.ceil(filtered.length / pageSize);
 
-    // 総記事数の計算
+    // 🚀 総数計算
     const total =
       Object.values(counts).reduce(
         (sum: number, count) => sum + (count as number),
@@ -165,6 +209,7 @@ export default function AllArticlesContent({
       filteredCount: filtered.length,
       totalCount: total,
       categoryCounts: counts,
+      isDataReady: true,
     };
   }, [
     allArticlesData,
@@ -172,8 +217,8 @@ export default function AllArticlesContent({
     currentCategory,
     currentPage,
     pageSize,
-    initialArticles,
     initialCategoryCounts,
+    initialArticles,
   ]);
 
   // 🚀 超高速ナビゲーション（APIなし）
@@ -192,7 +237,7 @@ export default function AllArticlesContent({
   // カテゴリ変更ハンドラー
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
-      navigateInstantly(1, categoryId); // 常にページ1に戻る
+      navigateInstantly(1, categoryId);
     },
     [navigateInstantly]
   );
@@ -208,7 +253,7 @@ export default function AllArticlesContent({
   // カテゴリボタンのハンドラーを事前生成
   const categoryHandlers = useMemo(() => {
     const handlers: Record<string, () => void> = {
-      "": () => handleCategoryChange(""), // All ボタン
+      "": () => handleCategoryChange(""),
     };
 
     CATEGORIES.forEach((category) => {
@@ -259,10 +304,9 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* 🚀 超高速カテゴリーフィルター */}
+          {/* 🚀 カテゴリーフィルター（常に表示） */}
           <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md">
             <div className="flex flex-wrap justify-start md:justify-center gap-3">
-              {/* All ボタン */}
               <CategoryButton
                 category={null}
                 currentCategory={currentCategory}
@@ -270,7 +314,6 @@ export default function AllArticlesContent({
                 onClick={categoryHandlers[""]}
               />
 
-              {/* カテゴリボタン */}
               {CATEGORIES.map((category) => (
                 <CategoryButton
                   key={category.id}
@@ -283,16 +326,10 @@ export default function AllArticlesContent({
             </div>
           </div>
 
-          {/* 初回ローディング */}
-          {isLoading && !allArticlesData ? (
-            <div className="flex justify-center py-20">
-              <div className="flex items-center gap-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
-                <span className="text-white">Loading all articles...</span>
-              </div>
-            </div>
+          {/* 🚀 コンテンツエリア（ローディング改善） */}
+          {!isDataReady || articlesLoading ? (
+            <LoadingState />
           ) : (
-            /* 記事グリッド */
             <div className="py-8">
               {paginatedArticles.length > 0 ? (
                 <>
@@ -312,16 +349,12 @@ export default function AllArticlesContent({
                       {Math.min(currentPage * pageSize, filteredCount)} of{" "}
                       {filteredCount} articles
                     </p>
-                    {currentCategory && (
-                      <p className="text-gray-400 text-sm mt-1">
-                        Category:{" "}
-                        {CATEGORIES.find((c) => c.id === currentCategory)?.name}
-                      </p>
-                    )}
                   </div>
 
-                  {/* ページネーション */}
-                  {totalPages > 1 && (
+                  {/* 🚀 ページネーション（ローディング対応） */}
+                  {articlesLoading ? (
+                    <PaginationSkeleton />
+                  ) : totalPages > 1 ? (
                     <div className="mt-12 flex justify-center">
                       <Pagination
                         currentPage={currentPage}
@@ -329,7 +362,7 @@ export default function AllArticlesContent({
                         onPageChange={handlePageChange}
                       />
                     </div>
-                  )}
+                  ) : null}
                 </>
               ) : (
                 <div className="text-center py-20">

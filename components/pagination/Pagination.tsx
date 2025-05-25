@@ -477,7 +477,6 @@ export function Pagination({
           </div>
 
           <span className="text-white">of {totalPages}</span>
-          <span className="text-gray-400 text-xs">(Ctrl+G)</span>
         </div>
       </div>
     </>
