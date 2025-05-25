@@ -576,14 +576,14 @@ export default function ArticleClientPage({ article }: { article: Article }) {
       {/* ⭐ Hero image - OptimizedImage使用 */}
       {hasFeaturedImage && (
         <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
-          <div className="relative max-h-[500px] w-full flex justify-center">
+          <div className="relative max-h-[400px] w-full flex justify-center">
             <OptimizedImage
               src={featuredImage}
               alt={article.title}
-              className="h-auto max-h-[500px] w-full max-w-[800px] object-contain rounded-md"
+              className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md"
               priority={true}
-              width={800}
-              height={500}
+              width={400}
+              height={400}
             />
           </div>
           <WhiteLine />
