@@ -67,15 +67,10 @@ async function fetchArticlesData(
 
     // エラーハンドリング - 部分的な成功でも対応
     let categoryCounts = {};
-    let totalCount = 0;
 
     if (countsResponse.ok) {
       const countsData = await countsResponse.json();
       categoryCounts = countsData.counts || {};
-      totalCount = Object.values(categoryCounts).reduce(
-        (sum: number, count) => sum + (count as number),
-        0
-      );
     } else {
       console.warn(`Category counts fetch failed: ${countsResponse.status}`);
     }
@@ -95,7 +90,6 @@ async function fetchArticlesData(
       articles,
       pagination,
       categoryCounts,
-      totalCount,
     };
   } catch (error) {
     console.error("データ取得エラー:", error);
@@ -105,7 +99,6 @@ async function fetchArticlesData(
       articles: [],
       pagination: { total: 0, page, pageSize, pageCount: 1 },
       categoryCounts: {},
-      totalCount: 0,
     };
   }
 }
@@ -121,8 +114,11 @@ export default async function AllArticlesPage({
   const pageSize = 12;
 
   // サーバーサイドでデータを取得
-  const { articles, pagination, categoryCounts, totalCount } =
-    await fetchArticlesData(page, category, pageSize);
+  const { articles, pagination, categoryCounts } = await fetchArticlesData(
+    page,
+    category,
+    pageSize
+  );
 
   return (
     <div className="min-h-screen">
@@ -131,7 +127,6 @@ export default async function AllArticlesPage({
           initialArticles={articles}
           initialPagination={pagination}
           initialCategoryCounts={categoryCounts}
-          initialTotalCount={totalCount}
           initialPage={page}
           initialCategory={category}
         />

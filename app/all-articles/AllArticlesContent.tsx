@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useMemo, useCallback, memo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/articleCard/articleCard";
@@ -10,18 +10,18 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import Image from "next/image";
 import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 
 // フェッチャー関数
 const fetcher = async (url: string) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "Cache-Control": "max-age=300",
+        "Cache-Control": "max-age=600", // 10分キャッシュ
       },
     });
     clearTimeout(timeoutId);
@@ -34,6 +34,42 @@ const fetcher = async (url: string) => {
   }
 };
 
+// 🚀 メモ化されたカテゴリボタン
+const CategoryButton = memo(
+  ({
+    category,
+    currentCategory,
+    count,
+    onClick,
+  }: {
+    category: { id: string; name: string } | null;
+    currentCategory: string;
+    count: number;
+    onClick: () => void;
+  }) => {
+    const isActive = category
+      ? currentCategory === category.id
+      : !currentCategory;
+    const label = category ? category.name : "All";
+
+    return (
+      <Button
+        variant={isActive ? "default" : "outline"}
+        className={
+          isActive
+            ? "bg-rose-700 text-white hover:bg-rose-800"
+            : "text-white border-white hover:bg-white hover:text-slate-900"
+        }
+        onClick={onClick}
+      >
+        {label} ({count})
+      </Button>
+    );
+  }
+);
+
+CategoryButton.displayName = "CategoryButton";
+
 interface AllArticlesContentProps {
   initialArticles: articleType[];
   initialPagination: {
@@ -43,7 +79,6 @@ interface AllArticlesContentProps {
     pageCount: number;
   };
   initialCategoryCounts: Record<string, number>;
-  initialTotalCount: number;
   initialPage: number;
   initialCategory: string;
 }
@@ -52,217 +87,145 @@ export default function AllArticlesContent({
   initialArticles,
   initialPagination,
   initialCategoryCounts,
-  initialTotalCount,
   initialPage,
   initialCategory,
 }: AllArticlesContentProps) {
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [prefetchedPages, setPrefetchedPages] = useState(new Set<number>());
   const searchParams = useSearchParams();
   const router = useRouter();
-  const hoverTimeoutRef = useRef<NodeJS.Timeout>();
 
   const currentPage = Number(searchParams.get("page") || initialPage);
   const currentCategory = searchParams.get("category") || initialCategory;
+  const pageSize = initialPagination.pageSize;
 
-  // APIキー生成
-  const articlesParams = useMemo(() => {
-    const params = new URLSearchParams({
-      published: "true",
-      page: currentPage.toString(),
-      pageSize: initialPagination.pageSize.toString(),
-    });
-    if (currentCategory) params.append("category", currentCategory);
-    return params.toString();
-  }, [currentPage, currentCategory, initialPagination.pageSize]);
-
-  const apiKey = `/api/articles?${articlesParams}`;
-
-  // 🔧 修正: SWRを常に呼び出し、ハイドレーション問題を回避
+  // 🚀 全記事データを取得（初回のみ）
   const {
-    data: articlesData,
+    data: allArticlesData,
     error: articlesError,
-    isLoading: articlesLoading,
-    mutate: mutateArticles,
-  } = useSWR(apiKey, fetcher, {
-    fallbackData: {
-      articles: initialArticles,
-      pagination: initialPagination,
-    },
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    revalidateOnMount: false, // 🔧 初期データがあるので再検証しない
-    dedupingInterval: 60000,
-    refreshInterval: 0,
-    keepPreviousData: true,
-    errorRetryCount: 2,
-  });
-
-  // カテゴリー数のSWR
-  const { data: countsData, error: countsError } = useSWR(
-    "/api/article-counts",
+    isLoading,
+  } = useSWR(
+    "/api/articles?published=true&pageSize=1000", // 大きなページサイズで全件取得
     fetcher,
     {
-      fallbackData: { counts: initialCategoryCounts },
+      fallbackData: {
+        articles: initialArticles,
+        pagination: initialPagination,
+      },
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      revalidateOnMount: false,
-      dedupingInterval: 300000,
+      dedupingInterval: 600000, // 10分間キャッシュ
       refreshInterval: 0,
     }
   );
 
-  // 🔧 修正: データの安全な取得（ハイドレーション考慮）
-  const { articles, pagination, categoryCounts, totalCount } = useMemo(() => {
-    // 初期データを基準に、新しいデータがあれば使用
-    const safeArticles = articlesData?.articles?.length
-      ? articlesData.articles
-      : initialArticles;
-    const safePagination = articlesData?.pagination || initialPagination;
+  // カテゴリ数データ
+  const { data: countsData } = useSWR("/api/article-counts", fetcher, {
+    fallbackData: { counts: initialCategoryCounts },
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 600000,
+    refreshInterval: 0,
+  });
 
+  // 🚀 完全にクライアントサイドでフィルタリング & ページネーション
+  const {
+    paginatedArticles,
+    totalPages,
+    filteredCount,
+    totalCount,
+    categoryCounts,
+  } = useMemo(() => {
+    const allArticles = allArticlesData?.articles || initialArticles;
     const counts = countsData?.counts || initialCategoryCounts;
-    const calculatedTotalCount = Object.values(counts).reduce(
-      (sum: number, count) => sum + (count as number),
-      0
-    );
+
+    // カテゴリでフィルタリング
+    const filtered = currentCategory
+      ? allArticles.filter(
+          (article: articleType) => article.category === currentCategory
+        )
+      : allArticles;
+
+    // ページネーション
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginated = filtered.slice(startIndex, endIndex);
+
+    // ページ数計算
+    const pages = Math.ceil(filtered.length / pageSize);
+
+    // 総記事数の計算
+    const total =
+      Object.values(counts).reduce(
+        (sum: number, count) => sum + (count as number),
+        0
+      ) || allArticles.length;
 
     return {
-      articles: safeArticles,
-      pagination: safePagination,
+      paginatedArticles: paginated,
+      totalPages: pages,
+      filteredCount: filtered.length,
+      totalCount: total,
       categoryCounts: counts,
-      totalCount: calculatedTotalCount || initialTotalCount,
     };
   }, [
-    articlesData,
+    allArticlesData,
     countsData,
+    currentCategory,
+    currentPage,
+    pageSize,
     initialArticles,
-    initialPagination,
     initialCategoryCounts,
-    initialTotalCount,
   ]);
 
-  // プリフェッチ関数
-  const prefetchPage = useCallback(
-    async (page: number) => {
-      if (page < 1 || page > pagination.pageCount || prefetchedPages.has(page))
-        return;
+  // 🚀 超高速ナビゲーション（APIなし）
+  const navigateInstantly = useCallback(
+    (page: number, category: string) => {
+      const params = new URLSearchParams();
+      params.set("page", page.toString());
+      if (category) params.set("category", category);
 
-      const params = new URLSearchParams({
-        published: "true",
-        page: page.toString(),
-        pageSize: pagination.pageSize.toString(),
-      });
-      if (currentCategory) params.append("category", currentCategory);
-
-      const apiUrl = `/api/articles?${params.toString()}`;
-
-      try {
-        const data = await fetcher(apiUrl);
-        await mutate(apiUrl, data, { revalidate: false });
-        setPrefetchedPages((prev) => new Set([...prev, page]));
-      } catch {
-        // エラーは静かに処理
-      }
+      const newUrl = `/all-articles?${params.toString()}`;
+      router.push(newUrl, { scroll: false });
     },
-    [
-      pagination.pageCount,
-      pagination.pageSize,
-      currentCategory,
-      prefetchedPages,
-    ]
+    [router]
   );
 
-  // プリフェッチ戦略
-  useEffect(() => {
-    // 🔧 修正: articlesLoadingに依存せず、データがあれば実行
-    if (pagination.pageCount > 1) {
-      const pagesToPrefetch = [];
+  // カテゴリ変更ハンドラー
+  const handleCategoryChange = useCallback(
+    (categoryId: string) => {
+      navigateInstantly(1, categoryId); // 常にページ1に戻る
+    },
+    [navigateInstantly]
+  );
 
-      if (currentPage > 1) {
-        pagesToPrefetch.push({ page: currentPage - 1, delay: 0 });
-      }
-      if (currentPage < pagination.pageCount) {
-        pagesToPrefetch.push({ page: currentPage + 1, delay: 50 });
-      }
-
-      if (currentPage > 2) {
-        pagesToPrefetch.push({ page: currentPage - 2, delay: 200 });
-      }
-      if (currentPage + 2 <= pagination.pageCount) {
-        pagesToPrefetch.push({ page: currentPage + 2, delay: 250 });
-      }
-
-      pagesToPrefetch.forEach(({ page, delay }) => {
-        setTimeout(() => prefetchPage(page), delay);
-      });
-    }
-  }, [currentPage, pagination.pageCount, prefetchPage]);
-
-  // ホバー時プリフェッチ
-  const handlePageHover = useCallback(
+  // ページ変更ハンドラー
+  const handlePageChange = useCallback(
     (page: number) => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-
-      hoverTimeoutRef.current = setTimeout(() => {
-        prefetchPage(page);
-      }, 150);
+      navigateInstantly(page, currentCategory);
     },
-    [prefetchPage]
+    [navigateInstantly, currentCategory]
   );
 
-  // ページ遷移処理
-  const updateQuery = useCallback(
-    async (key: string, value: string) => {
-      if (isTransitioning) return;
-
-      const newPage = key === "page" ? parseInt(value) : 1;
-
-      setIsTransitioning(true);
-
-      if (key === "page" && !prefetchedPages.has(newPage)) {
-        try {
-          await prefetchPage(newPage);
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        } catch {
-          // エラーは静かに処理
-        }
-      }
-
-      const params = new URLSearchParams(searchParams.toString());
-      if (value) params.set(key, value);
-      else params.delete(key);
-      if (key !== "page") params.set("page", "1");
-
-      router.push(`/all-articles?${params.toString()}`, { scroll: false });
-
-      const transitionTime =
-        key === "page" && prefetchedPages.has(newPage) ? 100 : 250;
-      setTimeout(() => setIsTransitioning(false), transitionTime);
-    },
-    [isTransitioning, searchParams, router, prefetchedPages, prefetchPage]
-  );
-
-  // クリーンアップ
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
+  // カテゴリボタンのハンドラーを事前生成
+  const categoryHandlers = useMemo(() => {
+    const handlers: Record<string, () => void> = {
+      "": () => handleCategoryChange(""), // All ボタン
     };
-  }, []);
+
+    CATEGORIES.forEach((category) => {
+      handlers[category.id] = () => handleCategoryChange(category.id);
+    });
+
+    return handlers;
+  }, [handleCategoryChange]);
 
   // エラーハンドリング
-  if (articlesError || countsError) {
+  if (articlesError) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center text-white">
           <p className="text-xl mb-4">記事の読み込みに失敗しました</p>
           <Button
-            onClick={() => {
-              setPrefetchedPages(new Set());
-              mutateArticles();
-              window.location.reload();
-            }}
+            onClick={() => window.location.reload()}
             className="bg-rose-700 hover:bg-rose-800"
           >
             再読み込み
@@ -272,15 +235,8 @@ export default function AllArticlesContent({
     );
   }
 
-  // 🔧 修正: シンプルなローディング判定
-  const isLoading = articlesLoading && !articles.length;
-
   return (
-    <div
-      className={`transition-opacity duration-150 ${
-        isTransitioning ? "opacity-75" : "opacity-100"
-      }`}
-    >
+    <div>
       <section className="relative bg-slate-950 text-white pt-16 pb-16">
         <div className="absolute inset-0 z-0 opacity-30">
           <Image
@@ -294,7 +250,7 @@ export default function AllArticlesContent({
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">All Posts</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto">
             Browse all articles and discover stories from Japanese mythology,
             culture, festivals, and customs.
           </p>
@@ -303,93 +259,99 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* カテゴリーフィルター */}
-          <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
-            <Button
-              variant={!currentCategory ? "default" : "outline"}
-              className={
-                !currentCategory
-                  ? "bg-rose-700 text-white hover:bg-rose-800"
-                  : "text-white border-white hover:bg-white hover:text-slate-900"
-              }
-              onClick={() => updateQuery("category", "")}
-              disabled={isTransitioning}
-            >
-              All ({totalCount})
-            </Button>
-            {CATEGORIES.map(({ id, name }) => (
-              <Button
-                key={id}
-                variant={currentCategory === id ? "default" : "outline"}
-                className={
-                  currentCategory === id
-                    ? "bg-rose-700 text-white hover:bg-rose-800"
-                    : "text-white border-white hover:bg-white hover:text-slate-900"
-                }
-                onClick={() => updateQuery("category", id)}
-                disabled={isTransitioning}
-              >
-                {name} ({categoryCounts[id] || 0})
-              </Button>
-            ))}
-          </div>
+          {/* 🚀 超高速カテゴリーフィルター */}
+          <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md">
+            <div className="flex flex-wrap justify-start md:justify-center gap-3">
+              {/* All ボタン */}
+              <CategoryButton
+                category={null}
+                currentCategory={currentCategory}
+                count={totalCount}
+                onClick={categoryHandlers[""]}
+              />
 
-          {/* 記事グリッド */}
-          <div className="flex-1 overflow-y-auto px-4 py-8">
-            {isLoading ? (
-              <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
-              </div>
-            ) : articles.length > 0 ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {articles.map((article: articleType) => (
-                    <ArticleCard key={article.id} article={article} />
-                  ))}
-                </div>
-
-                <div className="mt-8 text-center text-white">
-                  Showing {(currentPage - 1) * pagination.pageSize + 1} -
-                  {Math.min(
-                    currentPage * pagination.pageSize,
-                    pagination.total
-                  )}{" "}
-                  of {pagination.total} articles
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-20">
-                <p className="text-white text-xl">
-                  {currentCategory
-                    ? `No articles found in the "${
-                        CATEGORIES.find((c) => c.id === currentCategory)?.name
-                      }" category.`
-                    : "No articles found."}
-                </p>
-                {currentCategory && (
-                  <Button
-                    className="mt-4 bg-rose-700 hover:bg-rose-800 text-white"
-                    onClick={() => updateQuery("category", "")}
-                    disabled={isTransitioning}
-                  >
-                    View all articles
-                  </Button>
-                )}
-              </div>
-            )}
-
-            {/* ページネーション */}
-            {pagination.pageCount > 1 && (
-              <div className="mt-12 flex justify-center">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={pagination.pageCount}
-                  onPageChange={(page) => updateQuery("page", page.toString())}
-                  onPageHover={handlePageHover}
+              {/* カテゴリボタン */}
+              {CATEGORIES.map((category) => (
+                <CategoryButton
+                  key={category.id}
+                  category={category}
+                  currentCategory={currentCategory}
+                  count={categoryCounts[category.id] || 0}
+                  onClick={categoryHandlers[category.id]}
                 />
-              </div>
-            )}
+              ))}
+            </div>
           </div>
+
+          {/* 初回ローディング */}
+          {isLoading && !allArticlesData ? (
+            <div className="flex justify-center py-20">
+              <div className="flex items-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+                <span className="text-white">Loading all articles...</span>
+              </div>
+            </div>
+          ) : (
+            /* 記事グリッド */
+            <div className="py-8">
+              {paginatedArticles.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {paginatedArticles.map((article: articleType) => (
+                      <ArticleCard
+                        key={`${article.id}-${currentPage}-${currentCategory}`}
+                        article={article}
+                      />
+                    ))}
+                  </div>
+
+                  {/* 結果表示 */}
+                  <div className="mt-8 text-center text-white">
+                    <p>
+                      Showing {(currentPage - 1) * pageSize + 1} -
+                      {Math.min(currentPage * pageSize, filteredCount)} of{" "}
+                      {filteredCount} articles
+                    </p>
+                    {currentCategory && (
+                      <p className="text-gray-400 text-sm mt-1">
+                        Category:{" "}
+                        {CATEGORIES.find((c) => c.id === currentCategory)?.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* ページネーション */}
+                  {totalPages > 1 && (
+                    <div className="mt-12 flex justify-center">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-20">
+                  <p className="text-white text-xl">
+                    {currentCategory
+                      ? `No articles found in "${
+                          CATEGORIES.find((c) => c.id === currentCategory)?.name
+                        }" category.`
+                      : "No articles found."}
+                  </p>
+                  {currentCategory && (
+                    <Button
+                      className="mt-4 bg-rose-700 hover:bg-rose-800 text-white"
+                      onClick={categoryHandlers[""]}
+                    >
+                      View all articles
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
