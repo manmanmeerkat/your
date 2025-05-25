@@ -12,7 +12,7 @@ import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
 import useSWR, { mutate } from "swr";
 
-// 🚀 高速フェッチャー関数（1つ目版ベース）
+// フェッチャー関数（3つ目ベース）
 const fetcher = async (url: string) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -65,7 +65,7 @@ export default function AllArticlesContent({
   const currentPage = Number(searchParams.get("page") || initialPage);
   const currentCategory = searchParams.get("category") || initialCategory;
 
-  // APIキー生成
+  // APIキー生成（3つ目ベース）
   const articlesParams = useMemo(() => {
     const params = new URLSearchParams({
       published: "true",
@@ -78,7 +78,7 @@ export default function AllArticlesContent({
 
   const apiKey = `/api/articles?${articlesParams}`;
 
-  // 🚀 高速SWR設定（1つ目版ベース）
+  // SWR設定（3つ目ベース）
   const {
     data: articlesData,
     error: articlesError,
@@ -98,7 +98,7 @@ export default function AllArticlesContent({
     errorRetryCount: 2,
   });
 
-  // カテゴリー数のSWR
+  // カテゴリー数のSWR（3つ目ベース）
   const { data: countsData, error: countsError } = useSWR(
     "/api/article-counts",
     fetcher,
@@ -112,7 +112,7 @@ export default function AllArticlesContent({
     }
   );
 
-  // 🚀 データの高速取得（1つ目版ベース・シンプル版）
+  // データの安全な取得（3つ目ベース）
   const { articles, pagination, categoryCounts, totalCount } = useMemo(() => {
     const safeArticles = articlesData?.articles?.length
       ? articlesData.articles
@@ -140,7 +140,7 @@ export default function AllArticlesContent({
     initialTotalCount,
   ]);
 
-  // プリフェッチ関数
+  // プリフェッチ関数（3つ目ベース）
   const prefetchPage = useCallback(
     async (page: number) => {
       if (page < 1 || page > pagination.pageCount || prefetchedPages.has(page))
@@ -171,7 +171,7 @@ export default function AllArticlesContent({
     ]
   );
 
-  // プリフェッチ戦略
+  // プリフェッチ戦略（3つ目ベース）
   useEffect(() => {
     if (pagination.pageCount > 1) {
       const pagesToPrefetch = [];
@@ -196,7 +196,7 @@ export default function AllArticlesContent({
     }
   }, [currentPage, pagination.pageCount, prefetchPage]);
 
-  // ホバー時プリフェッチ
+  // ホバー時プリフェッチ（3つ目ベース）
   const handlePageHover = useCallback(
     (page: number) => {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -208,7 +208,7 @@ export default function AllArticlesContent({
     [prefetchPage]
   );
 
-  // ページ遷移処理
+  // ページ遷移処理（3つ目ベース）
   const updateQuery = useCallback(
     async (key: string, value: string) => {
       if (isTransitioning) return;
@@ -240,7 +240,7 @@ export default function AllArticlesContent({
     [isTransitioning, searchParams, router, prefetchedPages, prefetchPage]
   );
 
-  // クリーンアップ
+  // クリーンアップ（3つ目ベース）
   useEffect(() => {
     return () => {
       if (hoverTimeoutRef.current) {
@@ -249,7 +249,7 @@ export default function AllArticlesContent({
     };
   }, []);
 
-  // エラーハンドリング
+  // エラーハンドリング（3つ目ベース）
   if (articlesError || countsError) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -270,7 +270,7 @@ export default function AllArticlesContent({
     );
   }
 
-  // 🚀 シンプル・高速ローディング判定（1つ目版）
+  // ローディング判定（3つ目ベース）
   const isLoading = articlesLoading && !articles.length;
 
   return (
@@ -301,7 +301,7 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* 🚀 カテゴリーフィルター（2つ目版の改良されたスタイル） */}
+          {/* カテゴリーフィルター（3つ目ベース） */}
           <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
             <Button
               variant={!currentCategory ? "default" : "outline"}
@@ -332,17 +332,15 @@ export default function AllArticlesContent({
             ))}
           </div>
 
-          {/* 記事グリッド */}
+          {/* 記事グリッド（3つ目ベース） */}
           <div className="flex-1 overflow-y-auto px-4 py-8">
             {isLoading ? (
               <div className="flex justify-center py-20">
-                <div className="flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
-                  <span className="text-white">Loading articles...</span>
-                </div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
               </div>
             ) : articles.length > 0 ? (
               <>
+                {/* 🚀 記事一覧表示部分（1つ目ファイルから採用） */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {articles.map((article: articleType) => (
                     <ArticleCard key={article.id} article={article} />
@@ -379,7 +377,7 @@ export default function AllArticlesContent({
               </div>
             )}
 
-            {/* ページネーション */}
+            {/* ページネーション（3つ目ベース） */}
             {pagination.pageCount > 1 && (
               <div className="mt-12 flex justify-center">
                 <Pagination
