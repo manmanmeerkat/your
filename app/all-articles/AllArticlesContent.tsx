@@ -12,29 +12,16 @@ import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
 import useSWR from "swr";
 
-// 🚀 超高速フェッチャー関数
+// フェッチャー関数
 const fetcher = async (url: string) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-  try {
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "Cache-Control": "max-age=600",
-      },
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  } catch (error) {
-    clearTimeout(timeoutId);
-    throw error;
-  }
+  const response = await fetch(url, {
+    headers: { "Cache-Control": "max-age=600" },
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
 };
 
-// 🚀 メモ化されたカテゴリボタン
+// メモ化されたカテゴリボタン
 const CategoryButton = memo(
   ({
     category,
@@ -97,92 +84,156 @@ export default function AllArticlesContent({
   const currentCategory = searchParams.get("category") || initialCategory;
   const pageSize = initialPagination.pageSize;
 
-  // 🚀 背景で全データ読み込み（表示には影響しない）
-  const { data: allArticlesData, error: articlesError } = useSWR(
-    "/api/articles?published=true&pageSize=1000",
-    fetcher,
-    {
-      fallbackData: {
-        articles: initialArticles,
-        pagination: initialPagination,
-      },
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 600000,
-      refreshInterval: 0,
+  // 🚀 PaginationWrapper級の即座表示用データ
+  const quickTotalPages = useMemo(() => {
+    if (initialCategory !== currentCategory) {
+      // カテゴリが変わった場合のみ再計算
+      const filtered = initialArticles.filter(
+        (article: articleType) => article.category === currentCategory
+      );
+      return Math.ceil(filtered.length / pageSize);
     }
-  );
+    // 初期状態では既に計算済みの値を使用（PaginationWrapper方式）
+    return initialPagination.pageCount;
+  }, [
+    initialCategory,
+    currentCategory,
+    initialArticles,
+    pageSize,
+    initialPagination.pageCount,
+  ]);
 
-  const { data: countsData, error: countsError } = useSWR(
-    "/api/article-counts",
-    fetcher,
-    {
-      fallbackData: { counts: initialCategoryCounts },
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      dedupingInterval: 600000,
-      refreshInterval: 0,
-    }
-  );
-
-  // 🚀 表示用データの計算（mythology/page.tsx方式）
-  const displayData = useMemo(() => {
-    // 全データが読み込まれているかチェック
-    const hasFullData =
-      allArticlesData?.articles?.length > initialArticles.length;
-    const articles = hasFullData ? allArticlesData.articles : initialArticles;
-    const counts = countsData?.counts || initialCategoryCounts;
-
-    // フィルタリング
+  // 🚀 初期データで即座表示（mythology/page.tsx方式）
+  const currentDisplayData = useMemo(() => {
     const filtered = currentCategory
-      ? articles.filter(
+      ? initialArticles.filter(
           (article: articleType) => article.category === currentCategory
         )
-      : articles;
+      : initialArticles;
 
-    // ページネーション
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginated = filtered.slice(startIndex, endIndex);
 
-    // 統計計算
-    const totalPages = Math.ceil(filtered.length / pageSize);
     const totalCount =
-      Object.values(counts).reduce(
+      Object.values(initialCategoryCounts).reduce(
         (sum: number, count) => sum + (count as number),
         0
-      ) || articles.length;
+      ) || initialArticles.length;
 
     return {
       articles: paginated,
-      totalPages,
+      filteredCount: filtered.length,
+      totalCount,
+      categoryCounts: initialCategoryCounts,
+    };
+  }, [
+    currentCategory,
+    currentPage,
+    pageSize,
+    initialArticles,
+    initialCategoryCounts,
+  ]);
+
+  // 🚀 背景でフルデータ読み込み（表示には影響しない）
+  const { data: fullData } = useSWR(
+    "/api/articles?published=true&pageSize=1000",
+    fetcher,
+    {
+      fallbackData: { articles: initialArticles },
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 600000,
+      refreshInterval: 0,
+    }
+  );
+
+  const { data: countsData } = useSWR("/api/article-counts", fetcher, {
+    fallbackData: { counts: initialCategoryCounts },
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+    dedupingInterval: 600000,
+    refreshInterval: 0,
+  });
+
+  // 🚀 フルデータ読み込み後の更新表示データ（背景更新）
+  const enhancedDisplayData = useMemo(() => {
+    if (
+      !fullData?.articles ||
+      fullData.articles.length <= initialArticles.length
+    ) {
+      return currentDisplayData; // 初期データ表示を継続
+    }
+
+    const allArticles = fullData.articles;
+    const counts = countsData?.counts || initialCategoryCounts;
+
+    const filtered = currentCategory
+      ? allArticles.filter(
+          (article: articleType) => article.category === currentCategory
+        )
+      : allArticles;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const paginated = filtered.slice(startIndex, endIndex);
+
+    const totalCount = Object.values(counts).reduce(
+      (sum: number, count) => sum + (count as number),
+      0
+    );
+
+    return {
+      articles: paginated,
       filteredCount: filtered.length,
       totalCount,
       categoryCounts: counts,
     };
   }, [
-    allArticlesData,
+    fullData,
     countsData,
-    initialArticles,
-    initialCategoryCounts,
     currentCategory,
     currentPage,
     pageSize,
+    initialArticles,
+    initialCategoryCounts,
+    currentDisplayData,
   ]);
 
-  // 🚀 ナビゲーション関数
+  // 🚀 フルデータ読み込み後のページ数計算
+  const enhancedTotalPages = useMemo(() => {
+    if (
+      !fullData?.articles ||
+      fullData.articles.length <= initialArticles.length
+    ) {
+      return quickTotalPages; // 初期計算値を使用
+    }
+
+    const allArticles = fullData.articles;
+    const filtered = currentCategory
+      ? allArticles.filter(
+          (article: articleType) => article.category === currentCategory
+        )
+      : allArticles;
+
+    return Math.ceil(filtered.length / pageSize);
+  }, [fullData, currentCategory, pageSize, initialArticles, quickTotalPages]);
+
+  // 表示用データ
+  const displayData = enhancedDisplayData;
+  const displayTotalPages = enhancedTotalPages;
+
+  // ナビゲーション
   const navigateToPage = useCallback(
     (page: number, category: string) => {
       const params = new URLSearchParams();
       params.set("page", page.toString());
       if (category) params.set("category", category);
-
       router.push(`/all-articles?${params.toString()}`, { scroll: false });
     },
     [router]
   );
 
-  // 🚀 イベントハンドラー
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
       navigateToPage(1, categoryId);
@@ -197,35 +248,16 @@ export default function AllArticlesContent({
     [navigateToPage, currentCategory]
   );
 
-  // 🚀 カテゴリボタンハンドラー（最適化）
+  // カテゴリボタンハンドラー
   const categoryHandlers = useMemo(() => {
     const handlers: Record<string, () => void> = {
       "": () => handleCategoryChange(""),
     };
-
     CATEGORIES.forEach((category) => {
       handlers[category.id] = () => handleCategoryChange(category.id);
     });
-
     return handlers;
   }, [handleCategoryChange]);
-
-  // エラーハンドリング
-  if (articlesError || countsError) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center text-white">
-          <p className="text-xl mb-4">記事の読み込みに失敗しました</p>
-          <Button
-            onClick={() => window.location.reload()}
-            className="bg-rose-700 hover:bg-rose-800"
-          >
-            再読み込み
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>
@@ -251,7 +283,7 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* 🚀 カテゴリーフィルター */}
+          {/* カテゴリーフィルター */}
           <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md">
             <div className="flex flex-wrap justify-start md:justify-center gap-3">
               <CategoryButton
@@ -277,7 +309,7 @@ export default function AllArticlesContent({
           <div className="flex-1 overflow-y-auto px-4 py-8">
             {displayData.articles.length > 0 ? (
               <>
-                {/* 🚀 記事グリッド */}
+                {/* 記事グリッド */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {displayData.articles.map((article: articleType) => (
                     <ArticleCard
@@ -304,6 +336,17 @@ export default function AllArticlesContent({
                     </p>
                   )}
                 </div>
+
+                {/* 🚀 PaginationWrapper級の即座表示ページネーション */}
+                {displayTotalPages > 1 && (
+                  <div className="mt-12 flex justify-center">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={displayTotalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-20">
@@ -322,17 +365,6 @@ export default function AllArticlesContent({
                     View all articles
                   </Button>
                 )}
-              </div>
-            )}
-
-            {/* 🚀 ページネーション */}
-            {displayData.totalPages > 1 && (
-              <div className="mt-12 flex justify-center">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={displayData.totalPages}
-                  onPageChange={handlePageChange}
-                />
               </div>
             )}
           </div>
