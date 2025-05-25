@@ -1,7 +1,6 @@
-// app/all-articles/AllArticlesContent.tsx (最強版)
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef, memo } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/articleCard/articleCard";
@@ -13,7 +12,7 @@ import { CATEGORIES } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
 import useSWR, { mutate } from "swr";
 
-// 🚀 高速フェッチャー関数
+// 🚀 高速フェッチャー関数（1つ目版ベース）
 const fetcher = async (url: string) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -22,7 +21,7 @@ const fetcher = async (url: string) => {
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        "Cache-Control": "max-age=300", // 5分キャッシュ
+        "Cache-Control": "max-age=300",
       },
     });
     clearTimeout(timeoutId);
@@ -34,20 +33,6 @@ const fetcher = async (url: string) => {
     throw error;
   }
 };
-
-// 🚀 メモ化されたローディングコンポーネント
-const LoadingState = memo(() => (
-  <div className="py-8">
-    <div className="flex justify-center py-20">
-      <div className="flex items-center gap-3">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
-        <span className="text-white">Loading articles...</span>
-      </div>
-    </div>
-  </div>
-));
-
-LoadingState.displayName = "LoadingState";
 
 interface AllArticlesContentProps {
   initialArticles: articleType[];
@@ -80,7 +65,7 @@ export default function AllArticlesContent({
   const currentPage = Number(searchParams.get("page") || initialPage);
   const currentCategory = searchParams.get("category") || initialCategory;
 
-  // 🚀 APIキー生成（過去版の高速設定）
+  // APIキー生成
   const articlesParams = useMemo(() => {
     const params = new URLSearchParams({
       published: "true",
@@ -93,7 +78,7 @@ export default function AllArticlesContent({
 
   const apiKey = `/api/articles?${articlesParams}`;
 
-  // 🚀 高速SWR設定（過去版ベース）
+  // 🚀 高速SWR設定（1つ目版ベース）
   const {
     data: articlesData,
     error: articlesError,
@@ -106,14 +91,14 @@ export default function AllArticlesContent({
     },
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
-    revalidateOnMount: false, // 初期データがあるので再検証しない
-    dedupingInterval: 60000, // 1分間キャッシュ
+    revalidateOnMount: false,
+    dedupingInterval: 60000,
     refreshInterval: 0,
-    keepPreviousData: true, // 🚀 重要：スムーズな遷移
+    keepPreviousData: true,
     errorRetryCount: 2,
   });
 
-  // カテゴリ数のSWR
+  // カテゴリー数のSWR
   const { data: countsData, error: countsError } = useSWR(
     "/api/article-counts",
     fetcher,
@@ -122,43 +107,40 @@ export default function AllArticlesContent({
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
       revalidateOnMount: false,
-      dedupingInterval: 300000, // 5分間キャッシュ
+      dedupingInterval: 300000,
       refreshInterval: 0,
     }
   );
 
-  // 🚀 データの安全な取得（過去版ベース）
-  const { articles, pagination, categoryCounts, totalCount, isDataReady } =
-    useMemo(() => {
-      // 初期データを基準に、新しいデータがあれば使用
-      const safeArticles = articlesData?.articles?.length
-        ? articlesData.articles
-        : initialArticles;
-      const safePagination = articlesData?.pagination || initialPagination;
+  // 🚀 データの高速取得（1つ目版ベース・シンプル版）
+  const { articles, pagination, categoryCounts, totalCount } = useMemo(() => {
+    const safeArticles = articlesData?.articles?.length
+      ? articlesData.articles
+      : initialArticles;
+    const safePagination = articlesData?.pagination || initialPagination;
 
-      const counts = countsData?.counts || initialCategoryCounts;
-      const calculatedTotalCount = Object.values(counts).reduce(
-        (sum: number, count) => sum + (count as number),
-        0
-      );
+    const counts = countsData?.counts || initialCategoryCounts;
+    const calculatedTotalCount = Object.values(counts).reduce(
+      (sum: number, count) => sum + (count as number),
+      0
+    );
 
-      return {
-        articles: safeArticles,
-        pagination: safePagination,
-        categoryCounts: counts,
-        totalCount: calculatedTotalCount || initialTotalCount,
-        isDataReady: safeArticles.length > 0,
-      };
-    }, [
-      articlesData,
-      countsData,
-      initialArticles,
-      initialPagination,
-      initialCategoryCounts,
-      initialTotalCount,
-    ]);
+    return {
+      articles: safeArticles,
+      pagination: safePagination,
+      categoryCounts: counts,
+      totalCount: calculatedTotalCount || initialTotalCount,
+    };
+  }, [
+    articlesData,
+    countsData,
+    initialArticles,
+    initialPagination,
+    initialCategoryCounts,
+    initialTotalCount,
+  ]);
 
-  // 🚀 プリフェッチ関数（過去版の高速機能）
+  // プリフェッチ関数
   const prefetchPage = useCallback(
     async (page: number) => {
       if (page < 1 || page > pagination.pageCount || prefetchedPages.has(page))
@@ -189,7 +171,7 @@ export default function AllArticlesContent({
     ]
   );
 
-  // 🚀 プリフェッチ戦略（過去版の高速機能）
+  // プリフェッチ戦略
   useEffect(() => {
     if (pagination.pageCount > 1) {
       const pagesToPrefetch = [];
@@ -214,7 +196,7 @@ export default function AllArticlesContent({
     }
   }, [currentPage, pagination.pageCount, prefetchPage]);
 
-  // 🚀 ホバー時プリフェッチ（過去版の高速機能）
+  // ホバー時プリフェッチ
   const handlePageHover = useCallback(
     (page: number) => {
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
@@ -226,7 +208,7 @@ export default function AllArticlesContent({
     [prefetchPage]
   );
 
-  // 🚀 ページ遷移処理（過去版の高速機能）
+  // ページ遷移処理
   const updateQuery = useCallback(
     async (key: string, value: string) => {
       if (isTransitioning) return;
@@ -235,7 +217,6 @@ export default function AllArticlesContent({
 
       setIsTransitioning(true);
 
-      // ページ変更時のプリフェッチ
       if (key === "page" && !prefetchedPages.has(newPage)) {
         try {
           await prefetchPage(newPage);
@@ -289,8 +270,8 @@ export default function AllArticlesContent({
     );
   }
 
-  // 🚀 ローディング判定（改善版）
-  const isLoading = articlesLoading && !isDataReady;
+  // 🚀 シンプル・高速ローディング判定（1つ目版）
+  const isLoading = articlesLoading && !articles.length;
 
   return (
     <div
@@ -311,7 +292,7 @@ export default function AllArticlesContent({
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">All Posts</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
             Browse all articles and discover stories from Japanese mythology,
             culture, festivals, and customs.
           </p>
@@ -320,7 +301,7 @@ export default function AllArticlesContent({
 
       <section className="py-16 bg-slate-950 md:px-16">
         <div className="container mx-auto px-4">
-          {/* 🚀 カテゴリーフィルター */}
+          {/* 🚀 カテゴリーフィルター（2つ目版の改良されたスタイル） */}
           <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md flex flex-wrap justify-start md:justify-center gap-3">
             <Button
               variant={!currentCategory ? "default" : "outline"}
@@ -351,10 +332,15 @@ export default function AllArticlesContent({
             ))}
           </div>
 
-          {/* 🚀 記事グリッド（改善されたローディング） */}
+          {/* 記事グリッド */}
           <div className="flex-1 overflow-y-auto px-4 py-8">
             {isLoading ? (
-              <LoadingState />
+              <div className="flex justify-center py-20">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white" />
+                  <span className="text-white">Loading articles...</span>
+                </div>
+              </div>
             ) : articles.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -393,7 +379,7 @@ export default function AllArticlesContent({
               </div>
             )}
 
-            {/* 🚀 ページネーション（高速プリフェッチ付き） */}
+            {/* ページネーション */}
             {pagination.pageCount > 1 && (
               <div className="mt-12 flex justify-center">
                 <Pagination
