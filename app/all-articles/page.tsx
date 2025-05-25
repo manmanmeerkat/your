@@ -127,6 +127,7 @@ export default async function AllArticlesPage({
           initialArticles={articles}
           initialPagination={pagination}
           initialCategoryCounts={categoryCounts}
+          initialTotalCount={pagination.total}
           initialPage={page}
           initialCategory={category}
         />
