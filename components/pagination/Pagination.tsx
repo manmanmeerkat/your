@@ -44,7 +44,7 @@ const PageButton = memo(
       aria-current={isCurrent ? "page" : undefined}
       // 🚀 スタイル直接指定で計算時間削減
       style={{
-        minWidth: "40px",
+        minWidth: "20px",
         backgroundColor: isCurrent ? "#be185d" : "transparent",
         color: isCurrent ? "white" : "white",
         borderColor: isCurrent ? "#be185d" : "white",
@@ -106,7 +106,7 @@ const PaginationSkeleton = memo(() => (
         <div
           key={i}
           className="w-10 h-8 bg-slate-700 rounded animate-pulse"
-          style={{ minWidth: "40px" }}
+          style={{ minWidth: "20px" }}
         />
       ))}
     </nav>
