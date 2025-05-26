@@ -467,11 +467,11 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
       {/* Hero image */}
       {item.images?.[0] && (
         <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
-          <div className="relative max-h-[500px] w-full flex justify-center">
+          <div className="relative max-h-[400px] w-full flex justify-center">
             <Image
               src={item.images[0].url}
               alt={item.images[0].altText || item.title}
-              className="h-auto max-h-[500px] w-full max-w-[800px] object-contain rounded-md"
+              className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md"
               width={800}
               height={500}
               unoptimized
@@ -530,14 +530,15 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
             <Button
               size="lg"
               className="
-                w-[320px] 
+                max-w-[340px] 
+                w-full
                 border border-rose-700 bg-rose-700 text-white 
                 hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
                 shadow hover:shadow-lg
-                whitespace-nowrap
-                w-auto
                 px-6
                 transition-all duration-300
+                text-center
+                break-words
               "
             >
               Back to {label} ≫
