@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
     const publishedParam = searchParams.get('published');
     const categoryParam = searchParams.get('category');
     const searchQuery = searchParams.get('search');
+    const searchType = searchParams.get('searchType') || 'title'; // 新しく追加
     
     // ページネーション用パラメータ
     let page = 1;
@@ -67,12 +68,50 @@ export async function GET(request: NextRequest) {
       where.category = categoryParam;
     }
     
-    // キーワード検索が指定されている場合
+    // キーワード検索が指定されている場合（修正された部分）
     if (searchQuery && searchQuery.trim() !== '') {
-      where.title = {
-        contains: searchQuery.trim(),
-        mode: 'insensitive' // 大文字小文字を区別しない
-      };
+      const trimmedQuery = searchQuery.trim();
+      console.log('検索実行:', { query: trimmedQuery, type: searchType });
+      
+      switch (searchType) {
+        case 'title':
+          where.title = {
+            contains: trimmedQuery,
+            mode: 'insensitive'
+          };
+          break;
+        
+        case 'content':
+          where.content = {
+            contains: trimmedQuery,
+            mode: 'insensitive'
+          };
+          break;
+        
+        case 'both':
+          where.OR = [
+            {
+              title: {
+                contains: trimmedQuery,
+                mode: 'insensitive'
+              }
+            },
+            {
+              content: {
+                contains: trimmedQuery,
+                mode: 'insensitive'
+              }
+            }
+          ];
+          break;
+        
+        default:
+          // デフォルトはタイトル検索
+          where.title = {
+            contains: trimmedQuery,
+            mode: 'insensitive'
+          };
+      }
     }
     
     console.log('検索条件:', where);
