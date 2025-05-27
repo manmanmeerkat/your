@@ -1,43 +1,43 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { prisma } = require('./lib/prisma'); // ← Prisma クライアント取得
-
 /** @type {import('next-sitemap').IConfig} */
-const config = {
+module.exports = {
   siteUrl: 'https://www.yoursecretjapan.com',
   generateRobotsTxt: true,
-  exclude: ['/admin/**', '/api/**', '/drafts/**'],
+  generateIndexSitemap: true,
+  exclude: [
+    '/admin/**',
+    '/api/**',
+    '/drafts/**',
+  ],
   sitemapSize: 5000,
-  additionalPaths: async () => {
-    const articles = await prisma.article.findMany({
-      select: { slug: true, updatedAt: true },
-      where: { published: true },
-    });
+  transform: async (config, path) => {
+    if (path.startsWith('/articles/')) return null;
 
-    const staticPaths = [
-      { loc: '/', changefreq: 'daily', priority: 0.7 },
-      { loc: '/mythology', changefreq: 'daily', priority: 0.7 },
-      { loc: '/culture', changefreq: 'daily', priority: 0.7 },
-      { loc: '/customs', changefreq: 'daily', priority: 0.7 },
-      { loc: '/festivals', changefreq: 'daily', priority: 0.7 },
-      { loc: '/about', changefreq: 'daily', priority: 0.7 },
-      { loc: '/contact', changefreq: 'daily', priority: 0.7 },
-      { loc: '/all-articles', changefreq: 'daily', priority: 0.7 },
-      { loc: '/privacy-policy', changefreq: 'daily', priority: 0.7 },
+    return {
+      loc: `${config.siteUrl}${path}`,
+      changefreq: 'daily',
+      priority: 0.7,
+      lastmod: new Date().toISOString(),
+    };
+  },
+  additionalPaths: async (config) => {
+    const staticCategoryPaths = [
+      '/mythology',
+      '/culture',
+      '/customs',
+      '/festivals',
+      '/all-articles',
     ];
 
-    const articlePaths = articles.map((article) => ({
-      loc: `/articles/${article.slug}`,
-      lastmod: article.updatedAt.toISOString(),
-      changefreq: 'weekly',
-      priority: 0.9,
+    return staticCategoryPaths.map((path) => ({
+      loc: `${config.siteUrl}${path}`,
+      changefreq: 'daily',
+      priority: 0.7,
+      lastmod: new Date().toISOString(),
     }));
-
-    //Prismaクライアントを明示的に切断
-    await prisma.$disconnect();
-
-    return [...staticPaths, ...articlePaths];
+  },
+  robotsTxtOptions: {
+    additionalSitemaps: [
+      'https://www.yoursecretjapan.com/sitemap-articles.xml',
+    ],
   },
 };
-
-module.exports = config;
-

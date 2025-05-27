@@ -8,6 +8,7 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
+import Redbubble from "../redBubble/RedBubble";
 
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
@@ -663,6 +664,8 @@ export default function ArticleClientPage({ article }: { article: Article }) {
             </Button>
           </Link>
         </div>
+        <WhiteLine/>
+        <Redbubble/>
         <WhiteLine />
       </div>
     </div>

@@ -12,7 +12,7 @@ function getRandomItems<T>(array: T[], count: number): T[] {
   return shuffled.slice(0, count);
 }
 
-export default function RedbubbleGrid({ max = 15 }: { max?: number }) {
+export default function Redbubble({ max = 15 }: { max?: number }) {
   const [items, setItems] = useState<typeof REDBUBBLE_LISTS>([]);
 
   useEffect(() => {
