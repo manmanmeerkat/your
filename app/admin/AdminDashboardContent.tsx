@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { ImprovedPagination } from "@/components/ui/improved-pagination";
+import { Search, Replace, Eye, Play, AlertTriangle } from "lucide-react";
 
 // 型定義
 interface Article {
@@ -48,8 +49,56 @@ interface ContentMatch {
   highlighted: string;
 }
 
+interface BulkSearchResult {
+  id: string;
+  title: string;
+  slug: string;
+  category: string;
+  published: boolean;
+  matchCount: number;
+  matches?: Array<{
+    index: number;
+    before: string;
+    match: string;
+    after: string;
+    fullContext: string;
+  }>;
+  preview?: {
+    originalLength: number;
+    newLength: number;
+    changeCount: number;
+    matchDetails?: {
+      originalText: string;
+      replacementText: string;
+      position: number;
+      beforeContext: string;
+      afterContext: string;
+      fullContext: string;
+    };
+  };
+}
+
+interface ReplaceResult {
+  success: boolean;
+  message: string;
+  affectedArticles: number;
+  totalChanges: number;
+  searchTerm: string;
+  replaceTerm: string;
+  timestamp: string;
+  error?: string;
+  changes: Array<{
+    articleId: string;
+    title: string;
+    slug: string;
+    changeCount: number;
+    editUrl: string;
+    previewUrl: string;
+  }>;
+}
+
 export default function AdminDashboardContent() {
-  // 初期マウント時のフラグ
+  // 既存の状態
   const initialMountRef = useRef(true);
   const parametersAppliedRef = useRef(false);
 
@@ -82,12 +131,179 @@ export default function AdminDashboardContent() {
     [key: string]: boolean;
   }>({});
 
+  // 🆕 一括置換機能用の新しい状態
+  const [showBulkReplace, setShowBulkReplace] = useState(false);
+  const [bulkSearchTerm, setBulkSearchTerm] = useState("");
+  const [bulkReplaceTerm, setBulkReplaceTerm] = useState("");
+  const [bulkOptions, setBulkOptions] = useState({
+    caseSensitive: false,
+    wholeWord: false,
+    category: "",
+    publishedOnly: false,
+    firstMatchOnly: true, // 🆕 最初のマッチのみのオプション（デフォルト有効）
+  });
+  const [bulkResults, setBulkResults] = useState<BulkSearchResult[]>([]);
+  const [bulkPreviewResults, setBulkPreviewResults] = useState<
+    BulkSearchResult[]
+  >([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkStep, setBulkStep] = useState<"search" | "preview" | "execute">(
+    "search"
+  );
+
+  // 🆕 置換結果の確認用状態
+  const [replaceResult, setReplaceResult] = useState<ReplaceResult | null>(
+    null
+  );
+  const [showReplaceResult, setShowReplaceResult] = useState(false);
+
   // URLパラメータ関連
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const supabase = createClientComponentClient();
+
+  // 🆕 一括検索実行
+  const handleBulkSearch = useCallback(async () => {
+    if (!bulkSearchTerm.trim()) {
+      setError("検索語句を入力してください");
+      return;
+    }
+
+    setBulkLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "bulk-search",
+          query: bulkSearchTerm.trim(),
+          options: {
+            ...bulkOptions,
+            includeContent: true,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBulkResults(data.results);
+        setBulkStep("search");
+        setBulkPreviewResults([]);
+      } else {
+        setError(data.error || "一括検索に失敗しました");
+      }
+    } catch (error) {
+      setError("一括検索中にエラーが発生しました");
+      console.error("Bulk search error:", error);
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [bulkSearchTerm, bulkOptions]);
+
+  // 🆕 一括置換プレビュー
+  const handleBulkPreview = useCallback(async () => {
+    if (!bulkReplaceTerm && bulkReplaceTerm !== "") {
+      setError("置換語句を入力してください");
+      return;
+    }
+
+    setBulkLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "bulk-preview",
+          query: bulkSearchTerm.trim(),
+          replaceTerm: bulkReplaceTerm,
+          options: bulkOptions,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBulkPreviewResults(data.results);
+        setBulkStep("preview");
+      } else {
+        setError(data.error || "プレビューに失敗しました");
+      }
+    } catch (error) {
+      setError("プレビュー中にエラーが発生しました");
+      console.error("Bulk preview error:", error);
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [bulkSearchTerm, bulkReplaceTerm, bulkOptions]);
+
+  // 🆕 一括置換実行
+  const handleBulkExecute = useCallback(async () => {
+    const confirmMessage = `${bulkPreviewResults.length}件の記事で各1箇所ずつ（最初のマッチのみ）を一括置換します。\n\n「${bulkSearchTerm}」→「${bulkReplaceTerm}」\n\nこの操作は元に戻すことが困難です。実行しますか？`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    setBulkLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "bulk-replace",
+          query: bulkSearchTerm.trim(),
+          replaceTerm: bulkReplaceTerm,
+          options: bulkOptions,
+        }),
+      });
+
+      const data: ReplaceResult = await response.json();
+
+      if (response.ok) {
+        // 🆕 結果を保存して確認画面を表示
+        setReplaceResult(data);
+        setShowReplaceResult(true);
+        setBulkStep("execute");
+
+        // 置換セクションをリセット
+        setBulkSearchTerm("");
+        setBulkReplaceTerm("");
+        setBulkResults([]);
+        setBulkPreviewResults([]);
+        setBulkStep("search");
+        setShowBulkReplace(false);
+
+        // 🔥 修正: 検索状態をリセットして記事一覧を自動的に再読み込み
+        setSearchQuery("");
+        setSearchInput("");
+        setPagination((prev) => ({ ...prev, page: 1 }));
+      } else {
+        setError(data.error || "一括置換に失敗しました");
+      }
+    } catch (error) {
+      setError("一括置換中にエラーが発生しました");
+      console.error("Bulk execute error:", error);
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [bulkSearchTerm, bulkReplaceTerm, bulkOptions, bulkPreviewResults]);
+
+  // 既存のURL管理関数など... (省略、元のコードをそのまま使用)
 
   // URLパラメータから初期状態を取得
   useEffect(() => {
@@ -205,14 +421,12 @@ export default function AdminDashboardContent() {
   const handleCategoryChange = (category: string): void => {
     console.log("カテゴリー変更:", category);
     setSelectedCategory(category);
-    // カテゴリーを変更したらページを1に戻す
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
   // 検索タイプ変更時の処理
   const handleSearchTypeChange = (newType: "title" | "content" | "both") => {
     setSearchType(newType);
-    // 検索タイプを変更したらページを1に戻す
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -221,7 +435,6 @@ export default function AdminDashboardContent() {
     const trimmedQuery = searchInput.trim();
     console.log("検索実行:", trimmedQuery, "タイプ:", searchType);
     setSearchQuery(trimmedQuery);
-    // 検索時にページを1に戻す
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -230,7 +443,6 @@ export default function AdminDashboardContent() {
     console.log("検索リセット");
     setSearchInput("");
     setSearchQuery("");
-    // 検索リセット時にページを1に戻す
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
@@ -253,6 +465,7 @@ export default function AdminDashboardContent() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          action: "highlight",
           query,
           articleId,
           type: "article",
@@ -274,7 +487,6 @@ export default function AdminDashboardContent() {
     const isCurrentlyShown = showContentMatches[articleId];
 
     if (!isCurrentlyShown && searchQuery && searchType !== "title") {
-      // マッチを取得
       const matches = await getContentMatches(articleId, searchQuery);
       setContentSearchResults((prev) => ({
         ...prev,
@@ -290,23 +502,15 @@ export default function AdminDashboardContent() {
 
   // 編集リンクを生成する関数
   const getEditLink = (slug: string): string => {
-    // 現在のフィルター状態をパラメータとして渡す
     const params = new URLSearchParams();
-
-    // 戻り先のパスを指定
     params.append("returnPath", pathname);
-
-    // フィルター状態をパラメータとして追加
     if (selectedCategory) params.append("category", selectedCategory);
     if (searchQuery) {
       params.append("search", searchQuery);
       params.append("searchType", searchType);
     }
     if (pagination.page > 1) params.append("page", pagination.page.toString());
-
-    // 強制的に現在のタブを割り当てるフラグ
     params.append("forceFilter", "true");
-
     return `/admin/articles/${slug}?${params.toString()}`;
   };
 
@@ -426,11 +630,8 @@ export default function AdminDashboardContent() {
   // 記事の特集画像を取得するヘルパー関数
   const getFeaturedImage = (article: Article): ArticleImage | null => {
     if (article.images && article.images.length > 0) {
-      // 特集画像（isFeatured=true）を優先
       const featuredImage = article.images.find((img) => img.isFeatured);
       if (featuredImage) return featuredImage;
-
-      // 特集画像がなければ最初の画像を使用
       return article.images[0];
     }
     return null;
@@ -448,7 +649,6 @@ export default function AdminDashboardContent() {
   // HTML本文からプレーンテキストを抽出
   const getPlainTextFromHtml = (html: string): string => {
     if (!html) return "";
-    // HTMLタグを除去して純粋なテキストだけを取得
     return html.replace(/<[^>]*>/g, "");
   };
 
@@ -575,20 +775,118 @@ export default function AdminDashboardContent() {
     );
   };
 
-  // デバッグ情報
-  console.log("現在の状態:", {
-    selectedCategory,
-    searchQuery,
-    searchType,
-    pageNumber: pagination.page,
-    articlesCount: articles.length,
-  });
-
   return (
     <div className="space-y-6">
+      {/* 🆕 置換結果確認モーダル */}
+      {showReplaceResult && replaceResult && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full max-h-[80vh] overflow-y-auto m-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-green-800">
+                  ✅ 一括置換が完了しました
+                </h3>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowReplaceResult(false)}
+                  className="text-gray-500"
+                >
+                  ×
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-medium mb-2">実行結果</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">対象記事:</span>
+                      <span className="ml-2">
+                        {replaceResult.affectedArticles}件
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">置換箇所:</span>
+                      <span className="ml-2">
+                        {replaceResult.totalChanges}箇所
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium">検索語:</span>
+                      <code className="ml-2 bg-gray-100 px-1 rounded">
+                        {replaceResult.searchTerm}
+                      </code>
+                    </div>
+                    <div>
+                      <span className="font-medium">置換語:</span>
+                      <code className="ml-2 bg-gray-100 px-1 rounded">
+                        {replaceResult.replaceTerm}
+                      </code>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3">更新された記事一覧</h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {replaceResult.changes.map((change) => (
+                      <div
+                        key={change.articleId}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded"
+                      >
+                        <div className="flex-grow">
+                          <span className="font-medium">{change.title}</span>
+                          <span className="text-gray-600 text-sm ml-2">
+                            (最初のマッチ1箇所を置換)
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <Link href={change.editUrl}>
+                            <Button variant="outline" size="sm">
+                              編集
+                            </Button>
+                          </Link>
+                          <Link href={change.previewUrl} target="_blank">
+                            <Button variant="outline" size="sm">
+                              プレビュー
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium mb-2">💡 確認のヒント</h4>
+                  <ul className="text-sm space-y-1">
+                    <li>• 「編集」ボタンで各記事の内容を確認・修正できます</li>
+                    <li>
+                      • 「プレビュー」ボタンで本番サイトでの表示を確認できます
+                    </li>
+                    <li>• 置換は各記事で最初に見つかった箇所のみです</li>
+                    <li>
+                      • 万が一間違いがあった場合は、個別に編集してください
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">記事管理</h2>
         <div className="flex gap-3">
+          <Button
+            variant={showBulkReplace ? "default" : "outline"}
+            onClick={() => setShowBulkReplace(!showBulkReplace)}
+            className="flex items-center gap-2"
+          >
+            <Replace className="h-4 w-4" />
+            一括置換
+          </Button>
           <Link href="/admin/messages">
             <Button variant="outline">お問い合わせ一覧</Button>
           </Link>
@@ -600,6 +898,244 @@ export default function AdminDashboardContent() {
           </Link>
         </div>
       </div>
+
+      {/* 🆕 一括置換セクション */}
+      {showBulkReplace && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-orange-600" />
+            <h3 className="text-lg font-semibold text-orange-800">
+              一括検索・置換
+            </h3>
+          </div>
+
+          <div className="bg-white rounded-lg p-4 space-y-4">
+            {/* 検索・置換入力 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  検索語句 *
+                </label>
+                <Input
+                  value={bulkSearchTerm}
+                  onChange={(e) => setBulkSearchTerm(e.target.value)}
+                  placeholder="置換したい文字列を入力..."
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  置換語句
+                </label>
+                <Input
+                  value={bulkReplaceTerm}
+                  onChange={(e) => setBulkReplaceTerm(e.target.value)}
+                  placeholder="新しい文字列を入力..."
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            {/* オプション */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">オプション</label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={bulkOptions.caseSensitive}
+                    onChange={(e) =>
+                      setBulkOptions((prev) => ({
+                        ...prev,
+                        caseSensitive: e.target.checked,
+                      }))
+                    }
+                    className="rounded"
+                  />
+                  <span className="text-sm">大文字小文字を区別</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={bulkOptions.wholeWord}
+                    onChange={(e) =>
+                      setBulkOptions((prev) => ({
+                        ...prev,
+                        wholeWord: e.target.checked,
+                      }))
+                    }
+                    className="rounded"
+                  />
+                  <span className="text-sm">単語単位で検索</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={bulkOptions.publishedOnly}
+                    onChange={(e) =>
+                      setBulkOptions((prev) => ({
+                        ...prev,
+                        publishedOnly: e.target.checked,
+                      }))
+                    }
+                    className="rounded"
+                  />
+                  <span className="text-sm">公開記事のみ</span>
+                </label>
+                <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded">
+                  <span>📌 最初のマッチのみ置換（各記事で1箇所ずつ）</span>
+                </div>
+              </div>
+            </div>
+
+            {/* アクションボタン */}
+            <div className="flex gap-2">
+              <Button
+                onClick={handleBulkSearch}
+                disabled={!bulkSearchTerm.trim() || bulkLoading}
+                className="flex items-center gap-2"
+              >
+                <Search className="h-4 w-4" />
+                {bulkLoading && bulkStep === "search" ? "検索中..." : "検索"}
+              </Button>
+
+              {bulkResults.length > 0 && (
+                <Button
+                  onClick={handleBulkPreview}
+                  disabled={
+                    (!bulkReplaceTerm && bulkReplaceTerm !== "") || bulkLoading
+                  }
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Eye className="h-4 w-4" />
+                  {bulkLoading && bulkStep === "preview"
+                    ? "プレビュー中..."
+                    : "プレビュー"}
+                </Button>
+              )}
+
+              {bulkPreviewResults.length > 0 && (
+                <Button
+                  onClick={handleBulkExecute}
+                  disabled={bulkLoading}
+                  variant="default"
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Play className="h-4 w-4" />
+                  {bulkLoading && bulkStep === "execute" ? "実行中..." : "実行"}
+                </Button>
+              )}
+            </div>
+
+            {/* 検索結果表示 */}
+            {bulkResults.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <h4 className="font-medium">
+                  検索結果: {bulkResults.length}件の記事で
+                  {bulkResults.reduce(
+                    (sum, result) => sum + (result.matchCount || 0),
+                    0
+                  )}
+                  箇所が見つかりました
+                </h4>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {bulkResults.slice(0, 5).map((result) => (
+                    <div
+                      key={result.id}
+                      className="text-sm p-2 bg-gray-50 rounded"
+                    >
+                      <span className="font-medium">{result.title}</span>
+                      <span className="text-gray-600 ml-2">
+                        ({result.matchCount}箇所)
+                      </span>
+                    </div>
+                  ))}
+                  {bulkResults.length > 5 && (
+                    <div className="text-sm text-gray-600 p-2">
+                      ...他 {bulkResults.length - 5} 件
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* プレビュー結果表示 */}
+            {bulkPreviewResults.length > 0 && (
+              <div className="mt-4 space-y-4">
+                <h4 className="font-medium text-orange-700">
+                  置換プレビュー: {bulkPreviewResults.length}
+                  件の記事で各1箇所ずつ置換します
+                </h4>
+
+                <div className="max-h-80 overflow-y-auto space-y-3">
+                  {bulkPreviewResults.map((result) => (
+                    <div
+                      key={result.id}
+                      className="bg-orange-50 border border-orange-200 rounded-lg p-4"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <span className="font-medium text-lg">
+                            {result.title}
+                          </span>
+                          <span className="text-orange-700 text-sm ml-2">
+                            (最初のマッチを置換)
+                          </span>
+                        </div>
+                        <Link href={getEditLink(result.slug)}>
+                          <Button variant="outline" size="sm">
+                            編集ページで確認
+                          </Button>
+                        </Link>
+                      </div>
+
+                      {/* 🆕 置換詳細情報の表示 */}
+                      {result.preview?.matchDetails && (
+                        <div className="bg-white border rounded p-3 text-sm">
+                          <div className="mb-2">
+                            <span className="font-medium">
+                              置換箇所のコンテキスト:
+                            </span>
+                          </div>
+                          <div className="bg-gray-50 p-2 rounded font-mono text-xs break-all">
+                            <span className="text-gray-600">
+                              {result.preview.matchDetails.beforeContext}
+                            </span>
+                            <span className="bg-red-200 px-1 rounded">
+                              {result.preview.matchDetails.originalText}
+                            </span>
+                            <span className="text-gray-600">
+                              {result.preview.matchDetails.afterContext}
+                            </span>
+                          </div>
+                          <div className="mt-2 text-xs text-gray-600">
+                            位置: {result.preview.matchDetails.position}文字目
+                          </div>
+                          <div className="mt-2">
+                            <span className="font-medium">置換後:</span>
+                          </div>
+                          <div className="bg-gray-50 p-2 rounded font-mono text-xs break-all">
+                            <span className="text-gray-600">
+                              {result.preview.matchDetails.beforeContext}
+                            </span>
+                            <span className="bg-green-200 px-1 rounded">
+                              {result.preview.matchDetails.replacementText}
+                            </span>
+                            <span className="text-gray-600">
+                              {result.preview.matchDetails.afterContext}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* カテゴリーフィルター */}
       <div className="bg-gray-50 p-4 rounded shadow">
@@ -710,19 +1246,6 @@ export default function AdminDashboardContent() {
         </div>
       )}
 
-      {/* デバッグ情報 - 開発時のみ表示 */}
-      {process.env.NODE_ENV !== "production" && (
-        <div className="bg-slate-100 p-3 rounded text-xs">
-          <p>選択カテゴリー: {selectedCategory || "(なし)"}</p>
-          <p>検索キーワード: {searchQuery || "(なし)"}</p>
-          <p>検索タイプ: {searchType}</p>
-          <p>
-            ページ: {pagination.page} / {pagination.pageCount}
-          </p>
-          <p>表示件数: {articles.length} 件</p>
-        </div>
-      )}
-
       {loading ? (
         <div className="text-center py-12">
           <div className="inline-block animate-spin w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full"></div>
@@ -799,7 +1322,7 @@ export default function AdminDashboardContent() {
             )}
           </div>
 
-          {/* ここで改良版ページネーションを使用 */}
+          {/* ページネーション */}
           {pagination.pageCount > 1 && (
             <ImprovedPagination
               currentPage={pagination.page}
