@@ -1,4 +1,3 @@
-// app/admin/AdminDashboardContent.tsx
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -43,8 +42,13 @@ interface PaginationState {
   total: number;
 }
 
+interface ContentMatch {
+  snippet: string;
+  position: number;
+  highlighted: string;
+}
+
 export default function AdminDashboardContent() {
-  // ※ 以下は元のAdminDashboardコンポーネントの内容をそのまま使用
   // 初期マウント時のフラグ
   const initialMountRef = useRef(true);
   const parametersAppliedRef = useRef(false);
@@ -58,6 +62,7 @@ export default function AdminDashboardContent() {
     pageCount: 1,
     total: 0,
   });
+
   // カテゴリーフィルタリング用の状態
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -65,6 +70,17 @@ export default function AdminDashboardContent() {
   // 検索機能用の状態
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
+  const [searchType, setSearchType] = useState<"title" | "content" | "both">(
+    "title"
+  );
+
+  // コンテンツ検索結果用の状態
+  const [contentSearchResults, setContentSearchResults] = useState<{
+    [key: string]: ContentMatch[];
+  }>({});
+  const [showContentMatches, setShowContentMatches] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // URLパラメータ関連
   const pathname = usePathname();
@@ -82,11 +98,13 @@ export default function AdminDashboardContent() {
     const category = searchParams.get("category");
     const search = searchParams.get("search");
     const page = searchParams.get("page");
+    const searchTypeParam = searchParams.get("searchType");
 
     let stateChanged = false;
     let newCategoryValue = "";
     let newSearchValue = "";
     let newPage = 1;
+    let newSearchType: "title" | "content" | "both" = "title";
 
     if (category) {
       newCategoryValue = category;
@@ -106,12 +124,22 @@ export default function AdminDashboardContent() {
       console.log("ページパラメータを検出:", newPage);
     }
 
+    if (
+      searchTypeParam &&
+      ["title", "content", "both"].includes(searchTypeParam)
+    ) {
+      newSearchType = searchTypeParam as "title" | "content" | "both";
+      stateChanged = true;
+      console.log("検索テュプを検出:", searchTypeParam);
+    }
+
     // 一括で状態を更新
     if (stateChanged) {
       console.log("検出したURLパラメータで状態を更新します");
       setSelectedCategory(newCategoryValue);
       setSearchQuery(newSearchValue);
       setSearchInput(newSearchValue);
+      setSearchType(newSearchType);
       setPagination((prev) => ({ ...prev, page: newPage }));
       parametersAppliedRef.current = true;
     }
@@ -132,6 +160,7 @@ export default function AdminDashboardContent() {
 
     if (searchQuery) {
       params.append("search", searchQuery);
+      params.append("searchType", searchType);
     }
 
     if (pagination.page > 1) {
@@ -143,14 +172,27 @@ export default function AdminDashboardContent() {
       ? `${pathname}?${params.toString()}`
       : pathname;
     router.replace(url, { scroll: false });
-  }, [pathname, router, selectedCategory, searchQuery, pagination.page]);
+  }, [
+    pathname,
+    router,
+    selectedCategory,
+    searchQuery,
+    searchType,
+    pagination.page,
+  ]);
 
   // 状態変更時にURLを更新
   useEffect(() => {
     if (!initialMountRef.current) {
       updateUrlParams();
     }
-  }, [selectedCategory, searchQuery, pagination.page, updateUrlParams]);
+  }, [
+    selectedCategory,
+    searchQuery,
+    searchType,
+    pagination.page,
+    updateUrlParams,
+  ]);
 
   // ページを変更する関数
   const changePage = (newPage: number): void => {
@@ -167,10 +209,17 @@ export default function AdminDashboardContent() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
+  // 検索タイプ変更時の処理
+  const handleSearchTypeChange = (newType: "title" | "content" | "both") => {
+    setSearchType(newType);
+    // 検索タイプを変更したらページを1に戻す
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  };
+
   // 検索実行関数
   const handleSearch = (): void => {
     const trimmedQuery = searchInput.trim();
-    console.log("検索実行:", trimmedQuery);
+    console.log("検索実行:", trimmedQuery, "タイプ:", searchType);
     setSearchQuery(trimmedQuery);
     // 検索時にページを1に戻す
     setPagination((prev) => ({ ...prev, page: 1 }));
@@ -192,6 +241,53 @@ export default function AdminDashboardContent() {
     }
   };
 
+  // コンテンツマッチを取得する関数
+  const getContentMatches = async (
+    articleId: string,
+    query: string
+  ): Promise<ContentMatch[]> => {
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query,
+          articleId,
+          type: "article",
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.matches || [];
+      }
+    } catch (error) {
+      console.error("Content matches error:", error);
+    }
+    return [];
+  };
+
+  // コンテンツマッチを表示/非表示する関数
+  const toggleContentMatches = async (articleId: string) => {
+    const isCurrentlyShown = showContentMatches[articleId];
+
+    if (!isCurrentlyShown && searchQuery && searchType !== "title") {
+      // マッチを取得
+      const matches = await getContentMatches(articleId, searchQuery);
+      setContentSearchResults((prev) => ({
+        ...prev,
+        [articleId]: matches,
+      }));
+    }
+
+    setShowContentMatches((prev) => ({
+      ...prev,
+      [articleId]: !isCurrentlyShown,
+    }));
+  };
+
   // 編集リンクを生成する関数
   const getEditLink = (slug: string): string => {
     // 現在のフィルター状態をパラメータとして渡す
@@ -202,7 +298,10 @@ export default function AdminDashboardContent() {
 
     // フィルター状態をパラメータとして追加
     if (selectedCategory) params.append("category", selectedCategory);
-    if (searchQuery) params.append("search", searchQuery);
+    if (searchQuery) {
+      params.append("search", searchQuery);
+      params.append("searchType", searchType);
+    }
     if (pagination.page > 1) params.append("page", pagination.page.toString());
 
     // 強制的に現在のタブを割り当てるフラグ
@@ -220,6 +319,7 @@ export default function AdminDashboardContent() {
       console.log("現在のフィルター状態:", {
         category: selectedCategory,
         search: searchQuery,
+        searchType: searchType,
         page: pagination.page,
       });
 
@@ -254,6 +354,7 @@ export default function AdminDashboardContent() {
           // 検索クエリを追加
           if (searchQuery) {
             queryParams.append("search", searchQuery);
+            queryParams.append("searchType", searchType);
           }
 
           // デバッグ情報: 実際に使用するAPI URL
@@ -313,6 +414,7 @@ export default function AdminDashboardContent() {
     pagination.pageSize,
     selectedCategory,
     searchQuery,
+    searchType,
     supabase,
   ]);
 
@@ -350,10 +452,134 @@ export default function AdminDashboardContent() {
     return html.replace(/<[^>]*>/g, "");
   };
 
+  // 記事カードコンポーネント
+  const ArticleCard = ({ article }: { article: Article }) => {
+    const featuredImage = getFeaturedImage(article);
+    const plainContent = getPlainTextFromHtml(article.content);
+    const excerptContent =
+      plainContent.length > 100
+        ? `${plainContent.substring(0, 100)}...`
+        : plainContent;
+
+    const hasContentSearch =
+      searchQuery && (searchType === "content" || searchType === "both");
+
+    return (
+      <div key={article.id} className="bg-gray-50 rounded shadow">
+        <div className="flex p-4">
+          {/* 画像コンテナ - 左側 */}
+          <div className="flex-shrink-0 w-32 h-32 relative mr-4">
+            {featuredImage ? (
+              <Image
+                src={featuredImage.url}
+                alt={featuredImage.altText || article.title}
+                fill
+                className="object-cover rounded"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded">
+                <p className="text-gray-500 text-sm">画像なし</p>
+              </div>
+            )}
+          </div>
+
+          {/* 記事情報 - 右側 */}
+          <div className="flex-grow">
+            <h3 className="font-bold text-lg mb-1">{article.title}</h3>
+            <div className="text-sm text-gray-600 mb-2">
+              {formatDate(article.createdAt)}
+            </div>
+
+            {/* 記事本文の抜粋 */}
+            <div className="text-sm text-gray-700 mb-3 line-clamp-3">
+              {article.summary || excerptContent}
+            </div>
+
+            <div className="flex justify-between items-center mb-2">
+              <div className="text-sm">
+                {article.category && (
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    {article.category}
+                  </span>
+                )}
+              </div>
+              <div className="text-sm">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    article.published
+                      ? "bg-green-100 text-green-800"
+                      : "bg-amber-100 text-amber-800"
+                  }`}
+                >
+                  {article.published ? "公開中" : "下書き"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* 編集ページへのリンクを動的に生成 */}
+              <Link href={getEditLink(article.slug)}>
+                <Button variant="outline" size="sm" className="text-sm py-1">
+                  記事を編集
+                </Button>
+              </Link>
+
+              {/* コンテンツマッチ表示ボタン */}
+              {hasContentSearch && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleContentMatches(article.id)}
+                  className="text-sm py-1"
+                >
+                  {showContentMatches[article.id]
+                    ? "マッチを隠す"
+                    : "マッチを表示"}
+                </Button>
+              )}
+            </div>
+
+            {/* コンテンツマッチ表示エリア */}
+            {showContentMatches[article.id] &&
+              contentSearchResults[article.id] && (
+                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <h4 className="font-medium text-sm mb-2">
+                    検索キーワード &quot;{searchQuery}&quot; のマッチ:
+                  </h4>
+                  {contentSearchResults[article.id].length > 0 ? (
+                    contentSearchResults[article.id].map(
+                      (match: ContentMatch, index: number) => (
+                        <div
+                          key={index}
+                          className="text-sm mb-2 p-2 bg-white rounded border"
+                        >
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: match.highlighted,
+                            }}
+                            className="[&_mark]:bg-yellow-300 [&_mark]:font-bold [&_mark]:px-1"
+                          />
+                        </div>
+                      )
+                    )
+                  ) : (
+                    <p className="text-sm text-gray-600">
+                      マッチするコンテンツが見つかりませんでした。
+                    </p>
+                  )}
+                </div>
+              )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // デバッグ情報
   console.log("現在の状態:", {
     selectedCategory,
     searchQuery,
+    searchType,
     pageNumber: pagination.page,
     articlesCount: articles.length,
   });
@@ -404,32 +630,75 @@ export default function AdminDashboardContent() {
 
       {/* 検索ボックス */}
       <div className="bg-gray-50 p-4 rounded shadow">
-        <div className="flex items-center gap-2">
-          <div className="flex-grow flex items-center gap-2">
-            <span className="font-medium">タイトル検索:</span>
-            <Input
-              type="text"
-              placeholder="記事タイトルでキーワード検索..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="max-w-md"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleSearch}
-              disabled={searchInput.trim() === ""}
-            >
-              検索
-            </Button>
-            {searchQuery && (
-              <Button variant="outline" size="sm" onClick={resetSearch}>
-                検索解除
+        <div className="space-y-3">
+          {/* 検索タイプ選択 */}
+          <div className="flex items-center gap-4">
+            <span className="font-medium">検索対象:</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={searchType === "title" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSearchTypeChange("title")}
+              >
+                タイトルのみ
               </Button>
-            )}
+              <Button
+                variant={searchType === "content" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSearchTypeChange("content")}
+              >
+                本文のみ
+              </Button>
+              <Button
+                variant={searchType === "both" ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSearchTypeChange("both")}
+              >
+                タイトル・本文両方
+              </Button>
+            </div>
+          </div>
+
+          {/* 検索入力フィールド */}
+          <div className="flex items-center gap-2">
+            <div className="flex-grow flex items-center gap-2">
+              <span className="font-medium">
+                {searchType === "title"
+                  ? "タイトル検索:"
+                  : searchType === "content"
+                  ? "コンテンツ検索:"
+                  : "キーワード検索:"}
+              </span>
+              <Input
+                type="text"
+                placeholder={
+                  searchType === "title"
+                    ? "記事タイトルでキーワード検索..."
+                    : searchType === "content"
+                    ? "記事本文でキーワード検索..."
+                    : "タイトル・本文でキーワード検索..."
+                }
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="max-w-md"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSearch}
+                disabled={searchInput.trim() === ""}
+              >
+                検索
+              </Button>
+              {searchQuery && (
+                <Button variant="outline" size="sm" onClick={resetSearch}>
+                  検索解除
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -446,6 +715,7 @@ export default function AdminDashboardContent() {
         <div className="bg-slate-100 p-3 rounded text-xs">
           <p>選択カテゴリー: {selectedCategory || "(なし)"}</p>
           <p>検索キーワード: {searchQuery || "(なし)"}</p>
+          <p>検索タイプ: {searchType}</p>
           <p>
             ページ: {pagination.page} / {pagination.pageCount}
           </p>
@@ -479,7 +749,9 @@ export default function AdminDashboardContent() {
 
               {searchQuery && (
                 <div className="bg-blue-100 px-3 py-1 rounded-full flex items-center gap-1">
-                  <span>検索: &quot;{searchQuery}&quot;</span>
+                  <span>
+                    検索: &quot;{searchQuery}&quot; ({searchType})
+                  </span>
                   <button
                     onClick={resetSearch}
                     className="text-blue-500 hover:text-blue-700 ml-1"
@@ -507,83 +779,9 @@ export default function AdminDashboardContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles && articles.length > 0 ? (
-              articles.map((article: Article) => {
-                const featuredImage = getFeaturedImage(article);
-                const plainContent = getPlainTextFromHtml(article.content);
-                const excerptContent =
-                  plainContent.length > 100
-                    ? `${plainContent.substring(0, 100)}...`
-                    : plainContent;
-
-                return (
-                  <div key={article.id} className="bg-gray-50 rounded shadow">
-                    <div className="flex p-4">
-                      {/* 画像コンテナ - 左側 */}
-                      <div className="flex-shrink-0 w-32 h-32 relative mr-4">
-                        {featuredImage ? (
-                          <Image
-                            src={featuredImage.url}
-                            alt={featuredImage.altText || article.title}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <p className="text-gray-500">画像なし</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* 記事情報 - 右側 */}
-                      <div className="flex-grow">
-                        <h3 className="font-bold text-lg mb-1">
-                          {article.title}
-                        </h3>
-                        <div className="text-sm text-gray-600 mb-2">
-                          {formatDate(article.createdAt)}
-                        </div>
-
-                        {/* 記事本文の抜粋 */}
-                        <div className="text-sm text-gray-700 mb-3 line-clamp-3">
-                          {article.summary || excerptContent}
-                        </div>
-
-                        <div className="flex justify-between items-center mb-2">
-                          <div className="text-sm">
-                            {article.category && (
-                              <span className="font-medium">
-                                {article.category}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-sm">
-                            <span
-                              className={
-                                article.published
-                                  ? "text-green-600"
-                                  : "text-amber-600"
-                              }
-                            >
-                              {article.published ? "公開中" : "下書き"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* 編集ページへのリンクを動的に生成 */}
-                        <Link href={getEditLink(article.slug)}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-sm py-1"
-                          >
-                            記事を編集
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+              articles.map((article: Article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))
             ) : (
               <p className="col-span-full text-center py-12 text-base">
                 {selectedCategory || searchQuery
@@ -592,7 +790,9 @@ export default function AdminDashboardContent() {
                         ? `カテゴリー「${selectedCategory}」`
                         : ""
                     }${selectedCategory && searchQuery ? "、" : ""}${
-                      searchQuery ? `検索キーワード「${searchQuery}」` : ""
+                      searchQuery
+                        ? `検索キーワード「${searchQuery}」(${searchType})`
+                        : ""
                     }`
                   : "記事がありません。新しい記事を作成してください。"}
               </p>

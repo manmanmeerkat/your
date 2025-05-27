@@ -15,6 +15,8 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
   onPageHover?: (page: number) => void;
   disabled?: boolean;
+  siblingCount?: number;
+  showQuickJumper?: boolean;
 }
 
 // 🚀 CSS最適化：軽量スタイル版ページボタン
@@ -127,10 +129,12 @@ export function Pagination({
   onPageHover,
   disabled = false,
 }: PaginationProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(""); // 🔥 常に空文字列で初期化
   const [inputError, setInputError] = useState("");
   const [isRendered, setIsRendered] = useState(false); // 🚀 レンダリング状態
+  const [isFocused, setIsFocused] = useState(false); // 🆕 フォーカス状態管理
   const inputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout>(); // 🆕 デバウンス用タイマー
 
   // 🚀 プリレンダリング：初回レンダリング後に実際のUIを表示
   useEffect(() => {
@@ -142,7 +146,7 @@ export function Pagination({
     return () => clearTimeout(timeoutId);
   }, [currentPage, totalPages]);
 
-  // 🚀 既存の高機能ロジックをすべて保持
+  // 🚀 ページ番号計算の最適化（変更時のみ再計算）
   const pageNumbers = useMemo((): number[] => {
     if (!totalPages || totalPages < 1 || !currentPage || currentPage < 1) {
       return [1];
@@ -165,6 +169,7 @@ export function Pagination({
     return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
   }, [currentPage, totalPages]);
 
+  // 🚀 パフォーマンス改善：startTransitionを使用
   const handlePageChange = useCallback(
     (page: number) => {
       if (
@@ -173,12 +178,16 @@ export function Pagination({
         page !== currentPage &&
         !disabled
       ) {
-        onPageChange(page);
+        // 🆕 React 18のstartTransitionを使用してノンブロッキング更新
+        React.startTransition(() => {
+          onPageChange(page);
+        });
       }
     },
     [currentPage, totalPages, onPageChange, disabled]
   );
 
+  // 🚀 デバウンス付きホバーハンドラー
   const handlePageHover = useCallback(
     (page: number) => {
       if (
@@ -190,19 +199,24 @@ export function Pagination({
       )
         return;
 
-      const timeoutId = setTimeout(() => {
+      // 既存のタイマーをクリア
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      // デバウンス処理（200ms）
+      debounceTimerRef.current = setTimeout(() => {
         try {
           onPageHover(page);
         } catch {
           // エラーは静かに処理
         }
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
+      }, 200);
     },
     [onPageHover, currentPage, totalPages, disabled]
   );
 
+  // 🚀 ハンドラーのメモ化最適化
   const { pageHandlers, hoverHandlers } = useMemo(() => {
     const clickHandlers: Record<number, () => void> = {};
     const mouseHandlers: Record<number, () => void> = {};
@@ -234,6 +248,7 @@ export function Pagination({
     if (currentPage < totalPages) handlePageHover(currentPage + 1);
   }, [currentPage, totalPages, handlePageHover]);
 
+  // 🚀 入力値検証の最適化
   const validateInput = useCallback(
     (
       value: string
@@ -264,14 +279,19 @@ export function Pagination({
     [totalPages, currentPage]
   );
 
+  // 🔥 修正：入力変更時にデフォルト値を設定しない
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      setInputValue(value);
 
-      const validation = validateInput(value);
+      // 数字以外の文字を除去（リアルタイム）
+      const numericValue = value.replace(/[^0-9]/g, "");
+      setInputValue(numericValue);
+
+      const validation = validateInput(numericValue);
       setInputError(validation.error || "");
 
+      // ホバープレビューは有効なページの場合のみ
       if (validation.valid && validation.page) {
         handlePageHover(validation.page);
       }
@@ -288,39 +308,82 @@ export function Pagination({
 
         if (validation.valid && validation.page) {
           handlePageChange(validation.page);
-          setInputValue("");
+          setInputValue(""); // 🔥 修正：成功後は空文字列に戻す
           setInputError("");
           inputRef.current?.blur();
         }
+      } else if (e.key === "Escape") {
+        // ESCキーで入力をクリア
+        setInputValue("");
+        setInputError("");
+        inputRef.current?.blur();
       }
     },
     [inputValue, validateInput, handlePageChange]
   );
 
+  // 🔥 修正：フォーカス時にデフォルト値を設定しない
   const handleFocus = useCallback(() => {
     if (!disabled) {
-      setInputValue(currentPage.toString());
+      setIsFocused(true);
+      // デフォルト値は設定しない（プレースホルダーのみ表示）
     }
-  }, [currentPage, disabled]);
+  }, [disabled]);
 
+  // 🔥 修正：ブラー時の処理
   const handleBlur = useCallback(() => {
-    setInputValue("");
+    setIsFocused(false);
+    setInputValue(""); // 常に空文字列に戻す
     setInputError("");
   }, []);
 
+  // 🚀 キーボードショートカットの改善
   useEffect(() => {
     if (disabled) return;
 
     const handleKeydown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "g") {
-        e.preventDefault();
-        inputRef.current?.focus();
+      // 入力フィールドにフォーカスがある場合は無視
+      if (document.activeElement === inputRef.current) return;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          e.preventDefault();
+          if (currentPage > 1) handlePageChange(currentPage - 1);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          if (currentPage < totalPages) handlePageChange(currentPage + 1);
+          break;
+        case "Home":
+          e.preventDefault();
+          if (currentPage !== 1) handlePageChange(1);
+          break;
+        case "End":
+          e.preventDefault();
+          if (currentPage !== totalPages) handlePageChange(totalPages);
+          break;
+        default:
+          // Ctrl+G または Cmd+G でページジャンプにフォーカス
+          if ((e.ctrlKey || e.metaKey) && e.key === "g") {
+            e.preventDefault();
+            inputRef.current?.focus();
+          }
+          break;
       }
     };
 
     document.addEventListener("keydown", handleKeydown, { passive: false });
     return () => document.removeEventListener("keydown", handleKeydown);
-  }, [disabled]);
+  }, [disabled, currentPage, totalPages, handlePageChange]);
+
+  // 🚀 クリーンアップの改善
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // 不正な状態での安全な表示
   if (!totalPages || totalPages < 1 || !currentPage || currentPage < 1) {
@@ -364,6 +427,9 @@ export function Pagination({
         .pagination-nav:hover {
           background-color: white !important;
           color: #0f172a !important;
+        }
+        .pagination-input-focused {
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5) !important;
         }
       `}</style>
 
@@ -429,10 +495,10 @@ export function Pagination({
           )}
         </nav>
 
-        {/* ページジャンプ機能 */}
+        {/* 🔥 修正：ページジャンプ機能（デフォルト値なし） */}
         <div
           className={`flex items-center gap-2 text-white text-sm transition-opacity duration-200 ${
-            isOperationDisabled ? "opacity-50" : "opacity-100"
+            isOperationDisabled ? "opacity-50" : "opacity-50"
           }`}
         >
           <span>Go to:</span>
@@ -443,18 +509,19 @@ export function Pagination({
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              value={inputValue}
+              value={inputValue} // 🔥 常に空文字列または入力された値のみ
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              placeholder={`1-${totalPages}`}
+              placeholder={isFocused ? "Enter page number" : `1-${totalPages}`} // 🔥 動的プレースホルダー
               disabled={isOperationDisabled}
               className={`
                 w-16 px-2 py-1 text-center text-sm
                 bg-slate-800 border rounded
                 focus:outline-none focus:ring-1
                 disabled:opacity-50 disabled:cursor-not-allowed
+                ${isFocused ? "pagination-input-focused" : ""}
                 ${
                   inputError
                     ? "border-red-500 focus:ring-red-500"
@@ -463,6 +530,7 @@ export function Pagination({
                 transition-all duration-200
               `}
               aria-label="Jump to page number"
+              title="Use Ctrl+G to quickly focus this input" // 🆕 ヒント追加
             />
 
             {/* エラーツールチップ */}

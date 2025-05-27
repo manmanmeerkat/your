@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import Image from "next/image";
+import { ExternalLink, Copy, Eye, Check } from "lucide-react";
 
 export default function EditArticlePage({
   params,
@@ -17,7 +18,7 @@ export default function EditArticlePage({
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
-  const [description, setDescription] = useState(""); // 追加: 説明文フィールド
+  const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(false);
@@ -34,11 +35,12 @@ export default function EditArticlePage({
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [autoUpdateSummary, setAutoUpdateSummary] = useState(true); // 追加: 要約自動更新の制御
+  const [autoUpdateSummary, setAutoUpdateSummary] = useState(true);
 
-  // AbortControllerを使用せずに通常のfetchを使用する
+  // 新しく追加: URL関連の状態
+  const [urlCopied, setUrlCopied] = useState(false);
+
   const isMountedRef = useRef(true);
-
   const searchParams = useSearchParams();
 
   // 戻り先ページの状態を取得
@@ -46,6 +48,41 @@ export default function EditArticlePage({
   const returnCategory = searchParams.get("category") || "";
   const returnSearch = searchParams.get("search") || "";
   const returnPage = searchParams.get("page") || "1";
+
+  // 本番環境のURL構築
+  const productionBaseUrl = "https://www.yoursecretjapan.com";
+  const productionUrl = `${productionBaseUrl}/articles/${encodeURIComponent(
+    slug || params.slug
+  )}`;
+
+  // URLをクリップボードにコピーする関数
+  const copyUrlToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(productionUrl);
+      setUrlCopied(true);
+
+      // 2秒後にコピー状態をリセット
+      setTimeout(() => {
+        setUrlCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error("URL copy failed:", error);
+      // フォールバック: 選択可能な状態にする
+      const textArea = document.createElement("textarea");
+      textArea.value = productionUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setUrlCopied(true);
+      setTimeout(() => setUrlCopied(false), 2000);
+    }
+  };
+
+  // 本番サイトで記事をプレビューする関数
+  const previewInProduction = () => {
+    window.open(productionUrl, "_blank", "noopener,noreferrer");
+  };
 
   // マークダウン記法を削除する関数
   const stripMarkdown = (text: string) => {
@@ -61,8 +98,8 @@ export default function EditArticlePage({
     result = result.replace(/(\*|_)(.*?)\1/g, "$2");
 
     // コードブロック(```)と行内コード(`)の削除
-    result = result.replace(/```[\s\S]*?```/g, ""); // コードブロック
-    result = result.replace(/`([^`]+)`/g, "$1"); // 行内コード
+    result = result.replace(/```[\s\S]*?```/g, "");
+    result = result.replace(/`([^`]+)`/g, "$1");
 
     // リンク記法([text](url))の削除 - テキスト部分のみを残す
     result = result.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
@@ -169,7 +206,7 @@ export default function EditArticlePage({
           setTitle(localData.title);
           setSlug(localData.slug);
           setSummary(localData.summary || "");
-          setDescription(localData.description || ""); // 追加: descriptionの復元
+          setDescription(localData.description || "");
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
@@ -202,7 +239,7 @@ export default function EditArticlePage({
         setTitle(article.title);
         setSlug(article.slug);
         setSummary(article.summary || "");
-        setDescription(article.description || ""); // 追加: descriptionをセット
+        setDescription(article.description || "");
         setContent(article.content);
         setCategory(article.category);
         setPublished(article.published);
@@ -222,7 +259,7 @@ export default function EditArticlePage({
           title: article.title,
           slug: article.slug,
           summary: article.summary || "",
-          description: article.description || "", // 追加: descriptionをキャッシュ
+          description: article.description || "",
           content: article.content,
           category: article.category,
           published: article.published,
@@ -241,7 +278,7 @@ export default function EditArticlePage({
           setTitle(localData.title);
           setSlug(localData.slug);
           setSummary(localData.summary || "");
-          setDescription(localData.description || ""); // 追加: descriptionの復元
+          setDescription(localData.description || "");
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
@@ -299,9 +336,9 @@ export default function EditArticlePage({
     try {
       // ファイル名を安全な形式に変換
       const safeFileName = file.name
-        .replace(/[^a-zA-Z0-9.-]/g, "_") // 特殊文字をアンダースコアに置換
-        .replace(/_+/g, "_") // 連続するアンダースコアを1つに
-        .toLowerCase(); // 小文字に変換
+        .replace(/[^a-zA-Z0-9.-]/g, "_")
+        .replace(/_+/g, "_")
+        .toLowerCase();
 
       // 新しいファイル名でファイルを作成
       const newFile = new File([file], safeFileName, {
@@ -641,278 +678,345 @@ export default function EditArticlePage({
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row justify-between items-center">
-        <CardTitle>記事編集</CardTitle>
-        <Button
-          variant="outline"
-          className="text-red-600 hover:bg-red-50"
-          onClick={handleDelete}
-          disabled={saving}
-        >
-          {saving ? "処理中..." : "削除"}
-        </Button>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
-              <p>{error}</p>
+    <div className="space-y-4">
+      {/* 本番URL表示カード - 新しく追加 */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            本番環境URL
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {/* URL表示 */}
+            <div className="flex items-center gap-2 p-3 bg-white border rounded-lg">
+              <code className="flex-1 text-sm break-all text-blue-600">
+                {productionUrl}
+              </code>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={copyUrlToClipboard}
+                className="flex-shrink-0"
+                disabled={saving}
+              >
+                {urlCopied ? (
+                  <>
+                    <Check className="h-4 w-4 mr-1" />
+                    コピー完了
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4 mr-1" />
+                    コピー
+                  </>
+                )}
+              </Button>
             </div>
-          )}
 
-          {saveSuccess && (
-            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
-              <p>保存が完了しました。ページ遷移中...</p>
+            {/* アクションボタン */}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={previewInProduction}
+                disabled={saving || !published}
+                className="flex items-center gap-1"
+              >
+                <Eye className="h-4 w-4" />
+                本番サイトで確認
+              </Button>
+              {!published && (
+                <span className="text-sm text-amber-600 flex items-center">
+                  ※ 公開されていない記事です
+                </span>
+              )}
             </div>
-          )}
-
-          <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-              タイトル*
-            </label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="記事のタイトル"
-              required
-              disabled={saving}
-            />
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="space-y-2">
-            <label htmlFor="slug" className="text-sm font-medium">
-              スラッグ*
-            </label>
-            <Input
-              id="slug"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="article-slug"
-              required
-              disabled={saving}
-            />
-          </div>
+      {/* メインの記事編集カード */}
+      <Card>
+        <CardHeader className="flex flex-row justify-between items-center">
+          <CardTitle>記事編集</CardTitle>
+          <Button
+            variant="outline"
+            className="text-red-600 hover:bg-red-50"
+            onClick={handleDelete}
+            disabled={saving}
+          >
+            {saving ? "処理中..." : "削除"}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded">
+                <p>{error}</p>
+              </div>
+            )}
 
-          {/* 追加: 説明文フィールド - SEO・SNS用 */}
-          <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
-              説明文
-            </label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="記事の説明文..."
-              className="h-20"
-              disabled={saving}
-            />
-            <p className="text-xs text-gray-500">
-              検索結果やSNSでの表示に使用されます。マークダウン記法なし、150文字以内推奨。
-            </p>
-          </div>
+            {saveSuccess && (
+              <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded">
+                <p>保存が完了しました。ページ遷移中...</p>
+              </div>
+            )}
 
-          {/* 要約フィールド - 自動生成オプション付き */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label htmlFor="summary" className="text-sm font-medium">
-                要約
+            <div className="space-y-2">
+              <label htmlFor="title" className="text-sm font-medium">
+                タイトル*
               </label>
-              <div className="flex items-center">
-                <input
-                  id="autoUpdateSummary"
-                  type="checkbox"
-                  checked={autoUpdateSummary}
-                  onChange={(e) => setAutoUpdateSummary(e.target.checked)}
-                  className="rounded border-gray-300 mr-1"
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="記事のタイトル"
+                required
+                disabled={saving}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="slug" className="text-sm font-medium">
+                スラッグ*
+              </label>
+              <Input
+                id="slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="article-slug"
+                required
+                disabled={saving}
+              />
+              <p className="text-xs text-gray-500">
+                URL: {productionBaseUrl}/articles/
+                <strong>{slug || params.slug}</strong>
+              </p>
+            </div>
+
+            {/* 説明文フィールド - SEO・SNS用 */}
+            <div className="space-y-2">
+              <label htmlFor="description" className="text-sm font-medium">
+                説明文
+              </label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="記事の説明文..."
+                className="h-20"
+                disabled={saving}
+              />
+              <p className="text-xs text-gray-500">
+                検索結果やSNSでの表示に使用されます。マークダウン記法なし、150文字以内推奨。
+              </p>
+            </div>
+
+            {/* 要約フィールド - 自動生成オプション付き */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label htmlFor="summary" className="text-sm font-medium">
+                  要約
+                </label>
+                <div className="flex items-center">
+                  <input
+                    id="autoUpdateSummary"
+                    type="checkbox"
+                    checked={autoUpdateSummary}
+                    onChange={(e) => setAutoUpdateSummary(e.target.checked)}
+                    className="rounded border-gray-300 mr-1"
+                    disabled={saving}
+                  />
+                  <label
+                    htmlFor="autoUpdateSummary"
+                    className="text-xs text-gray-500"
+                  >
+                    本文から自動生成
+                  </label>
+                </div>
+              </div>
+              <Textarea
+                id="summary"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                placeholder="記事の要約..."
+                className="h-20"
+                disabled={saving || autoUpdateSummary}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="content" className="text-sm font-medium">
+                本文* (マークダウン記法対応)
+              </label>
+              <Textarea
+                id="content"
+                value={content}
+                onChange={handleContentChange}
+                placeholder="記事の本文..."
+                className="h-40 font-mono"
+                required
+                disabled={saving}
+              />
+              <p className="text-xs text-gray-500">
+                マークダウン記法を使って記事本文を書くことができます。
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="category" className="text-sm font-medium">
+                カテゴリー*
+              </label>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-md border border-gray-300 p-2"
+                required
+                disabled={saving}
+              >
+                <option value="culture">文化</option>
+                <option value="mythology">神話</option>
+                <option value="tradition">伝統</option>
+                <option value="festivals">祭り</option>
+                <option value="places">場所</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">画像</label>
+
+              {/* 現在の画像表示 */}
+              {image && !preview && (
+                <div className="mt-2 relative">
+                  <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
+                    <div className="w-full pb-[56.25%] relative">
+                      <Image
+                        src={image.url}
+                        alt={image.altText || "記事画像"}
+                        fill
+                        style={{ objectFit: "contain" }}
+                        className="absolute inset-0"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 text-red-600 hover:bg-red-50"
+                    onClick={handleDeleteImage}
+                    disabled={saving}
+                  >
+                    削除
+                  </Button>
+                </div>
+              )}
+
+              {/* 新しい画像プレビュー */}
+              {preview && (
+                <div className="mt-2 relative">
+                  <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
+                    <div className="w-full pb-[56.25%] relative">
+                      <Image
+                        src={preview}
+                        alt="画像プレビュー"
+                        fill
+                        style={{ objectFit: "contain" }}
+                        className="absolute inset-0"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="absolute top-2 right-2 text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      setFile(null);
+                      setPreview(null);
+                    }}
+                    disabled={saving}
+                  >
+                    キャンセル
+                  </Button>
+                </div>
+              )}
+
+              {/* 画像アップロード */}
+              {!preview && (
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="mt-2"
                   disabled={saving}
                 />
-                <label
-                  htmlFor="autoUpdateSummary"
-                  className="text-xs text-gray-500"
-                >
-                  本文から自動生成
-                </label>
-              </div>
-            </div>
-            <Textarea
-              id="summary"
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              placeholder="記事の要約..."
-              className="h-20"
-              disabled={saving || autoUpdateSummary}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="content" className="text-sm font-medium">
-              本文* (マークダウン記法対応)
-            </label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={handleContentChange}
-              placeholder="記事の本文..."
-              className="h-40 font-mono"
-              required
-              disabled={saving}
-            />
-            <p className="text-xs text-gray-500">
-              マークダウン記法を使って記事本文を書くことができます。
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="category" className="text-sm font-medium">
-              カテゴリー*
-            </label>
-            <select
-              id="category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-md border border-gray-300 p-2"
-              required
-              disabled={saving}
-            >
-              <option value="culture">文化</option>
-              <option value="mythology">神話</option>
-              <option value="tradition">伝統</option>
-              <option value="festivals">祭り</option>
-              <option value="places">場所</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">画像</label>
-
-            {/* 現在の画像表示 */}
-            {image && !preview && (
-              <div className="mt-2 relative">
-                <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
-                  <div className="w-full pb-[56.25%] relative">
-                    <Image
-                      src={image.url}
-                      alt={image.altText || "記事画像"}
-                      fill
-                      style={{ objectFit: "contain" }}
-                      className="absolute inset-0"
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 text-red-600 hover:bg-red-50"
-                  onClick={handleDeleteImage}
-                  disabled={saving}
-                >
-                  削除
-                </Button>
-              </div>
-            )}
-
-            {/* 新しい画像プレビュー */}
-            {preview && (
-              <div className="mt-2 relative">
-                <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
-                  <div className="w-full pb-[56.25%] relative">
-                    <Image
-                      src={preview}
-                      alt="画像プレビュー"
-                      fill
-                      style={{ objectFit: "contain" }}
-                      className="absolute inset-0"
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 text-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    setFile(null);
-                    setPreview(null);
-                  }}
-                  disabled={saving}
-                >
-                  キャンセル
-                </Button>
-              </div>
-            )}
-
-            {/* 画像アップロード */}
-            {!preview && (
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="mt-2"
-                disabled={saving}
-              />
-            )}
-          </div>
-
-          {/* 画像の代替テキスト入力欄 */}
-          {(image || preview) && (
-            <div className="space-y-2">
-              <label htmlFor="altText" className="text-sm font-medium">
-                画像の代替テキスト
-              </label>
-              <Input
-                id="altText"
-                value={altText}
-                onChange={(e) => setAltText(e.target.value)}
-                placeholder="画像の説明"
-                disabled={saving}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center space-x-2">
-            <input
-              id="published"
-              type="checkbox"
-              checked={published}
-              onChange={(e) => setPublished(e.target.checked)}
-              className="rounded border-gray-300"
-              disabled={saving}
-            />
-            <label htmlFor="published" className="text-sm font-medium">
-              公開する
-            </label>
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={navigateBack}
-              disabled={saving}
-            >
-              キャンセル
-            </Button>
-            <Button
-              type="submit"
-              disabled={saving || uploading}
-              className={saving ? "bg-gray-500" : ""}
-            >
-              {saving ? (
-                <div className="flex items-center">
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  保存中...
-                </div>
-              ) : (
-                "保存"
               )}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            </div>
+
+            {/* 画像の代替テキスト入力欄 */}
+            {(image || preview) && (
+              <div className="space-y-2">
+                <label htmlFor="altText" className="text-sm font-medium">
+                  画像の代替テキスト
+                </label>
+                <Input
+                  id="altText"
+                  value={altText}
+                  onChange={(e) => setAltText(e.target.value)}
+                  placeholder="画像の説明"
+                  disabled={saving}
+                />
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <input
+                id="published"
+                type="checkbox"
+                checked={published}
+                onChange={(e) => setPublished(e.target.checked)}
+                className="rounded border-gray-300"
+                disabled={saving}
+              />
+              <label htmlFor="published" className="text-sm font-medium">
+                公開する
+              </label>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={navigateBack}
+                disabled={saving}
+              >
+                キャンセル
+              </Button>
+              <Button
+                type="submit"
+                disabled={saving || uploading}
+                className={saving ? "bg-gray-500" : ""}
+              >
+                {saving ? (
+                  <div className="flex items-center">
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                    保存中...
+                  </div>
+                ) : (
+                  "保存"
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
