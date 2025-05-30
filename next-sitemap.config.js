@@ -4,13 +4,21 @@ module.exports = {
   generateRobotsTxt: true,
   generateIndexSitemap: true,
   exclude: [
+    '/admin',
     '/admin/**',
     '/api/**',
     '/drafts/**',
   ],
   sitemapSize: 5000,
   transform: async (config, path) => {
-    if (path.startsWith('/articles/')) return null;
+    if (
+      path.startsWith('/articles/') ||
+      path === '/admin' || path.startsWith('/admin/') ||
+      path === '/api' || path.startsWith('/api/') ||
+      path === '/drafts' || path.startsWith('/drafts/')
+    ) {
+      return null;
+    }
 
     return {
       loc: `${config.siteUrl}${path}`,

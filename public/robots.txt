@@ -7,5 +7,4 @@ Host: https://www.yoursecretjapan.com
 
 # Sitemaps
 Sitemap: https://www.yoursecretjapan.com/sitemap.xml
-Sitemap: https://www.yoursecretjapan.com/sitemap-0.xml
 Sitemap: https://www.yoursecretjapan.com/sitemap-articles.xml
