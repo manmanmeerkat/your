@@ -472,12 +472,11 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
               src={item.images[0].url}
               alt={item.images[0].altText || item.title}
               className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md"
-              width={800}
-              height={500}
+              width={400}
+              height={400}
               unoptimized
             />
           </div>
-          <WhiteLine />
         </div>
       )}
 

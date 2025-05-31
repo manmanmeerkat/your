@@ -587,7 +587,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
               height={400}
             />
           </div>
-          <WhiteLine />
         </div>
       )}
 
