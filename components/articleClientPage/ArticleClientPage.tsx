@@ -100,12 +100,9 @@ const OptimizedImage = ({
   if (hasError) {
     return (
       <div
-        className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 flex items-center justify-center"
-        style={{ minHeight: "200px" }}
+        className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 flex items-center justify-center min-h-[200px]"
       >
-        <div className="text-center">
-          <div className="text-gray-400 text-4xl mb-2">📷</div>
-          <div>画像を読み込めませんでした</div>
+        <div className="text-center">Failed to load image.
         </div>
       </div>
     );
@@ -116,8 +113,7 @@ const OptimizedImage = ({
       {/* スケルトンローダー */}
       {shouldShowLoader && !isLoaded && (
         <div
-          className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center z-10"
-          style={{ minHeight: "200px" }}
+          className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center z-10 min-h-[200px]"
         >
           <div className="text-gray-400">Loading...</div>
         </div>
@@ -130,19 +126,13 @@ const OptimizedImage = ({
         alt={alt}
         width={width}
         height={height}
-        unoptimized={true} // ⭐ Vercel最適化を無効化
+        unoptimized={true}
         className={`transition-opacity duration-500 ${
           isLoaded ? "opacity-100" : "opacity-0"
-        } ${className || ""}`}
+        } max-w-full h-auto rounded-lg shadow-lg ${className || ""}`}
         priority={priority}
         onLoad={handleLoad}
         onError={handleError}
-        style={{
-          maxWidth: "100%",
-          height: "auto",
-          borderRadius: "8px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-        }}
       />
     </div>
   );

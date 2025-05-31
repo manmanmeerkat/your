@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 
 export default function ArticleCard({ article }: { article: articleType }) {
   const { id, slug, title, category, content, summary, images } = article;
@@ -86,9 +87,8 @@ export default function ArticleCard({ article }: { article: articleType }) {
               {imageError && (
                 <div className="w-full h-52 bg-gradient-to-br from-slate-200 to-slate-300 rounded-[5px] md:rounded-none flex items-center justify-center">
                   <div className="text-center text-slate-500">
-                    <div className="text-2xl mb-2">📷</div>
                     <div className="text-xs mb-2">Failed to load</div>
-                    <button
+                    <Button
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -97,36 +97,33 @@ export default function ArticleCard({ article }: { article: articleType }) {
                       className="text-xs px-2 py-1 bg-slate-400 text-white rounded hover:bg-slate-500 transition-colors"
                     >
                       Retry
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* 実際の画像 */}
               {!imageError && (
-                <img
+                <Image
                   key={`img-${id}-${imageKey}`}
                   src={imageUrl}
                   alt={imageAlt}
                   className={`w-full h-52 object-contain md:object-cover transition-opacity duration-500 ${
                     imageLoaded ? "opacity-100" : "opacity-0"
                   }`}
+                  width={800}
+                  height={208}
                   loading="eager"
                   decoding="async"
                   onLoad={handleImageLoad}
                   onError={handleImageError}
-                  style={{
-                    maxWidth: "100%",
-                    height: "208px",
-                    objectFit: "cover",
-                  }}
+                  unoptimized
                 />
               )}
             </>
           ) : (
             <div className="text-slate-400 h-52 w-full flex items-center justify-center">
               <div className="text-center">
-                <div className="text-3xl mb-2">📷</div>
                 <div className="text-sm">No image</div>
               </div>
             </div>
