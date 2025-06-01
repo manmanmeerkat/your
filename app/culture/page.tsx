@@ -84,7 +84,7 @@ export default async function CulturePage({
   return (
     <div>
       {/* ヘッダー */}
-      <section className="relative bg-slate-900 text-white pb-8">
+      <section className="relative bg-slate-900 pb-8">
         <div className="absolute inset-0 z-0 opacity-40">
           <Image
             src="/images/category-top/culture.jpg"
@@ -95,11 +95,11 @@ export default async function CulturePage({
             sizes="100vw"
           />
         </div>
-        <div className="container mx-auto px-6 py-36 relative z-10 text-center">
+        <div className="container mx-auto px-6 py-32 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Culture
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-left">
             Japan has cultivated a rich cultural heritage for over a thousand
             years, blending refined traditions, craftsmanship, and everyday
             practices. We will explore the depth and beauty of Japanese culture
@@ -110,9 +110,9 @@ export default async function CulturePage({
       </section>
 
       {/* 文化記事一覧 (ページネーション追加) */}
-      <section className="py-16 bg-slate-950">
+      <section className="py-24">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
             The charm of Japanese culture
           </h2>
 
@@ -146,9 +146,9 @@ export default async function CulturePage({
       <WhiteLine />
 
       {/* 文化カテゴリー */}
-      <section className="py-16 bg-slate-950">
+      <section className="py-16">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
             Japanese Culture Category
           </h2>
           <div
@@ -180,8 +180,6 @@ export default async function CulturePage({
       <WhiteLine />
 
       <RedBubble />
-
-      <WhiteLine />
     </div>
   );
 }

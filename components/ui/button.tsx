@@ -19,8 +19,8 @@ export function Button({
   };
 
   const variantClasses = {
-    default: 'bg-blue-600 hover:bg-blue-700 text-white',
-    outline: 'bg-transparent border border-gray-300 hover:bg-gray-100',
+    default: 'bg-[#df7163] hover:[#df7163]',
+    outline: 'bg-transparent border border-[#df7163]',
     ghost: 'bg-transparent hover:bg-gray-100',
   };
 

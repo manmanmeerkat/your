@@ -8,9 +8,9 @@ import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 export default function AboutPage() {
   return (
-    <div>
+    <div className="bg-[#2b1e1c] text-[#f3f3f2] pb-16">
       {/* ヘッダーセクション */}
-      <section className="relative bg-slate-950 text-white pt-40 pb-40">
+      <section className="relative bg-slate-950 pt-40 pb-40">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 overflow-hidden">
             <Image
@@ -28,7 +28,7 @@ export default function AboutPage() {
 
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">About us</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
             Your Secret Japan is a project dedicated to sharing the richness of
             Japan&apos;s cultural heritage and traditions with the world.
             Through stories of mythology, timeless arts, seasonal festivals, and
@@ -39,27 +39,27 @@ export default function AboutPage() {
       </section>
 
       {/* ミッションセクション */}
-      <section className="pt-16 md:px-16 ">
+      <section className="pt-16 md:px-16">
         <div className="container mx-auto px-4 max-w-3xl">
-          <h2 className="text-3xl font-bold mb-8 text-center text-white">
+          <h2 className="text-3xl font-bold mb-8 text-center bg-[#180614] py-2">
             Our mission
           </h2>
           <div className="shadow-md p-8">
-            <p className="mb-4 text-lg text-white text-justify">
+            <p className="mb-4 text-lg">
               Your Secret Japan is passionate about discovering and sharing the
               deep charm of Japan.
               <br />
               We present the real Japan that you won&apos;t find in a tourist
               guidebook.
             </p>
-            <p className="mb-4 text-lg text-white text-justify">
+            <p className="mb-4 text-lg">
               Japanese culture is diverse, from ancient myths, seasonal
               festivals, and traditional crafts that are meticulously crafted.{" "}
               <br />
               We aim to introduce this rich cultural heritage in an accessible
               and engaging way.
             </p>
-            <p className="mb-4 text-lg text-white text-justify">
+            <p className="mb-4 text-lg">
               Whether you&apos;re a beginner wanting to learn about Japan or a
               knowledgeable enthusiast, Your Secret Japan will leave you with
               new discoveries and insights.
@@ -70,10 +70,10 @@ export default function AboutPage() {
       <WhiteLine />
 
       {/* コンテンツセクション */}
-      <section className="pt-8 pb-24 bg-slate-950 md:px-16">
+      <section className="pt-8 pb-24 md:px-16">
         <div className="container mx-auto px-4 max-w-3xl text-center">
-          <h2 className="text-3xl font-bold mb-6 text-white">Our Contents</h2>
-          <p className="text-lg mb-8 text-white">
+          <h2 className="text-3xl font-bold mb-6 bg-[#180614] py-2">Our Contents</h2>
+          <p className="text-lg mb-8">
             Here are the categories we offer on this website.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
@@ -94,7 +94,6 @@ export default function AboutPage() {
       <WhiteLine />
       <SimpleContact />
       <BackToHomeBtn />
-      <WhiteLine />
     </div>
   );
 }

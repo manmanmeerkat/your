@@ -563,10 +563,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   const hasFeaturedImage = article.images?.some((img) => img.isFeatured);
 
   return (
-    <div className="bg-slate-950 min-h-screen article-page-container">
+    <div className="min-h-screen article-page-container">
       {/* ⭐ Hero image - OptimizedImage使用 */}
       {hasFeaturedImage && (
-        <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
+        <div className="w-full overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[400px] w-full flex justify-center">
             <OptimizedImage
               src={featuredImage}
@@ -617,14 +617,14 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           />
         </div>
 
-        <div className="flex flex-col justify-center items-center mt-8 gap-8">
+        <div className="flex flex-col justify-center items-center mt-24 gap-8">
           <Link href={`/${article.category}`}>
             <Button
               size="lg"
               className="
                 w-[320px] 
-                border border-rose-700 bg-rose-700 text-white 
-                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                border border-[#df7163] bg-[#df7163] text-[#f3f3f2]
+                hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                 shadow hover:shadow-lg
                 whitespace-nowrap
                 w-auto
@@ -640,8 +640,8 @@ export default function ArticleClientPage({ article }: { article: Article }) {
               size="lg"
               className="
                 w-[220px] 
-                border border-rose-700 bg-rose-700 text-white 
-                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                border border-[#df7163] bg-[#df7163] text-[#f3f3f2] 
+                hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                 shadow hover:shadow-lg
                 whitespace-nowrap
                 w-auto
@@ -655,7 +655,6 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         </div>
         <WhiteLine/>
         <Redbubble/>
-        <WhiteLine />
       </div>
     </div>
   );

@@ -45,7 +45,7 @@ export default function Header() {
           <Link
             href={href}
             prefetch={true} // プリフェッチを明示的に有効化
-            className="block py-2 text-white relative group hover:text-gray-300 transition-colors duration-200"
+            className="block py-2 text-[#f3f3f2] relative group hover:text-gray-300 transition-colors duration-200"
           >
             {label}
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-400 transition-all duration-300 group-hover:w-full" />
@@ -64,7 +64,7 @@ export default function Header() {
             href={href}
             onClick={closeMenu}
             prefetch={true}
-            className="block py-2 text-white relative group hover:text-gray-300 transition-colors duration-200"
+            className="block py-2 text-[#f3f3f2] relative group hover:text-gray-300 transition-colors duration-200"
           >
             {label}
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-400 transition-all duration-300 group-hover:w-full" />
@@ -75,7 +75,7 @@ export default function Header() {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-slate-950 shadow-sm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#180614] shadow-sm">
       <div className="container mx-auto px-6 md:px-16 py-4">
         <div className="flex justify-between items-center">
           <Link
@@ -89,7 +89,7 @@ export default function Header() {
           {/* ハンバーガーボタン */}
           <Button
             variant="ghost"
-            className="group lg:hidden z-50 relative hover:bg-white transition-colors duration-200"
+            className="group lg:hidden z-50 relative hover:bg-white transition-colors duration-200 px-0"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -128,7 +128,7 @@ export default function Header() {
 
         {/* モバイルメニュー（最適化されたアニメーション） */}
         {isVisible && (
-          <nav className="fixed inset-0 z-50 bg-black bg-opacity-95">
+          <nav className="fixed inset-0 z-50 bg-[#2b1e1c] bg-opacity-95">
             <div
               className={`flex flex-col h-full transform transition-all duration-300 ease-out
                 ${
@@ -138,7 +138,7 @@ export default function Header() {
                 }`}
             >
               <div className="container mx-auto w-full px-6 md:px-16 flex justify-between pt-6">
-                <p className="text-2xl font-bold text-white">Menu</p>
+                <p className="text-2xl font-bold text-[#f3f3f2]">Menu</p>
                 <button
                   type="button"
                   onClick={closeMenu}

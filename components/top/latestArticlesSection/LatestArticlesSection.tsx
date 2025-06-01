@@ -21,7 +21,7 @@ export default function LatestArticlesSection({
 
   return (
     <>
-      <h2 className="text-3xl font-bold mb-12 text-white">Latest Posts</h2>
+      <h2 className="text-3xl font-bold mb-12 text-[#f3f3f2] bg-[#180614] py-2">Latest Posts</h2>
       {articles.length ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {articles.map((a) => (
@@ -37,8 +37,8 @@ export default function LatestArticlesSection({
             size="lg"
             disabled={isNavigating}
             className="w-[220px] font-normal
-                      border border-rose-700 bg-rose-700 text-white
-                      hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                      border border-[#df7163] bg-[#df7163] text-[#f3f3f2]
+                      hover:bg-white hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                       shadow hover:shadow-lg
                       disabled:opacity-70 disabled:cursor-not-allowed
                       transition-all duration-200

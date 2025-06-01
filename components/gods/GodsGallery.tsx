@@ -43,8 +43,16 @@ export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
           <Button
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
-              ${activeTab === tab.value ? "bg-white !text-black" : "bg-slate-700 text-white"}`}
+            className={`
+              w-[80px] font-normal rounded-full text-sm 
+              transition-all duration-200 border shadow 
+              ${
+                activeTab === tab.value
+                  ? "bg-[#f3f3f2] text-[#df7163] border-[#df7163] font-bold"
+                  : "bg-[#df7163] text-[#f3f3f2] border-[#df7163] hover:font-bold"
+              }
+              hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:shadow-lg
+            `}
           >
             {tab.label}
           </Button>

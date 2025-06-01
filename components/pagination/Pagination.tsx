@@ -34,27 +34,22 @@ const PageButton = memo(
     onHover?: () => void;
     disabled: boolean;
   }) => (
-    <Button
-      variant={isCurrent ? "default" : "outline"}
-      size="sm"
-      // 🚀 CSS最適化：複雑なクラス計算を簡素化
-      className={isCurrent ? "pagination-current" : "pagination-normal"}
-      onClick={onClick}
-      onMouseEnter={onHover}
-      disabled={isCurrent || disabled}
-      aria-label={`Go to page ${page}`}
-      aria-current={isCurrent ? "page" : undefined}
-      // 🚀 スタイル直接指定で計算時間削減
-      style={{
-        minWidth: "20px",
-        backgroundColor: isCurrent ? "#be185d" : "transparent",
-        color: isCurrent ? "white" : "white",
-        borderColor: isCurrent ? "#be185d" : "white",
-        transition: "all 0.1s ease", // アニメーション時間短縮
-      }}
-    >
-      {page}
-    </Button>
+  <Button
+    size="sm"
+    className={`
+      min-w-[20px] px-2 py-1 rounded border text-sm font-medium
+      ${isCurrent
+        ? "bg-[#df7163] text-[#f3f3f2] border-[#df7163]"
+        : "bg-transparent text-[#f3f3f2] border-[#f3f3f2] hover:bg-[#df7163] hover:text-[#f3f3f2] hover:border-[#df7163]"}
+    `}
+    onClick={onClick}
+    onMouseEnter={onHover}
+    disabled={isCurrent || disabled}
+    aria-label={`Go to page ${page}`}
+    aria-current={isCurrent ? "page" : undefined}
+  >
+    {page}
+  </Button>
   )
 );
 
@@ -108,7 +103,6 @@ const PaginationSkeleton = memo(() => (
         <div
           key={i}
           className="w-10 h-8 bg-slate-700 rounded animate-pulse"
-          style={{ minWidth: "20px" }}
         />
       ))}
     </nav>
@@ -404,35 +398,6 @@ export function Pagination({
 
   return (
     <>
-      {/* 🚀 CSS最適化：インラインスタイルで高速化 */}
-      <style jsx>{`
-        .pagination-current {
-          background-color: #be185d !important;
-          color: white !important;
-          border-color: #be185d !important;
-        }
-        .pagination-normal {
-          background-color: transparent !important;
-          color: white !important;
-          border-color: white !important;
-        }
-        .pagination-normal:hover {
-          background-color: white !important;
-          color: #0f172a !important;
-        }
-        .pagination-nav {
-          border-color: white !important;
-          color: white !important;
-        }
-        .pagination-nav:hover {
-          background-color: white !important;
-          color: #0f172a !important;
-        }
-        .pagination-input-focused {
-          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5) !important;
-        }
-      `}</style>
-
       <div className="flex flex-col items-center gap-3">
         {/* メインナビゲーション */}
         <nav
@@ -464,7 +429,7 @@ export function Pagination({
                 {/* 省略記号 */}
                 {index > 0 && page - pageNumbers[index - 1] > 1 && (
                   <span
-                    className="text-white mx-1 select-none"
+                    className="text-[#f3f3f2] mx-1 select-none"
                     aria-hidden="true"
                   >
                     ...
@@ -497,7 +462,7 @@ export function Pagination({
 
         {/* 🔥 修正：ページジャンプ機能（デフォルト値なし） */}
         <div
-          className={`flex items-center gap-2 text-white text-sm transition-opacity duration-200 ${
+          className={`flex items-center gap-2 text-[#f3f3f2] text-sm transition-opacity duration-200 ${
             isOperationDisabled ? "opacity-50" : "opacity-50"
           }`}
         >
@@ -514,7 +479,7 @@ export function Pagination({
               onKeyDown={handleKeyDown}
               onFocus={handleFocus}
               onBlur={handleBlur}
-              placeholder={isFocused ? "Enter page number" : `1-${totalPages}`} // 🔥 動的プレースホルダー
+              placeholder={isFocused ? "page" : `1-${totalPages}`} // 🔥 動的プレースホルダー
               disabled={isOperationDisabled}
               className={`
                 w-16 px-2 py-1 text-center text-sm
@@ -524,8 +489,8 @@ export function Pagination({
                 ${isFocused ? "pagination-input-focused" : ""}
                 ${
                   inputError
-                    ? "border-red-500 focus:ring-red-500"
-                    : "border-gray-400 focus:border-white focus:ring-white"
+                    ? "border-[#df7163] focus:ring-[#df7163]"
+                    : "border-gray-400 focus:border-[#f3f3f2] focus:ring-white"
                 }
                 transition-all duration-200
               `}
@@ -536,7 +501,7 @@ export function Pagination({
             {/* エラーツールチップ */}
             {inputError && (
               <div
-                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-red-600 text-white text-xs rounded whitespace-nowrap z-10"
+                className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 px-2 py-1 bg-[#df7163] text-[#f3f3f2] text-xs rounded whitespace-nowrap z-10"
                 role="alert"
               >
                 {inputError}
@@ -544,7 +509,7 @@ export function Pagination({
             )}
           </div>
 
-          <span className="text-white">of {totalPages}</span>
+          <span className="text-[#f3f3f2]">of {totalPages}</span>
         </div>
       </div>
     </>

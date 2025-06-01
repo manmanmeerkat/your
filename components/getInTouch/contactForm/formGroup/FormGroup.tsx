@@ -16,7 +16,7 @@ export function FormGroup({
 }: FormGroupProps) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium mb-2">
+      <label htmlFor={id} className="block text-md font-medium mb-2">
         {label} {showAsterisk && <span className="text-red-600">*</span>}
       </label>
       <Input

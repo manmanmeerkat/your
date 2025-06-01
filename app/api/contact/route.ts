@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     if (!data.name || !data.email || !data.subject || !data.message) {
       console.log('Validation failed:', { data });
       return NextResponse.json(
-        { success: false, message: '必須項目が入力されていません。' }, 
+        { success: false, message: 'Required fields are missing.' }, 
         { status: 400 }
       );
     }
@@ -43,14 +43,14 @@ export async function POST(request: Request) {
       
       return NextResponse.json({ 
         success: true, 
-        message: 'お問い合わせを受け付けました。' 
+        message: 'Thank you for your inquiry. We have received your message.' 
       });
     } catch (dbError) {
       console.error('Database error:', dbError);
       return NextResponse.json(
         { 
           success: false, 
-          message: 'データベースエラーが発生しました。', 
+          message: 'We’re sorry, a database error has occurred. Please try again later.', 
           error: dbError instanceof Error ? dbError.message : String(dbError)
         }, 
         { status: 500 }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         success: false, 
-        message: 'エラーが発生しました。後でもう一度お試しください。',
+        message: "We're sorry, something went wrong. Please try again later.",
         error: error instanceof Error ? error.message : String(error)
       }, 
       { status: 500 }

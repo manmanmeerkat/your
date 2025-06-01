@@ -12,7 +12,7 @@ const LinkSection = ({
 }) => (
   <div>
     <h4 className="text-lg font-semibold mb-4">{title}</h4>
-    <ul className="space-y-2 text-slate-300">
+    <ul className="space-y-2 text-[#f3f3f2]">
       {links.map(({ href, label, img }) => (
         <li key={href}>
           <Link
@@ -31,7 +31,7 @@ const LinkSection = ({
                 unoptimized
               />
             )}
-            <span className="relative block text-slate-300 group-hover:text-white transition-colors">
+            <span className="relative block text-slate-250 group-hover:text-white transition-colors">
               {label}
               <span
                 className="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-400 transition-all duration-300 group-hover:w-full"
@@ -49,12 +49,12 @@ export default function Footer() {
   const filteredSNSLinks = SNS_LINKS.filter(link => link.img !== "/images/icon/x-black.png");
 
   return (
-    <footer className="bg-slate-950 text-white py-12">
+    <footer className="bg-[#180614] text-[#f3f3f2] py-12">
       <div className="container mx-auto px-6 md:px-16">
         <div className="grid gap-8 lg:grid-cols-[2fr_1fr_1fr_1fr]">
         <div>
           <h3 className="text-xl font-bold mb-4">Your Secret Japan</h3>
-          <p className="text-slate-300">
+          <p className="text-slate-250">
             Welcome to a journey exploring Japanese culture, customs, myths and traditions.
           </p>
         </div>
@@ -64,7 +64,7 @@ export default function Footer() {
         <LinkSection title="Social Media" links={filteredSNSLinks} />
       </div>
 
-        <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
+        <div className="border-t border-slate-500 mt-8 pt-8 text-center text-slate-300">
           <p>&copy; {new Date().getFullYear()} Your Secret Japan. All rights reserved.</p>
         </div>
       </div>

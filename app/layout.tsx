@@ -92,7 +92,7 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
-        <div className="flex flex-col min-h-screen bg-slate-950">
+        <div className="flex flex-col min-h-screen bg-[#2b1e1c] text-[#f3f3f2]">
           <Header />
           <main className="flex-grow pt-18">{children}</main>
           <BackToTopButton />
