@@ -9,8 +9,8 @@ export const BackToHomeBtn = () => {
               size="lg"
               className="
                 font-normal
-                border border-rose-700 bg-rose-700 text-white
-                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                border border-[#df7163] bg-[#df7163] text-[#f3f3f2]
+                hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                 shadow hover:shadow-lg
                 whitespace-nowrap
                 w-auto

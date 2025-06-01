@@ -1,10 +1,9 @@
-import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import Image from "next/image";
 import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 export default function PrivacyPolicyPage() {
   return (
-    <>
+    <div className="mb-24">
       <section className="relative bg-slate-950 text-white pt-24 pb-24">
         <div className="absolute inset-0 z-0 opacity-30">
           <Image
@@ -17,7 +16,7 @@ export default function PrivacyPolicyPage() {
         </div>
         <div className="container mx-auto px-6 py-24 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justifyr">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto">
             Our commitment to your privacy
           </p>
         </div>
@@ -25,9 +24,9 @@ export default function PrivacyPolicyPage() {
 
       {/* プライバシーポリシーコンテンツ */}
       <div className="container mx-auto px-4 pt-32 pb-8">
-        <div className="max-w-4xl mx-auto bg-slate-800/40 rounded-lg p-8 text-white text-justify">
+        <div className="max-w-4xl mx-auto bg-[#16160e] rounded-lg p-8 text-white text-left">
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               Introduction
             </h2>
             <p className="mb-4 text-gray-300">
@@ -43,7 +42,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               Information We Collect
             </h2>
             <p className="mb-4 text-gray-300">
@@ -68,7 +67,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               How We Use Information
             </h2>
             <p className="mb-4 text-gray-300">
@@ -89,7 +88,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               Analytics
             </h2>
             <p className="mb-4 text-gray-300">
@@ -106,7 +105,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               External Links
             </h2>
             <p className="mb-4 text-gray-300">
@@ -122,7 +121,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               Changes to This Privacy Policy
             </h2>
             <p className="mb-4 text-gray-300">
@@ -137,7 +136,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4 text-rose-500">
+            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
               Contact Us
             </h2>
             <p className="mb-4 text-gray-300">
@@ -151,8 +150,6 @@ export default function PrivacyPolicyPage() {
         </div>
       </div>
       <BackToHomeBtn/>
-
-      <WhiteLine />
-    </>
+    </div>
   );
 }

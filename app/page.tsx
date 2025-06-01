@@ -77,7 +77,7 @@ export default async function HomePage() {
   const articles = await getLatestArticles();
 
   return (
-    <div className="scroll-smooth">
+    <div className="scroll-smooth mb-24">
       {/* Hero セクション */}
       <HeroSection />
 
@@ -87,7 +87,7 @@ export default async function HomePage() {
       <WhiteLine />
 
       {/* 最新記事セクション */}
-      <section id="latest-articles" className="py-16 md:px-16 bg-slate-950">
+      <section id="latest-articles" className="py-16 md:px-16">
         <div className="container mx-auto px-4 text-center">
           <LatestArticlesSection articles={articles} />
         </div>
@@ -101,8 +101,6 @@ export default async function HomePage() {
 
       {/* お問い合わせ */}
       <SimpleContact />
-
-      <WhiteLine />
     </div>
   );
 }

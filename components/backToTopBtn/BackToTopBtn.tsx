@@ -25,8 +25,8 @@ export default function BackToTopButton() {
     className={`fixed bottom-6 right-6 z-50 
         w-12 h-12 flex items-center justify-center
         rounded-full 
-        border border-rose-700 bg-rose-700 text-white 
-        hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+        border border-[#df7163]  bg-[#df7163]  text-white 
+        hover:bg-white hover:text-[#df7163]  hover:border-[#df7163]  hover:font-bold
         shadow-md hover:shadow-lg transition-all duration-300
         ${isVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
     aria-label="Back to top"

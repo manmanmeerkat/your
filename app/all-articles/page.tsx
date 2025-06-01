@@ -8,6 +8,7 @@ import AllArticlesPaginationWrapper from "@/components/AllArticlesPaginationWrap
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import Redbubble from "@/components/redBubble/RedBubble";
 import { articleType } from "@/types/types";
+import Link from "next/link";
 
 // ISR設定 - 30分ごとに再生成
 export const revalidate = 1800;
@@ -142,14 +143,14 @@ export default async function AllArticlesPage({
           </div>
           <div className="container mx-auto px-6 py-24 relative z-10 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">All Posts</h1>
-            <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+            <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
               Browse all articles and discover stories from Japanese mythology,
               culture, festivals, and customs.
             </p>
           </div>
         </section>
 
-        <section className="py-16 bg-slate-950 md:px-16">
+        <section className="py-24 md:px-16">
           <div className="container mx-auto px-4">
             {/* 🚀 カテゴリーフィルター（クライアントコンポーネント） */}
             <AllArticlesCategoryFilter
@@ -197,7 +198,7 @@ export default async function AllArticlesPage({
                 </>
               ) : (
                 <div className="text-center py-20">
-                  <p className="text-white text-xl">
+                  <p className="text-xl">
                     {category
                       ? `No articles found in "${
                           category.charAt(0).toUpperCase() + category.slice(1)
@@ -206,12 +207,12 @@ export default async function AllArticlesPage({
                   </p>
                   {category && (
                     <div className="mt-4">
-                      <a
+                      <Link
                         href="/all-articles"
-                        className="inline-block bg-rose-700 hover:bg-rose-800 text-white px-4 py-2 rounded-md transition-colors"
+                        className="inline-block bg-[#df7163]  hover:bg-[#df7163]  text-white px-4 py-2 rounded-md transition-colors"
                       >
                         View all articles
-                      </a>
+                      </Link>
                     </div>
                   )}
                 </div>
@@ -222,7 +223,6 @@ export default async function AllArticlesPage({
 
         <WhiteLine />
         <Redbubble />
-        <WhiteLine />
       </Suspense>
     </div>
   );

@@ -63,8 +63,8 @@ export default function ArticleCard({ article }: { article: articleType }) {
     >
       <Card
         key={id}
-        className="flex flex-col md:flex-row h-full min-h-[260px] rounded-xl shadow-md overflow-hidden bg-white 
-                        transition-transform duration-300 ease-in-out hover:scale-[1.03]"
+        className="flex flex-col md:flex-row h-full min-h-[260px] rounded-xl shadow-md overflow-hidden bg-[#f3f3f2]
+                    transition-transform duration-300 ease-in-out hover:scale-[1.03] text-[#180614]"
       >
         {/* Image area */}
         <div
@@ -131,8 +131,8 @@ export default function ArticleCard({ article }: { article: articleType }) {
         </div>
 
         {/* Content area */}
-        <div className="md:w-3/5 p-4 flex flex-col justify-between flex-grow bg-white text-left">
-          <span className="text-xs inline-flex w-auto max-w-max bg-slate-800 text-white px-2 py-0.5 rounded mb-2">
+        <div className="md:w-3/5 px-6 sm:px-16 md:px-4 py-4 flex flex-col justify-between flex-grow bg-[#f3f3f2] text-left">
+          <span className="text-xs inline-flex w-auto max-w-max bg-slate-800 px-2 py-0.5 rounded mb-2 text-[#f3f3f2]">
             {categoryLabel}
           </span>
           <h3 className="text-lg font-semibold mb-1 leading-tight">{title}</h3>
@@ -145,8 +145,8 @@ export default function ArticleCard({ article }: { article: articleType }) {
             <Button
               size="sm"
               className="w-[120px] font-normal
-                        border border-rose-700 bg-rose-700 text-white rounded-full
-                        hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                        border border-[#df7163] bg-[#df7163] text-[#f3f3f2] rounded-full
+                        hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                         shadow hover:shadow-lg transition-all duration-300"
             >
               Read more ≫

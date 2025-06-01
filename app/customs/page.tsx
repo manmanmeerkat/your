@@ -84,7 +84,7 @@ export default async function CustomsPage({
   return (
     <div>
       {/* ヘッダー */}
-      <section className="relative bg-slate-950 text-white pt-16 pb-16">
+      <section className="relative bg-slate-950 pt-16 pb-16">
         <div className="absolute inset-0 z-0 opacity-30">
           <Image
             src="/images/category-top/custom.jpg"
@@ -99,7 +99,7 @@ export default async function CustomsPage({
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Customs
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
             Japanese customs offer a glimpse into the country&apos;s unique
             sense of harmony, respect, and seasonal awareness. We will explore
             everyday traditions such as bowing, removing shoes, and celebrating
@@ -110,9 +110,9 @@ export default async function CustomsPage({
       </section>
 
       {/* 記事一覧 */}
-      <section className="py-16 bg-slate-950 md:px-16">
+      <section className="py-16 md:px-16">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
             Discover Japanese customs
           </h2>
 
@@ -136,7 +136,7 @@ export default async function CustomsPage({
               )}
             </>
           ) : (
-            <p className="text-center text-white">
+            <p className="text-center">
               Customs posts will be available soon.
             </p>
           )}
@@ -146,9 +146,9 @@ export default async function CustomsPage({
       <WhiteLine />
 
       {/* サブカテゴリ */}
-      <section className="py-16 bg-slate-950">
+      <section className="py-16">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
             Japanese Way of Life
           </h2>
           <div
@@ -180,8 +180,6 @@ export default async function CustomsPage({
       <WhiteLine />
 
       <Redbubble />
-
-      <WhiteLine />
     </div>
   );
 }

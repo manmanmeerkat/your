@@ -132,7 +132,7 @@ export default async function MythologyPage({
   return (
     <div>
       {/* ヘッダー */}
-      <section className="relative bg-slate-900 text-white">
+      <section className="relative bg-slate-950">
         <div className="absolute inset-0 z-0 opacity-40">
           <Image
             src="/images/category-top/mythology.jpg"
@@ -147,7 +147,7 @@ export default async function MythologyPage({
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Mythology
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-justify">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-left">
             Japan&apos;s mythology weaves timeless tales of divine creation,
             heroic adventures, and sacred traditions. We will explore the
             enchanting world of Japanese mythology through stories of gods such
@@ -158,9 +158,9 @@ export default async function MythologyPage({
       </section>
 
       {/* 神話記事一覧 (ページネーション追加) */}
-      <section className="py-16 bg-slate-950">
+      <section className="py-16">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-16 mt-8 text-center bg-[#180614] py-2">
             Japanese mythological stories
           </h2>
 
@@ -184,7 +184,7 @@ export default async function MythologyPage({
               )}
             </>
           ) : (
-            <p className="text-center text-white">
+            <p className="text-center">
               Mythology posts will be available soon.
             </p>
           )}
@@ -194,9 +194,9 @@ export default async function MythologyPage({
       <WhiteLine />
 
       {/* 神々ギャラリー */}
-      <section className="py-16 bg-slate-950" id="about-japanese-gods">
+      <section className="py-16" id="about-japanese-gods">
         <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-12 text-center text-white">
+          <h2 className="text-3xl font-bold mb-12 text-center bg-[#180614] py-2">
             About Japanese Gods
           </h2>
           <GodsGallery gods={JAPANESE_GODS} slugMap={godsSlugMap} />
@@ -206,8 +206,6 @@ export default async function MythologyPage({
       <WhiteLine />
 
       <RedBubble />
-
-      <WhiteLine />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import Slider from "../slider/Slider";
 
 export default function HeroSection() {
   return (
-    <section className="relative text-white md:px-16">
+    <section className="relative text-[#f3f3f2] md:px-16">
       <div className="absolute inset-0 z-0">
         <Slider />
       </div>
@@ -23,8 +23,8 @@ export default function HeroSection() {
             <Button
               size="lg"
               className="w-[260px] font-normal
-                        border border-rose-700 bg-rose-700 text-white
-                        hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                        border border-[#df7163] bg-[#df7163] text-[#f3f3f2]
+                        hover:bg-white hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                         shadow hover:shadow-lg"
             >
               Explore Categories ≫
@@ -35,8 +35,8 @@ export default function HeroSection() {
               size="lg"
               variant="outline"
               className="font-normal w-[220px] text-center
-                        border-white text-white
-                        hover:bg-white hover:text-black hover:font-bold"
+                        border-white text-[#f3f3f2]
+                        hover:bg-white hover:text-[#180614] hover:font-bold"
             >
               Latest Articles ≫
             </Button>

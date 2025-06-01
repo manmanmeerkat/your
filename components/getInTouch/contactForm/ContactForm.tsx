@@ -105,7 +105,7 @@ export function ContactForm() {
     <div className="max-w-2xl mx-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-slate-800/40 rounded-lg shadow-lg p-8 space-y-6 text-white"
+        className="bg-[#1b1b1b] rounded-lg shadow-lg p-8 space-y-6"
       >
         <FormGroup
           id="name"
@@ -130,7 +130,7 @@ export function ContactForm() {
           placeholder="Enter the subject"
         />
         <div>
-          <label htmlFor="message" className="block text-sm font-medium mb-2">
+          <label htmlFor="message" className="block text-md font-medium mb-2">
             Message<span className="text-red-600">*</span>
           </label>
           <Textarea
@@ -149,7 +149,7 @@ export function ContactForm() {
             className={`mb-6 p-4 rounded-md ${
               feedback.success
                 ? "bg-cyan-100 border-l-4 border-cyan-600 text-cyan-800"
-                : "bg-rose-100 border-l-4 border-rose-600 text-rose-800"
+                : "bg-[#f6bfbc] border-l-4 border-[#df7163] text-[#a22041]"
             }`}
           >
             {feedback.message}
@@ -161,8 +161,8 @@ export function ContactForm() {
           disabled={isSubmitting}
           className="
           font-normal
-          border border-rose-700 bg-rose-700 text-white
-          hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+          border border-[#df7163] bg-[#df7163] text-white
+          hover:bg-white hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
           shadow hover:shadow-lg
           whitespace-nowrap
           w-full

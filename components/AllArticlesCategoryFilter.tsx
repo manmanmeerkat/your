@@ -29,8 +29,8 @@ const CategoryButton = memo(
         variant={isActive ? "default" : "outline"}
         className={
           isActive
-            ? "bg-rose-700 text-white hover:bg-rose-800"
-            : "text-white border-white hover:bg-white hover:text-slate-900"
+            ? "bg-[#df7163] hover:bg-[#df7163]"
+            : "border-white hover:bg-white hover:text-[#df7163] "
         }
         onClick={onClick}
       >
@@ -69,8 +69,8 @@ function AllArticlesCategoryFilter({
   };
 
   return (
-    <div className="sticky top-16 z-20 bg-slate-950 py-4 shadow-md">
-      <div className="flex flex-wrap justify-start md:justify-center gap-3">
+    <div className="sticky top-16 z-20 bg-[#180614] py-4 shadow-md">
+      <div className="flex flex-wrap justify-start md:justify-center gap-3 px-4">
         <CategoryButton
           category={null}
           currentCategory={currentCategory}
