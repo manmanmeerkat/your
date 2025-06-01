@@ -135,10 +135,15 @@ export const JAPANESE_GODS: godType[] = [
       img: "/images/gods/takemikazuchi.png",
       gender: "male"
     },
-        {
+    {
       name: "Yagami-hime",
       img: "/images/gods/yagami.png",
       gender: "female"
+    },
+    {
+      name: "Omoikane no Kami",
+      img: "/images/gods/omoikane.png",
+      gender: "male"
     },
   ];
   
