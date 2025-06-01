@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_CONFIG } from "@/constants/constants";
 import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 import { TableOfContents } from "@/components/japanese-style/TableOfContents";
@@ -463,10 +462,10 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
   const label = CATEGORY_CONFIG[item.category]?.label || "Category";
 
   return (
-    <div className="bg-slate-950 min-h-screen article-page-container">
+    <div className="min-h-screen article-page-container">
       {/* Hero image */}
       {item.images?.[0] && (
-        <div className="w-full bg-slate-950 overflow-hidden pt-8 px-4 sm:px-8">
+        <div className="w-full overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[400px] w-full flex justify-center">
             <Image
               src={item.images[0].url}
@@ -524,15 +523,15 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
         </div>
 
         {/* ボタン部分 */}
-        <div className="flex flex-col justify-center items-center mt-8 gap-8">
+        <div className="flex flex-col justify-center items-center mt-24 mb-16 gap-8">
           <Link href={`${returnPath}#${sectionId}`}>
             <Button
               size="lg"
               className="
                 max-w-[340px] 
                 w-full
-                border border-rose-700 bg-rose-700 text-white 
-                hover:bg-white hover:text-rose-700 hover:border-rose-700 hover:font-bold
+                border border-[#df7163] bg-[#df7163] text-[#f3f3f2] 
+                hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
                 shadow hover:shadow-lg
                 px-6
                 transition-all duration-300
@@ -545,7 +544,6 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
           </Link>
           <BackToHomeBtn />
         </div>
-        <WhiteLine />
       </div>
     </div>
   );
