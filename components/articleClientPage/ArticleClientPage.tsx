@@ -8,6 +8,7 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
+import RelatedArticles from "@/components/sidebar/RelatedArticles";
 import Redbubble from "../redBubble/RedBubble";
 
 // 和風スタイルを読み込む
@@ -761,19 +762,38 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           </div>
 
           <div className="japanese-style-modern-container">
-            <TableOfContents
-              tableOfContents={tableOfContents}
-              activeSection={activeSection}
-              scrollToHeading={scrollToHeading}
-              showMobileToc={showMobileToc}
-              closeMobileToc={() => setShowMobileToc(false)}
-            />
+            {/* レイアウト調整：メインコンテンツを左側に、目次と関連記事を右側に */}
+            <div className="flex flex-col lg:flex-row gap-8">
+              {/* メインコンテンツ */}
+              <div className="flex-1 min-w-0">
+                <div className="japanese-style-modern-content">
+                  <div
+                    ref={contentRef}
+                    dangerouslySetInnerHTML={{ __html: renderedContent }}
+                  />
+                </div>
+              </div>
 
-            <div className="japanese-style-modern-content">
-              <div
-                ref={contentRef}
-                dangerouslySetInnerHTML={{ __html: renderedContent }}
-              />
+              {/* 右サイドバー：目次 + 関連記事 */}
+              <div className="lg:w-80 flex-shrink-0">
+                <div className="sticky top-8 space-y-6">
+                  <TableOfContents
+                    tableOfContents={tableOfContents}
+                    activeSection={activeSection}
+                    scrollToHeading={scrollToHeading}
+                    showMobileToc={showMobileToc}
+                    closeMobileToc={() => setShowMobileToc(false)}
+                  />
+
+                  {/* 関連記事：デスクトップのみ、目次の下に表示 */}
+                  <div className="hidden lg:block">
+                    <RelatedArticles
+                      currentCategory={article.category}
+                      currentArticleId={article.id}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
