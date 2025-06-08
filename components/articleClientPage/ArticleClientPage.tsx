@@ -764,18 +764,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           <div className="japanese-style-modern-container">
             {/* レイアウト調整：メインコンテンツを左側に、目次と関連記事を右側に */}
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* メインコンテンツ */}
-              <div className="flex-1 min-w-0">
-                <div className="japanese-style-modern-content">
-                  <div
-                    ref={contentRef}
-                    dangerouslySetInnerHTML={{ __html: renderedContent }}
-                  />
-                </div>
-              </div>
+
 
               {/* 右サイドバー：目次 + 関連記事 */}
-              <div className="lg:w-80 flex-shrink-0">
+              <div className="order-1 lg:order-2 lg:w-80 flex-shrink-0">
                 <div className="sticky top-8 space-y-6">
                   <TableOfContents
                     tableOfContents={tableOfContents}
@@ -790,6 +782,18 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                     <RelatedArticles
                       currentCategory={article.category}
                       currentArticleId={article.id}
+                    />
+                  </div>
+                </div>
+              </div>
+
+            {/* メインコンテンツ */}
+              <div className="order-2 lg:order-1 flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
+                  <div className="japanese-style-modern-content">
+                    <div
+                      ref={contentRef}
+                      dangerouslySetInnerHTML={{ __html: renderedContent }}
                     />
                   </div>
                 </div>

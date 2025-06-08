@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { articleType } from "@/types/types";
+import { Button } from "../ui/button";
 
 interface RelatedArticlesProps {
   currentCategory: string;
@@ -65,8 +66,8 @@ export default function RelatedArticles({
 
   if (loading) {
     return (
-      <div className="w-full bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-        <div className="p-6">
+      <div className="w-full bg-[#1b1b1b] rounded-sm border border-slate-700 overflow-hidden">
+        <div className="p-4">
           <h3 className="text-xl font-bold mb-6 text-center text-orange-400 pb-3 border-b border-slate-700">
             More Japanese{" "}
             {CATEGORY_LABELS[currentCategory as keyof typeof CATEGORY_LABELS]}
@@ -75,12 +76,12 @@ export default function RelatedArticles({
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="animate-pulse flex gap-4 p-3 bg-slate-700/50 rounded-lg"
+                className="animate-pulse flex gap-4 p-3 rounded-lg"
               >
-                <div className="bg-slate-600 w-20 h-20 rounded-lg flex-shrink-0"></div>
+                <div className=" w-20 h-20 rounded-lg flex-shrink-0"></div>
                 <div className="flex-1 space-y-3 py-2">
-                  <div className="bg-slate-600 h-4 rounded w-3/4"></div>
-                  <div className="bg-slate-600 h-3 rounded w-1/2"></div>
+                  <div className=" h-4 rounded w-3/4"></div>
+                  <div className=" h-3 rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -95,9 +96,9 @@ export default function RelatedArticles({
   }
 
   return (
-    <div className="w-full bg-slate-800 rounded-xl border border-slate-700 overflow-hidden shadow-xl">
+    <div className="w-full bg-[#1b1b1b] rounded-xl border border-[#2b2b2b] overflow-hidden shadow-xl">
       <div className="p-6">
-        <h3 className="text-xl font-bold mb-6 text-center text-orange-400 pb-3 border-b border-slate-700">
+        <h3 className="japanese-style-modern-sidebar-title">
           More Japanese{" "}
           {CATEGORY_LABELS[currentCategory as keyof typeof CATEGORY_LABELS]}
         </h3>
@@ -111,11 +112,21 @@ export default function RelatedArticles({
         <div className="mt-8 pt-6 border-t border-slate-700 text-center">
           <Link
             href={`/${currentCategory}`}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                          className="
+                font-normal
+                border border-[#df7163] bg-[#df7163] text-[#f3f3f2]
+                hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
+                shadow hover:shadow-lg
+                whitespace-nowrap
+                w-auto
+                px-6
+                py-2
+                rounded-md
+              "
           >
             View All{" "}
             {CATEGORY_LABELS[currentCategory as keyof typeof CATEGORY_LABELS]}
-            <span className="text-lg">≫</span>
+             <span className="text-lg">≫</span>
           </Link>
         </div>
       </div>
@@ -133,20 +144,19 @@ function RelatedArticleCard({ article }: { article: articleType }) {
     imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== "";
 
   return (
-    <Link href={`/articles/${article.slug}`} className="block group">
-      <div className="flex gap-4 p-3 rounded-lg bg-slate-700/30 hover:bg-slate-700/50 transition-all duration-300 border border-slate-600/50 hover:border-orange-500/50 hover:shadow-lg">
+    <Link href={`/articles/${article.slug}`} className="group flex gap-4 p-3 rounded-lg bg-[#2c2929] hover:bg-[#bbc8e6] transition-all duration-300 border border-slate-600/50 hover:border-[#bbc8e6] hover:shadow-lg">
         {/* 画像エリア - 余白修正 */}
-        <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-600 relative border border-slate-500">
+        <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden relative border border-slate-500">
           {hasValidImage ? (
             <>
               {!imageLoaded && !imageError && (
-                <div className="absolute inset-0 bg-slate-600 animate-pulse flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-orange-400/30 border-t-orange-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 animate-pulse flex items-center justify-center">
+                  <div className="w-4 h-4 border-2 rounded-full animate-spin"></div>
                 </div>
               )}
 
               {imageError && (
-                <div className="w-full h-full bg-slate-600 flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center">
                   <div className="text-slate-400 text-sm">🖼️</div>
                 </div>
               )}
@@ -168,7 +178,7 @@ function RelatedArticleCard({ article }: { article: articleType }) {
               )}
             </>
           ) : (
-            <div className="w-full h-full bg-slate-600 flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center">
               <div className="text-slate-400 text-sm">🖼️</div>
             </div>
           )}
@@ -176,18 +186,22 @@ function RelatedArticleCard({ article }: { article: articleType }) {
 
         {/* コンテンツエリア */}
         <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
-          <h4 className="font-semibold text-slate-100 group-hover:text-orange-300 transition-colors duration-200 leading-tight mb-3 line-clamp-2">
+          <h4 className="font-semibold text-[#f3f3f2] group-hover:text-[#1b1b1b] transition-colors duration-200 leading-tight mb-3 line-clamp-2">
             {article.title}
           </h4>
-
-          <div className="inline-flex items-center gap-2 text-sm font-medium text-orange-400 group-hover:text-orange-300 transition-all duration-200">
-            <span>Read more</span>
-            <span className="transform group-hover:translate-x-1 transition-transform duration-200">
-              ≫
-            </span>
+                      
+          <div className="inline-flex items-center gap-2 text-sm font-medium text-[#df7163] group-hover:text-orange-300 transition-all duration-200">
+            <Button
+              size="sm"
+              className="w-[160px] font-normal
+                border border-[#df7163] bg-[#df7163] text-[#f3f3f2] rounded-full
+                hover:bg-[#f3f3f2]  hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
+                shadow hover:shadow-lg"
+            >
+              Read more ≫
+            </Button>
           </div>
         </div>
-      </div>
     </Link>
   );
 }

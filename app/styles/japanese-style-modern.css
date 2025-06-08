@@ -110,7 +110,7 @@
 .japanese-style-modern-sidebar {
   position: sticky;
   top: 2rem;
-  width: 250px;
+  width: 100%;
   flex-shrink: 0;
   padding: 1.25rem;
   background: #1b1b1b; /* 濃い黒 */
@@ -133,7 +133,7 @@
     width: 85%;
     max-width: 300px;
     max-height: 70vh;
-    z-index: 1000;
+    z-index: 999;
     background: #121212;
     border: 1px solid rgba(217, 119, 6, 0.4);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -151,7 +151,7 @@
   color: #f19072;
   margin: 1.5rem 0 1rem;
   padding: 0.3rem 0 0.3rem 0.75rem;
-  background: rgb(44, 41, 41, 0.8);
+  background: rgba(44, 41, 41, 0.8);
   position: relative;
 }
 
@@ -350,7 +350,6 @@
 }
 
 /* リンクスタイル */
-.japanese-style-modern a,
 .japanese-style-modern-a {
   color: #000;
   text-decoration: none;
@@ -360,7 +359,6 @@
   border-bottom: 1px solid #bbc8e6;
 }
 
-.japanese-style-modern a:hover,
 .japanese-style-modern-a:hover {
   border-bottom: 1px solid #bbc8e6;
   background: rgba(245, 158, 11, 0.1);
@@ -699,7 +697,7 @@
   width: 100%;
   height: 2px;
   background: #0c0a09;
-  z-index: 1000;
+  z-index: 999;
 }
 
 /* モバイル対応の調整 */
