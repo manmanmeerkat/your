@@ -99,11 +99,8 @@ const OptimizedImage = ({
 
   if (hasError) {
     return (
-      <div
-        className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 flex items-center justify-center min-h-[200px]"
-      >
-        <div className="text-center">Failed to load image.
-        </div>
+      <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 flex items-center justify-center min-h-[200px]">
+        <div className="text-center">Failed to load image.</div>
       </div>
     );
   }
@@ -112,9 +109,7 @@ const OptimizedImage = ({
     <div className="relative">
       {/* スケルトンローダー */}
       {shouldShowLoader && !isLoaded && (
-        <div
-          className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center z-10 min-h-[200px]"
-        >
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center z-10 min-h-[200px]">
           <div className="text-gray-400">Loading...</div>
         </div>
       )}
@@ -148,7 +143,155 @@ const safeId = (text: unknown): string => {
     .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-");
 };
 
-// ⭐ より堅牢なインライン処理関数
+// ⭐ テーブル処理関数を追加（黒ベース和風デザイン対応）
+const processTable = (tableText: string): string => {
+  const lines = tableText.trim().split("\n");
+  if (lines.length < 2) return tableText;
+
+  const headerLine = lines[0];
+  const separatorLine = lines[1];
+  const dataLines = lines.slice(2);
+
+  // セパレーター行の確認（|---|---|のような形式）
+  if (!separatorLine.match(/^\s*\|?[\s\-:|]+\|\s*$/)) {
+    return tableText; // テーブル形式でない場合は元のテキストを返す
+  }
+
+  // ヘッダーの解析
+  const headers = headerLine
+    .split("|")
+    .map((cell) => cell.trim())
+    .filter((cell) => cell !== "");
+
+  if (headers.length === 0) return tableText;
+
+  // 黒ベース和風カラーパレット
+  const colors = {
+    primary: "#1a1a1a", // 深い黒
+    primaryLight: "#2d2d2d", // 少し明るい黒
+    accent: "#df7163", // アクセント朱色
+    accentLight: "#e8998f", // 薄い朱色
+    textPrimary: "#ffffff", // 白文字
+    textSecondary: "#e2e8f0", // 薄い白
+    border: "#404040", // グレーボーダー
+    borderAccent: "#df7163", // 朱色ボーダー
+    alternateRow: "#262626", // 交互行の色（少し明るい黒）
+    hoverRow: "#333333", // ホバー時の色
+  };
+
+  // テーブルHTMLの構築（黒ベース和風スタイル）
+  let tableHtml = `
+    <div class="table-wrapper" style="
+      overflow-x: auto; 
+      margin: 2rem 0; 
+      border-radius: 12px; 
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(223, 113, 99, 0.2);
+      background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(45, 45, 45, 0.95));
+      padding: 1px;
+    ">
+      <table class="japanese-style-modern-table" style="
+        width: 100%; 
+        border-collapse: collapse; 
+        border-radius: 11px; 
+        overflow: hidden;
+        background: ${colors.primary};
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+      ">`;
+
+  // ヘッダー行（黒ベースに朱色アクセント）
+  tableHtml += `
+    <thead style="
+      background: linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight});
+      position: relative;
+      border-bottom: 2px solid ${colors.accent};
+    ">
+      <tr>`;
+
+  headers.forEach((header, index) => {
+    const borderRight =
+      index < headers.length - 1
+        ? `border-right: 1px solid rgba(223, 113, 99, 0.3);`
+        : "";
+    tableHtml += `
+      <th style="
+        padding: 18px 24px; 
+        text-align: left; 
+        font-weight: 700; 
+        color: ${colors.textPrimary}; 
+        font-size: 1rem;
+        letter-spacing: 0.8px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        ${borderRight}
+        position: relative;
+        background: linear-gradient(135deg, rgba(223, 113, 99, 0.1), rgba(232, 153, 143, 0.05));
+      ">${processInlineMarkdown(header)}</th>`;
+  });
+
+  tableHtml += `
+      </tr>
+      <tr style="height: 3px;">
+        <td colspan="${headers.length}" style="
+          background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba(223, 113, 99, 0.5) 20%, 
+            rgba(223, 113, 99, 0.8) 50%, 
+            rgba(223, 113, 99, 0.5) 80%, 
+            transparent 100%
+          );
+          padding: 0;
+          border: none;
+        "></td>
+      </tr>
+    </thead>`;
+
+  // データ行（黒ベースの交互背景、ホバーエフェクトなし）
+  tableHtml += "<tbody>";
+  dataLines.forEach((line, index) => {
+    const cells = line
+      .split("|")
+      .map((cell) => cell.trim())
+      .filter((cell) => cell !== "");
+
+    if (cells.length > 0) {
+      const isEven = index % 2 === 0;
+      const bgColor = isEven ? colors.primary : colors.alternateRow;
+
+      tableHtml += `
+        <tr style="
+          background-color: ${bgColor};
+          border-bottom: 1px solid ${colors.border};
+        ">`;
+
+      // ヘッダー数に合わせてセルを調整
+      for (let i = 0; i < headers.length; i++) {
+        const cellContent = cells[i] || "";
+        const borderRight =
+          i < headers.length - 1
+            ? `border-right: 1px solid ${colors.border};`
+            : "";
+
+        tableHtml += `
+          <td style="
+            padding: 16px 24px; 
+            color: ${colors.textPrimary};
+            font-size: 0.95rem;
+            line-height: 1.7;
+            ${borderRight}
+            vertical-align: top;
+            font-weight: 400;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+          ">${processInlineMarkdown(cellContent)}</td>`;
+      }
+      tableHtml += "</tr>";
+    }
+  });
+
+  tableHtml += "</tbody></table></div>";
+
+  return tableHtml;
+};
+
+// ⭐ より堅牢なインライン処理関数（改行防止対応）
 const processInlineMarkdown = (text: string): string => {
   if (!text || typeof text !== "string") return "";
 
@@ -173,7 +316,13 @@ const processInlineMarkdown = (text: string): string => {
           '<div class="markdown-image-container" data-src="$2" data-alt="$1" data-title="$3"><div class="markdown-image-loader"><div style="color: #9ca3af;">Loading...</div></div></div>'
         )
 
-        // ⭐ 4. 強調テキスト（流派名の特別処理）
+        // ⭐ 4. 括弧内テキストの改行防止
+        .replace(
+          /\(([^)]+)\)/g,
+          '<span style="white-space: nowrap;">($1)</span>'
+        )
+
+        // ⭐ 5. 強調テキスト（流派名の特別処理）
         .replace(
           /\*\*([^*]*-ryu[^*]*)\*\*/g,
           '<strong class="ryu-name">$1</strong>'
@@ -183,10 +332,10 @@ const processInlineMarkdown = (text: string): string => {
           '<strong class="japanese-style-modern-strong">$1</strong>'
         )
 
-        // ⭐ 5. 斜体（強調の後に処理）
+        // ⭐ 6. 斜体（強調の後に処理）
         .replace(/\*([^*]+)\*/g, '<em class="japanese-style-modern-em">$1</em>')
 
-        // ⭐ 6. 特殊文字のエスケープ解除
+        // ⭐ 7. 特殊文字のエスケープ解除
         .replace(/&amp;/g, "&")
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
@@ -197,7 +346,7 @@ const processInlineMarkdown = (text: string): string => {
   }
 };
 
-// ⭐ より堅牢なMarkdownレンダリング関数
+// ⭐ より堅牢なMarkdownレンダリング関数（テーブル対応追加）
 const renderEnhancedMarkdown = (content: string): string => {
   if (!content || typeof content !== "string") {
     console.warn("Invalid content provided to renderEnhancedMarkdown");
@@ -207,8 +356,14 @@ const renderEnhancedMarkdown = (content: string): string => {
   try {
     let html = '<section class="japanese-style-modern-section">';
 
+    // ⭐ テーブルを先に処理して置換
+    const tableRegex = /(\|[^\n]*\|\n\|[\s\-:|]*\|\n(?:\|[^\n]*\|\n?)*)/g;
+    const contentWithTables = content.replace(tableRegex, (match) => {
+      return `\n\nTABLE_PLACEHOLDER_${btoa(match)}\n\n`;
+    });
+
     // ⭐ より堅牢な段落分割
-    const paragraphs = content
+    const paragraphs = contentWithTables
       .split(/\n\s*\n/)
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
@@ -222,8 +377,19 @@ const renderEnhancedMarkdown = (content: string): string => {
       if (!paragraph) continue;
 
       try {
+        // ⭐ テーブルプレースホルダーの処理
+        if (paragraph.startsWith("TABLE_PLACEHOLDER_")) {
+          const encodedTable = paragraph.replace("TABLE_PLACEHOLDER_", "");
+          try {
+            const tableText = atob(encodedTable);
+            html += processTable(tableText);
+          } catch (e) {
+            console.warn("Error decoding table:", e);
+            html += `<p class="japanese-style-modern-p">テーブルの処理中にエラーが発生しました</p>`;
+          }
+        }
         // ⭐ 見出し1
-        if (paragraph.match(/^#\s+/)) {
+        else if (paragraph.match(/^#\s+/)) {
           const headingText = paragraph.replace(/^#\s+/, "").trim();
           const id = safeId(headingText);
           if (i > 0) {
@@ -370,6 +536,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
       /\[.+\]\(.+\)/,
       /!\[.+\]\(.+\)/,
       /^>.+$/m,
+      /\|[^\n]*\|/, // テーブル検出パターンを追加
     ];
 
     const contentIsMarkdown = mdPatterns.some((pattern) =>
@@ -653,8 +820,8 @@ export default function ArticleClientPage({ article }: { article: Article }) {
             </Button>
           </Link>
         </div>
-        <WhiteLine/>
-        <Redbubble/>
+        <WhiteLine />
+        <Redbubble />
       </div>
     </div>
   );

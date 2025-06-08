@@ -63,10 +63,17 @@ interface BulkSearchResult {
     after: string;
     fullContext: string;
   }>;
+  // 🆕 新しいプロパティ
+  firstMatchIsLinked?: boolean;
+  status?: "ready" | "already_linked";
+  linkedText?: string;
   preview?: {
     originalLength: number;
     newLength: number;
     changeCount: number;
+    // 🆕 リンク済み用のプロパティ
+    alreadyLinked?: boolean;
+    message?: string;
     matchDetails?: {
       originalText: string;
       replacementText: string;
@@ -87,6 +94,9 @@ interface ReplaceResult {
   replaceTerm: string;
   timestamp: string;
   error?: string;
+  // 🆕 新しいプロパティ
+  skippedArticles?: number;
+  alreadyLinkedCount?: number;
   changes: Array<{
     articleId: string;
     title: string;
@@ -131,7 +141,7 @@ export default function AdminDashboardContent() {
     [key: string]: boolean;
   }>({});
 
-  // 🆕 一括置換機能用の新しい状態
+  // 一括置換機能用の状態
   const [showBulkReplace, setShowBulkReplace] = useState(false);
   const [bulkSearchTerm, setBulkSearchTerm] = useState("");
   const [bulkReplaceTerm, setBulkReplaceTerm] = useState("");
@@ -140,7 +150,7 @@ export default function AdminDashboardContent() {
     wholeWord: false,
     category: "",
     publishedOnly: false,
-    firstMatchOnly: true, // 🆕 最初のマッチのみのオプション（デフォルト有効）
+    firstMatchOnly: true,
   });
   const [bulkResults, setBulkResults] = useState<BulkSearchResult[]>([]);
   const [bulkPreviewResults, setBulkPreviewResults] = useState<
@@ -151,7 +161,7 @@ export default function AdminDashboardContent() {
     "search"
   );
 
-  // 🆕 置換結果の確認用状態
+  // 置換結果の確認用状態
   const [replaceResult, setReplaceResult] = useState<ReplaceResult | null>(
     null
   );
@@ -164,7 +174,7 @@ export default function AdminDashboardContent() {
 
   const supabase = createClientComponentClient();
 
-  // 🆕 一括検索実行
+  // 一括検索実行
   const handleBulkSearch = useCallback(async () => {
     if (!bulkSearchTerm.trim()) {
       setError("検索語句を入力してください");
@@ -207,7 +217,7 @@ export default function AdminDashboardContent() {
     }
   }, [bulkSearchTerm, bulkOptions]);
 
-  // 🆕 一括置換プレビュー
+  // 一括置換プレビュー
   const handleBulkPreview = useCallback(async () => {
     if (!bulkReplaceTerm && bulkReplaceTerm !== "") {
       setError("置換語句を入力してください");
@@ -247,9 +257,22 @@ export default function AdminDashboardContent() {
     }
   }, [bulkSearchTerm, bulkReplaceTerm, bulkOptions]);
 
-  // 🆕 一括置換実行
+  // 一括置換実行
   const handleBulkExecute = useCallback(async () => {
-    const confirmMessage = `${bulkPreviewResults.length}件の記事で各1箇所ずつ（最初のマッチのみ）を一括置換します。\n\n「${bulkSearchTerm}」→「${bulkReplaceTerm}」\n\nこの操作は元に戻すことが困難です。実行しますか？`;
+    const readyCount = bulkPreviewResults.filter(
+      (r) => r.status === "ready"
+    ).length;
+    const skipCount = bulkPreviewResults.filter(
+      (r) => r.status === "already_linked"
+    ).length;
+
+    let confirmMessage = `${readyCount}件の記事で最初のマッチを置換します。\n\n「${bulkSearchTerm}」→「${bulkReplaceTerm}」\n\n`;
+
+    if (skipCount > 0) {
+      confirmMessage += `${skipCount}件の記事は既にリンク化済みのためスキップされます。\n\n`;
+    }
+
+    confirmMessage += "この操作は元に戻すことが困難です。実行しますか？";
 
     if (!confirm(confirmMessage)) {
       return;
@@ -275,7 +298,6 @@ export default function AdminDashboardContent() {
       const data: ReplaceResult = await response.json();
 
       if (response.ok) {
-        // 🆕 結果を保存して確認画面を表示
         setReplaceResult(data);
         setShowReplaceResult(true);
         setBulkStep("execute");
@@ -288,7 +310,7 @@ export default function AdminDashboardContent() {
         setBulkStep("search");
         setShowBulkReplace(false);
 
-        // 🔥 修正: 検索状態をリセットして記事一覧を自動的に再読み込み
+        // 検索状態をリセットして記事一覧を自動的に再読み込み
         setSearchQuery("");
         setSearchInput("");
         setPagination((prev) => ({ ...prev, page: 1 }));
@@ -302,8 +324,6 @@ export default function AdminDashboardContent() {
       setBulkLoading(false);
     }
   }, [bulkSearchTerm, bulkReplaceTerm, bulkOptions, bulkPreviewResults]);
-
-  // 既存のURL管理関数など... (省略、元のコードをそのまま使用)
 
   // URLパラメータから初期状態を取得
   useEffect(() => {
@@ -346,7 +366,7 @@ export default function AdminDashboardContent() {
     ) {
       newSearchType = searchTypeParam as "title" | "content" | "both";
       stateChanged = true;
-      console.log("検索テュプを検出:", searchTypeParam);
+      console.log("検索タイプを検出:", searchTypeParam);
     }
 
     // 一括で状態を更新
@@ -800,8 +820,8 @@ export default function AdminDashboardContent() {
                   <h4 className="font-medium mb-2">実行結果</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
-                      <span className="font-medium">対象記事:</span>
-                      <span className="ml-2">
+                      <span className="font-medium">置換実行:</span>
+                      <span className="ml-2 text-green-600 font-bold">
                         {replaceResult.affectedArticles}件
                       </span>
                     </div>
@@ -811,19 +831,36 @@ export default function AdminDashboardContent() {
                         {replaceResult.totalChanges}箇所
                       </span>
                     </div>
+                    {replaceResult.skippedArticles &&
+                      replaceResult.skippedArticles > 0 && (
+                        <div>
+                          <span className="font-medium">スキップ:</span>
+                          <span className="ml-2 text-blue-600">
+                            {replaceResult.skippedArticles}件
+                          </span>
+                        </div>
+                      )}
                     <div>
                       <span className="font-medium">検索語:</span>
                       <code className="ml-2 bg-gray-100 px-1 rounded">
                         {replaceResult.searchTerm}
                       </code>
                     </div>
-                    <div>
-                      <span className="font-medium">置換語:</span>
-                      <code className="ml-2 bg-gray-100 px-1 rounded">
-                        {replaceResult.replaceTerm}
-                      </code>
-                    </div>
                   </div>
+                  {replaceResult.skippedArticles &&
+                    replaceResult.skippedArticles > 0 && (
+                      <div className="mt-3 text-sm text-blue-700 bg-blue-50 p-2 rounded">
+                        <span className="font-medium">
+                          📌 スキップについて:
+                        </span>
+                        <br />
+                        {replaceResult.alreadyLinkedCount ||
+                          replaceResult.skippedArticles}
+                        件の記事は、
+                        検索ワードが既にマークダウンリンクとして使用されているため、
+                        置換をスキップしました。
+                      </div>
+                    )}
                 </div>
 
                 <div>
@@ -899,7 +936,7 @@ export default function AdminDashboardContent() {
         </div>
       </div>
 
-      {/* 🆕 一括置換セクション */}
+      {/* 一括置換セクション */}
       {showBulkReplace && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -983,7 +1020,7 @@ export default function AdminDashboardContent() {
                   <span className="text-sm">公開記事のみ</span>
                 </label>
                 <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded">
-                  <span>📌 最初のマッチのみ置換（各記事で1箇所ずつ）</span>
+                  <span>📌 最初のマッチのみ置換（リンク済みは除外）</span>
                 </div>
               </div>
             </div>
@@ -1032,28 +1069,55 @@ export default function AdminDashboardContent() {
             {bulkResults.length > 0 && (
               <div className="mt-4 space-y-2">
                 <h4 className="font-medium">
-                  検索結果: {bulkResults.length}件の記事で
-                  {bulkResults.reduce(
-                    (sum, result) => sum + (result.matchCount || 0),
-                    0
+                  検索結果: {bulkResults.length}件の記事
+                  {bulkResults.filter((r) => r.status === "ready").length >
+                    0 && (
+                    <span className="text-green-600 ml-2">
+                      (置換可能:{" "}
+                      {bulkResults.filter((r) => r.status === "ready").length}
+                      件)
+                    </span>
                   )}
-                  箇所が見つかりました
+                  {bulkResults.filter((r) => r.status === "already_linked")
+                    .length > 0 && (
+                    <span className="text-blue-600 ml-2">
+                      (置換済み:{" "}
+                      {
+                        bulkResults.filter((r) => r.status === "already_linked")
+                          .length
+                      }
+                      件)
+                    </span>
+                  )}
                 </h4>
                 <div className="max-h-40 overflow-y-auto space-y-1">
-                  {bulkResults.slice(0, 5).map((result) => (
+                  {bulkResults.slice(0, 10).map((result) => (
                     <div
                       key={result.id}
-                      className="text-sm p-2 bg-gray-50 rounded"
+                      className={`text-sm p-2 rounded flex items-center justify-between ${
+                        result.status === "already_linked"
+                          ? "bg-blue-50 border border-blue-200"
+                          : "bg-gray-50"
+                      }`}
                     >
-                      <span className="font-medium">{result.title}</span>
-                      <span className="text-gray-600 ml-2">
-                        ({result.matchCount}箇所)
-                      </span>
+                      <div>
+                        <span className="font-medium">{result.title}</span>
+                        <span className="text-gray-600 ml-2">
+                          {result.status === "already_linked"
+                            ? "(最初のマッチは既にリンク済み)"
+                            : `(${result.matchCount}箇所)`}
+                        </span>
+                      </div>
+                      {result.status === "already_linked" && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          置換済み
+                        </span>
+                      )}
                     </div>
                   ))}
-                  {bulkResults.length > 5 && (
+                  {bulkResults.length > 10 && (
                     <div className="text-sm text-gray-600 p-2">
-                      ...他 {bulkResults.length - 5} 件
+                      ...他 {bulkResults.length - 10} 件
                     </div>
                   )}
                 </div>
@@ -1064,24 +1128,61 @@ export default function AdminDashboardContent() {
             {bulkPreviewResults.length > 0 && (
               <div className="mt-4 space-y-4">
                 <h4 className="font-medium text-orange-700">
-                  置換プレビュー: {bulkPreviewResults.length}
-                  件の記事で各1箇所ずつ置換します
+                  置換プレビュー:
+                  <span className="text-green-600 ml-2">
+                    置換実行:{" "}
+                    {
+                      bulkPreviewResults.filter((r) => r.status === "ready")
+                        .length
+                    }
+                    件
+                  </span>
+                  {bulkPreviewResults.filter(
+                    (r) => r.status === "already_linked"
+                  ).length > 0 && (
+                    <span className="text-blue-600 ml-2">
+                      スキップ:{" "}
+                      {
+                        bulkPreviewResults.filter(
+                          (r) => r.status === "already_linked"
+                        ).length
+                      }
+                      件
+                    </span>
+                  )}
                 </h4>
 
                 <div className="max-h-80 overflow-y-auto space-y-3">
                   {bulkPreviewResults.map((result) => (
                     <div
                       key={result.id}
-                      className="bg-orange-50 border border-orange-200 rounded-lg p-4"
+                      className={`border rounded-lg p-4 ${
+                        result.status === "already_linked"
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-orange-50 border-orange-200"
+                      }`}
                     >
                       <div className="flex justify-between items-start mb-3">
                         <div>
                           <span className="font-medium text-lg">
                             {result.title}
                           </span>
-                          <span className="text-orange-700 text-sm ml-2">
-                            (最初のマッチを置換)
-                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            {result.status === "already_linked" ? (
+                              <>
+                                <span className="text-blue-700 text-sm">
+                                  🔗 最初のマッチは既にリンク化済み
+                                </span>
+                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                  スキップ
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-orange-700 text-sm">
+                                ✏️ 最初のマッチを置換
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <Link href={getEditLink(result.slug)}>
                           <Button variant="outline" size="sm">
@@ -1090,43 +1191,71 @@ export default function AdminDashboardContent() {
                         </Link>
                       </div>
 
-                      {/* 🆕 置換詳細情報の表示 */}
-                      {result.preview?.matchDetails && (
+                      {result.status === "already_linked" ? (
                         <div className="bg-white border rounded p-3 text-sm">
                           <div className="mb-2">
                             <span className="font-medium">
-                              置換箇所のコンテキスト:
+                              既存のリンク情報:
                             </span>
                           </div>
-                          <div className="bg-gray-50 p-2 rounded font-mono text-xs break-all">
+                          <div className="bg-blue-50 p-2 rounded text-xs">
                             <span className="text-gray-600">
-                              {result.preview.matchDetails.beforeContext}
+                              最初に見つかった「{bulkSearchTerm}
+                              」は既にマークダウンリンクとして使用されています。
                             </span>
-                            <span className="bg-red-200 px-1 rounded">
-                              {result.preview.matchDetails.originalText}
-                            </span>
-                            <span className="text-gray-600">
-                              {result.preview.matchDetails.afterContext}
-                            </span>
+                            {result.linkedText && (
+                              <div className="mt-1">
+                                <span className="font-medium">
+                                  リンクテキスト:{" "}
+                                </span>
+                                <code className="bg-white px-1 rounded">
+                                  {result.linkedText}
+                                </code>
+                              </div>
+                            )}
                           </div>
-                          <div className="mt-2 text-xs text-gray-600">
-                            位置: {result.preview.matchDetails.position}文字目
-                          </div>
-                          <div className="mt-2">
-                            <span className="font-medium">置換後:</span>
-                          </div>
-                          <div className="bg-gray-50 p-2 rounded font-mono text-xs break-all">
-                            <span className="text-gray-600">
-                              {result.preview.matchDetails.beforeContext}
-                            </span>
-                            <span className="bg-green-200 px-1 rounded">
-                              {result.preview.matchDetails.replacementText}
-                            </span>
-                            <span className="text-gray-600">
-                              {result.preview.matchDetails.afterContext}
-                            </span>
+                          <div className="mt-2 text-xs text-blue-600">
+                            この記事は既に手動でリンク化済みのため、置換をスキップします。
                           </div>
                         </div>
+                      ) : (
+                        result.preview?.matchDetails && (
+                          <div className="bg-white border rounded p-3 text-sm">
+                            <div className="mb-2">
+                              <span className="font-medium">
+                                置換箇所のコンテキスト:
+                              </span>
+                            </div>
+                            <div className="bg-gray-50 p-2 rounded font-mono text-xs break-all">
+                              <span className="text-gray-600">
+                                {result.preview.matchDetails.beforeContext}
+                              </span>
+                              <span className="bg-red-200 px-1 rounded">
+                                {result.preview.matchDetails.originalText}
+                              </span>
+                              <span className="text-gray-600">
+                                {result.preview.matchDetails.afterContext}
+                              </span>
+                            </div>
+                            <div className="mt-2 text-xs text-gray-600">
+                              位置: {result.preview.matchDetails.position}文字目
+                            </div>
+                            <div className="mt-2">
+                              <span className="font-medium">置換後:</span>
+                            </div>
+                            <div className="bg-gray-50 p-2 rounded font-mono text-xs break-all">
+                              <span className="text-gray-600">
+                                {result.preview.matchDetails.beforeContext}
+                              </span>
+                              <span className="bg-green-200 px-1 rounded">
+                                {result.preview.matchDetails.replacementText}
+                              </span>
+                              <span className="text-gray-600">
+                                {result.preview.matchDetails.afterContext}
+                              </span>
+                            </div>
+                          </div>
+                        )
                       )}
                     </div>
                   ))}
