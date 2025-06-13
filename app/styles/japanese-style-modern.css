@@ -1583,3 +1583,73 @@ body.toc-open {
   background: rgba(241, 144, 114, 0.3);
   color: var(--japanese-text-primary);
 }
+/* ========================================== */
+/* 🚨 新規追加：×ボタン専用スタイル - Hydrationエラー修正版 */
+/* ========================================== */
+
+.japanese-style-modern-close-button {
+  position: absolute !important;
+  top: 50% !important;
+  right: 1.2rem !important;
+  transform: translateY(-50%) !important;
+  width: 32px !important;
+  height: 32px !important;
+  background: rgba(223, 113, 99, 0.1) !important;
+  border: 1px solid rgba(223, 113, 99, 0.3) !important;
+  border-radius: 50% !important;
+  color: #df7163 !important;
+  font-size: 1.4rem !important;
+  font-weight: 300 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  backdrop-filter: blur(4px) !important;
+  z-index: 10 !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.japanese-style-modern-close-button:hover {
+  background: rgba(223, 113, 99, 0.2) !important;
+  border-color: rgba(223, 113, 99, 0.5) !important;
+  color: #e8998f !important;
+  transform: translateY(-50%) scale(1.1) !important;
+  box-shadow: 0 2px 8px rgba(223, 113, 99, 0.3) !important;
+}
+
+.japanese-style-modern-close-button:active {
+  transform: translateY(-50%) scale(0.95) !important;
+  background: rgba(223, 113, 99, 0.3) !important;
+}
+
+/* モバイル専用の×ボタンスタイル */
+@media (max-width: 768px) {
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-close-button {
+    display: flex !important;
+  }
+
+  /* 🚨 修正：タイトルが relative であることを確認 */
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-sidebar-title {
+    position: relative !important;
+    padding-right: 4rem !important;
+  }
+}
+
+/* デスクトップでは×ボタンを非表示 */
+@media (min-width: 769px) {
+  .japanese-style-modern-close-button {
+    display: none !important;
+  }
+}
+
+/* 🚨 修正：既存の::afterスタイルを無効化（重複を避けるため） */
+@media (max-width: 768px) {
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-sidebar-title::after {
+    display: none !important;
+  }
+}
