@@ -66,11 +66,9 @@ const OptimizedImage = ({
 
   // ⭐ マウント時にキャッシュ確認
   useEffect(() => {
-    // 短い遅延でローダーを非表示にする（UX改善）
     const timer = setTimeout(() => {
       setShouldShowLoader(false);
     }, 100);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -83,7 +81,6 @@ const OptimizedImage = ({
     const timer = setTimeout(() => {
       setShouldShowLoader(false);
     }, 100);
-
     return () => clearTimeout(timer);
   }, [src]);
 
@@ -108,14 +105,12 @@ const OptimizedImage = ({
 
   return (
     <div className="relative">
-      {/* スケルトンローダー */}
       {shouldShowLoader && !isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-lg flex items-center justify-center z-10 min-h-[200px]">
           <div className="text-gray-400">Loading...</div>
         </div>
       )}
 
-      {/* Next.js Image (unoptimized) */}
       <Image
         ref={imgRef}
         src={src}
@@ -138,7 +133,6 @@ const safeId = (text: unknown): string => {
   if (typeof text !== "string") {
     return `heading-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   }
-
   return text
     .toLowerCase()
     .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-");
@@ -168,16 +162,16 @@ const processTable = (tableText: string): string => {
 
   // 黒ベース和風カラーパレット
   const colors = {
-    primary: "#1a1a1a", // 深い黒
-    primaryLight: "#2d2d2d", // 少し明るい黒
-    accent: "#df7163", // アクセント朱色
-    accentLight: "#e8998f", // 薄い朱色
-    textPrimary: "#ffffff", // 白文字
-    textSecondary: "#e2e8f0", // 薄い白
-    border: "#404040", // グレーボーダー
-    borderAccent: "#df7163", // 朱色ボーダー
-    alternateRow: "#262626", // 交互行の色（少し明るい黒）
-    hoverRow: "#333333", // ホバー時の色
+    primary: "#1a1a1a",
+    primaryLight: "#2d2d2d",
+    accent: "#df7163",
+    accentLight: "#e8998f",
+    textPrimary: "#ffffff",
+    textSecondary: "#e2e8f0",
+    border: "#404040",
+    borderAccent: "#df7163",
+    alternateRow: "#262626",
+    hoverRow: "#333333",
   };
 
   // テーブルHTMLの構築（黒ベース和風スタイル）
@@ -525,6 +519,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [showMobileToc, setShowMobileToc] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0); // スクロール位置を保存
   const contentRef = useRef<HTMLDivElement>(null);
 
   const { renderedContent, tableOfContents } = useMemo(() => {
@@ -556,39 +551,133 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     }
   }, [article.content]);
 
-  // ⭐ スクロール処理
+  // 🚨 改善版：より精密な見出し検出
   const handleScroll = useCallback(() => {
     if (typeof window === "undefined") return;
 
     setShowScrollTop(window.scrollY > 300);
 
     if (tableOfContents.length > 0) {
+      // 🚨 改善：より精密な見出し検出
       const headings = document.querySelectorAll(
-        ".japanese-style-modern h1, .japanese-style-modern h2, .japanese-style-modern h3"
+        ".japanese-style-modern-section h1[id], .japanese-style-modern-section h2[id], .japanese-style-modern-section h3[id]"
       );
 
-      let currentId = "";
-      for (const heading of headings) {
+      if (headings.length === 0) return;
+
+      // 現在のスクロール位置
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      // 🚨 改善：より正確な判定のための調整値
+      const headerOffset = 120; // ヘッダーの高さ + マージン
+      const viewportCenter = scrollPosition + windowHeight / 3; // ビューポートの上部1/3を基準点に
+
+      let activeId = "";
+      let closestDistance = Infinity;
+
+      // 各見出しとの距離を計算して最も近いものを選択
+      headings.forEach((heading) => {
         const rect = heading.getBoundingClientRect();
-        if (rect.top <= 100) {
-          currentId = heading.id;
-        } else {
-          break;
+        const elementTop = rect.top + scrollPosition;
+
+        // 🚨 改善：見出しがビューポートの上部1/3に入った時点でアクティブに
+        const distanceFromViewportCenter = Math.abs(
+          elementTop - viewportCenter
+        );
+
+        // 見出しが画面上部に来た場合、または最も近い見出しの場合
+        if (
+          elementTop <= scrollPosition + headerOffset &&
+          distanceFromViewportCenter < closestDistance
+        ) {
+          closestDistance = distanceFromViewportCenter;
+          activeId = heading.id;
+        }
+      });
+
+      // 🚨 改善：ページの最下部近くの場合、最後の見出しをアクティブに
+      if (scrollPosition + windowHeight >= documentHeight - 100) {
+        const lastHeading = headings[headings.length - 1];
+        if (lastHeading) {
+          activeId = lastHeading.id;
         }
       }
-      setActiveSection(currentId);
+
+      // 🚨 改善：ページトップ付近の場合、最初の見出しをアクティブに
+      if (scrollPosition < 200 && headings[0]) {
+        activeId = headings[0].id;
+      }
+
+      // アクティブ状態を更新（変更があった場合のみ）
+      if (activeId !== activeSection) {
+        setActiveSection(activeId);
+
+        // 🚨 デバッグ用ログ（本番では削除）
+        console.log(
+          "Active section changed:",
+          activeId,
+          "Scroll position:",
+          scrollPosition
+        );
+      }
     }
-  }, [tableOfContents.length]);
+  }, [tableOfContents.length, activeSection]);
+
+  // 🚨 改善：Intersection Observer を使ったより高精度な検出（オプション）
+  const useIntersectionObserver = () => {
+    useEffect(() => {
+      if (typeof window === "undefined" || tableOfContents.length === 0) return;
+
+      const headings = document.querySelectorAll(
+        ".japanese-style-modern-section h1[id], .japanese-style-modern-section h2[id], .japanese-style-modern-section h3[id]"
+      );
+
+      if (headings.length === 0) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // 現在表示されている見出しを収集
+          const visibleHeadings = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => {
+              // Y座標でソート（上から順番）
+              return a.boundingClientRect.top - b.boundingClientRect.top;
+            });
+
+          if (visibleHeadings.length > 0) {
+            // 最も上にある見出しをアクティブに
+            const activeId = visibleHeadings[0].target.id;
+            if (activeId !== activeSection) {
+              setActiveSection(activeId);
+            }
+          }
+        },
+        {
+          rootMargin: "-20% 0px -80% 0px",
+          threshold: 0,
+        }
+      );
+
+      headings.forEach((heading) => observer.observe(heading));
+
+      return () => {
+        headings.forEach((heading) => observer.unobserve(heading));
+        observer.disconnect();
+      };
+    }, [tableOfContents.length, activeSection]);
+  };
+
+  // カスタムフックを使用
+  useIntersectionObserver();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const handleScrollEvent = () => handleScroll();
-
     window.addEventListener("scroll", handleScrollEvent, { passive: true });
     window.addEventListener("resize", handleScrollEvent);
-
-    // 初回実行
     setTimeout(handleScrollEvent, 100);
 
     return () => {
@@ -692,36 +781,161 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     };
   }, [renderedContent]); // renderedContentが変更されたときに再実行
 
+  // ⭐ コンポーネントのアンマウント時にbodyクラスをクリーンアップ
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove("toc-open");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+    };
+  }, []);
+
   const scrollToTop = useCallback(() => {
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, []);
 
-  const scrollToHeading = useCallback((id: string) => {
-    if (typeof window === "undefined") return;
+  // 🚨 完全修正: scrollToHeading 関数（スクロール位置復元を完全排除）
+  // 🚨 最終修正: scrollToHeading 関数（位置計算方法を改善）
+  const scrollToHeading = useCallback(
+    (id: string) => {
+      if (typeof window === "undefined") return;
 
-    const element = document.getElementById(id);
-    if (element) {
-      const elementPosition =
-        element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - 100;
+      console.log("クリックされた見出しID:", id);
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-
-      setActiveSection(id);
-      if (window.innerWidth <= 768) {
-        setShowMobileToc(false);
+      const element = document.getElementById(id);
+      if (!element) {
+        console.log("要素が見つかりません:", id);
+        const allHeadings = document.querySelectorAll("h1[id], h2[id], h3[id]");
+        console.log(
+          "利用可能な見出し:",
+          Array.from(allHeadings).map((h) => h.id)
+        );
+        return;
       }
-    }
-  }, []);
 
+      console.log("要素が見つかりました:", element);
+
+      // モバイルの場合
+      if (window.innerWidth <= 768) {
+        // 🚨 重要: body固定解除前に要素の絶対位置を計算
+        const elementRect = element.getBoundingClientRect();
+        const currentScrollY = window.scrollY;
+        const absoluteElementPosition = elementRect.top + currentScrollY;
+
+        console.log("body固定前の要素位置計算:");
+        console.log("- element.getBoundingClientRect().top:", elementRect.top);
+        console.log("- window.scrollY:", currentScrollY);
+        console.log("- 絶対位置:", absoluteElementPosition);
+
+        // 1. 目次を閉じる
+        setShowMobileToc(false);
+
+        // 2. body の固定を解除
+        document.body.classList.remove("toc-open");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+
+        console.log("モバイル: body固定解除完了");
+
+        // 🚨 重要: 計算済みの絶対位置を使用してスクロール
+        requestAnimationFrame(() => {
+          const offsetPosition = absoluteElementPosition - 100;
+
+          console.log("計算済み位置でスクロール開始:", offsetPosition);
+
+          // 負の値の場合は0に調整
+          const finalPosition = Math.max(0, offsetPosition);
+
+          window.scrollTo({
+            top: finalPosition,
+            behavior: "smooth",
+          });
+
+          setActiveSection(id);
+        });
+      } else {
+        // デスクトップの場合は通常のスクロール
+        const elementPosition =
+          element.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - 100;
+
+        console.log("デスクトップ スクロール開始:", offsetPosition);
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition), // 負の値を防ぐ
+          behavior: "smooth",
+        });
+
+        setActiveSection(id);
+      }
+    },
+    [] // 依存関係を完全に削除
+  );
+
+  // 🚨 修正: toggleMobileToc関数（見出しクリック時の処理を分離）
   const toggleMobileToc = useCallback(() => {
-    setShowMobileToc((prev) => !prev);
-  }, []);
+    setShowMobileToc((prev) => {
+      const newValue = !prev;
+
+      if (newValue) {
+        // 目次を開く - 現在のスクロール位置を保存
+        const currentScroll = window.scrollY;
+        setScrollPosition(currentScroll);
+
+        document.body.classList.add("toc-open");
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${currentScroll}px`;
+        document.body.style.width = "100%";
+
+        console.log("目次を開く: スクロール位置保存:", currentScroll);
+      } else {
+        // 🚨 重要: toggleMobileToc経由で閉じる場合のみスクロール位置を復元
+        // （×ボタンやオーバーレイクリック時）
+        document.body.classList.remove("toc-open");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+
+        // 少し遅延してからスクロール位置を復元
+        setTimeout(() => {
+          if (scrollPosition > 0) {
+            window.scrollTo(0, scrollPosition);
+            console.log("目次を閉じる: スクロール位置復元:", scrollPosition);
+          }
+        }, 50);
+      }
+
+      return newValue;
+    });
+  }, [scrollPosition]);
+
+  // 🚨 修正: closeMobileToc関数（×ボタン・オーバーレイ専用、必ずスクロール位置復元）
+  const closeMobileToc = useCallback(() => {
+    console.log("closeMobileToc呼び出し - スクロール位置復元あり");
+
+    setShowMobileToc(false);
+
+    document.body.classList.remove("toc-open");
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.width = "";
+
+    // ×ボタン・オーバーレイクリック時は必ずスクロール位置を復元
+    setTimeout(() => {
+      if (scrollPosition >= 0) {
+        // 0以上で復元（ページトップでも0は有効）
+        window.scrollTo(0, scrollPosition);
+        console.log(
+          "×ボタン/オーバーレイ: スクロール位置復元:",
+          scrollPosition
+        );
+      }
+    }, 50);
+  }, [scrollPosition]);
 
   const featuredImage = useMemo(
     () => article.images.find((img) => img.isFeatured)?.url ?? "/fallback.jpg",
@@ -732,7 +946,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
   return (
     <div className="min-h-screen article-page-container">
-      {/* ⭐ Hero image - OptimizedImage使用 */}
+      {/* Hero image */}
       {hasFeaturedImage && (
         <div className="w-full overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[400px] w-full flex justify-center">
@@ -762,20 +976,33 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           </div>
 
           <div className="japanese-style-modern-container">
-            {/* レイアウト調整：メインコンテンツを左側に、目次と関連記事を右側に */}
             <div className="flex flex-col lg:flex-row gap-8">
-
-
-              {/* 右サイドバー：目次 + 関連記事 */}
+              {/* 右サイドバー：デスクトップ用目次 + 関連記事 */}
               <div className="order-1 lg:order-2 lg:w-80 flex-shrink-0">
                 <div className="sticky top-8 space-y-6">
-                  <TableOfContents
-                    tableOfContents={tableOfContents}
-                    activeSection={activeSection}
-                    scrollToHeading={scrollToHeading}
-                    showMobileToc={showMobileToc}
-                    closeMobileToc={() => setShowMobileToc(false)}
-                  />
+                  {/* デスクトップ用目次（モバイル目次機能は除外） */}
+                  <div className="hidden lg:block">
+                    <aside className="japanese-style-modern-sidebar scrollbar-custom">
+                      <h3 className="japanese-style-modern-sidebar-title">
+                        Contents
+                      </h3>
+                      <nav>
+                        {tableOfContents.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`japanese-style-modern-toc-item ${
+                              activeSection === item.id ? "active" : ""
+                            }`}
+                            data-level={item.level}
+                            onClick={() => scrollToHeading(item.id)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            {item.text}
+                          </div>
+                        ))}
+                      </nav>
+                    </aside>
+                  </div>
 
                   {/* 関連記事：デスクトップのみ、目次の下に表示 */}
                   <div className="hidden lg:block">
@@ -787,7 +1014,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                 </div>
               </div>
 
-            {/* メインコンテンツ */}
+              {/* メインコンテンツ */}
               <div className="order-2 lg:order-1 flex-1 min-w-0">
                 <div className="flex-1 min-w-0">
                   <div className="japanese-style-modern-content">
@@ -847,6 +1074,15 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         <WhiteLine />
         <Redbubble />
       </div>
+
+      {/* 🚨 重要：モバイル目次を記事コンテナの外側に配置 */}
+      <TableOfContents
+        tableOfContents={tableOfContents}
+        activeSection={activeSection}
+        scrollToHeading={scrollToHeading}
+        showMobileToc={showMobileToc}
+        closeMobileToc={closeMobileToc}
+      />
     </div>
   );
 }
