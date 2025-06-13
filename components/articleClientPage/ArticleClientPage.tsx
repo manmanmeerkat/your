@@ -977,10 +977,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
           <div className="japanese-style-modern-container">
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* 右サイドバー：デスクトップ用目次 + 関連記事 */}
+              {/* 🚨 修正：右サイドバー - レスポンシブ対応 */}
               <div className="order-1 lg:order-2 lg:w-80 flex-shrink-0">
-                <div className="sticky top-8 space-y-6">
-                  {/* デスクトップ用目次（モバイル目次機能は除外） */}
+                <div className="space-y-6 lg:sticky lg:top-8">
+                  {/* デスクトップ用目次（モバイルでは非表示） */}
                   <div className="hidden lg:block">
                     <aside className="japanese-style-modern-sidebar scrollbar-custom">
                       <h3 className="japanese-style-modern-sidebar-title">
@@ -1004,7 +1004,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                     </aside>
                   </div>
 
-                  {/* 関連記事：デスクトップのみ、目次の下に表示 */}
+                  {/* 🚨 修正：関連記事 - デスクトップ用サイドバー */}
                   <div className="hidden lg:block">
                     <RelatedArticles
                       currentCategory={article.category}
@@ -1032,6 +1032,14 @@ export default function ArticleClientPage({ article }: { article: Article }) {
             showScrollTop={showScrollTop}
             scrollToTop={scrollToTop}
             toggleMobileToc={toggleMobileToc}
+          />
+        </div>
+
+        {/* 🚨 追加：モバイル・タブレット専用関連記事エリア */}
+        <div className="block lg:hidden mt-8">
+          <RelatedArticles
+            currentCategory={article.category}
+            currentArticleId={article.id}
           />
         </div>
 
