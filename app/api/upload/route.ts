@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     console.log('Bucket:', 'images');
     console.log('Filename:', fileName);
     
-    const { data, error } = await supabase
+    const { error } = await supabase
       .storage
       .from('images')
       .upload(fileName, fileArray, {
