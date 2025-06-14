@@ -1,6 +1,6 @@
+//components/articleCard/articleCard.tsx
 "use client";
 
-//components/articleCard/articleCard.tsx
 import { articleType } from "@/types/types";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -63,10 +63,12 @@ export default function ArticleCard({ article }: { article: articleType }) {
     >
       <Card
         key={id}
-        className="flex flex-col md:flex-row h-full min-h-[260px] rounded-xl shadow-md overflow-hidden bg-[#f3f3f2]
-                    transition-transform duration-300 ease-in-out hover:scale-[1.03] text-[#180614]"
+        className="flex flex-col md:flex-row h-full 
+                   min-h-[260px] sm:min-h-[280px] md:min-h-[280px] 
+                   rounded-xl shadow-md overflow-hidden bg-[#f3f3f2]
+                   transition-transform duration-300 ease-in-out hover:scale-[1.03] text-[#180614]"
       >
-        {/* Image area */}
+        {/* Image area - 元のまま */}
         <div
           className="w-full md:w-[220px] min-h-[208px] bg-slate-100 flex items-center justify-center 
                 p-4 md:p-0 md:pl-4 md:pt-0 overflow-hidden rounded-[5px] md:rounded-none relative"
@@ -130,17 +132,26 @@ export default function ArticleCard({ article }: { article: articleType }) {
           )}
         </div>
 
-        {/* Content area */}
+        {/* Content area - はみ出し修正のみ */}
         <div className="md:w-3/5 px-6 sm:px-16 md:px-4 py-4 flex flex-col justify-between flex-grow bg-[#f3f3f2] text-left">
           <span className="text-xs inline-flex w-auto max-w-max bg-slate-800 px-2 py-0.5 rounded mb-2 text-[#f3f3f2]">
             {categoryLabel}
           </span>
-          <h3 className="text-lg font-semibold mb-1 leading-tight">{title}</h3>
+
+          {/* タイトル - はみ出し防止のみ追加 */}
+          <h3
+            className="text-lg font-semibold mb-1 leading-tight 
+                         overflow-hidden break-words"
+          >
+            {title}
+          </h3>
+
           <p className="text-sm text-gray-700 line-clamp-3 flex-grow">
             {summary ||
               content?.slice(0, 100) + "..." ||
               "No content available."}
           </p>
+
           <div className="mt-4">
             <Button
               size="sm"
