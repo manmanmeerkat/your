@@ -36,8 +36,8 @@ const nextConfig = {
   
   // ⭐ 実験的機能（ビルド最適化追加）
   experimental: {
-    // 🚨 APIルートの静的生成を防止
-    serverComponentsExternalPackages: ['prisma', '@prisma/client'],
+    // 🚨 Prisma関連の最適化（競合回避）
+    serverComponentsExternalPackages: ['prisma'],
     
     // 開発環境でのキャッシュ完全無効化
     ...(process.env.NODE_ENV === 'development' && {
@@ -47,7 +47,6 @@ const nextConfig = {
     // 🚀 ビルド最適化
     ...(process.env.NODE_ENV === 'production' && {
       optimizeCss: true,
-      optimizePackageImports: ['@prisma/client'],
     }),
   },
 
@@ -87,20 +86,15 @@ const nextConfig = {
         },
       };
 
-      // 🚨 Prisma関連の最適化
+      // 🚨 クライアントサイドでPrismaを完全に除外
       if (!isServer) {
         config.resolve.alias = {
           ...config.resolve.alias,
-          '@prisma/client': false, // クライアントサイドでPrismaを無効化
+          '@prisma/client': false,
+          'prisma': false,
         };
       }
     }
-
-    // 🚀 ビルド高速化
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      // 重いライブラリの最適化
-    };
 
     return config;
   },
