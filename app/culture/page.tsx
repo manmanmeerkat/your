@@ -1,4 +1,5 @@
-// app/culture/page.tsx
+// app/culture/page.tsx - 既存コンポーネント活用改善版
+import { Suspense } from "react";
 import Image from "next/image";
 import { articleType } from "@/types/types";
 import ArticleCard from "../../components/articleCard/articleCard";
@@ -10,6 +11,7 @@ import PaginationWrapper from "@/components/pagination-wrapper";
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
 
+// 📊 パフォーマンス改善1: キャッシュ戦略の最適化
 async function getCultureArticles(page = 1) {
   try {
     const baseUrl =
@@ -22,26 +24,21 @@ async function getCultureArticles(page = 1) {
       `${baseUrl}/api/articles?category=culture&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
         next: {
-          revalidate: 3600, // 1時間キャッシュ
-          tags: ["culture-articles"],
+          revalidate: 1800, // 30分キャッシュ
+          tags: ["culture-articles", `culture-page-${page}`], // ページ別キャッシュタグ
+        },
+        // 📈 追加の最適化オプション
+        headers: {
+          "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
         },
       }
     );
 
-    if (!res.ok)
-      return {
-        articles: [],
-        pagination: {
-          total: 0,
-          page: 1,
-          pageSize: ARTICLES_PER_PAGE,
-          pageCount: 1,
-        },
-      };
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
     const data = await res.json();
-
-    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
     const articles = Array.isArray(data.articles) ? data.articles : [];
 
     return {
@@ -67,19 +64,94 @@ async function getCultureArticles(page = 1) {
   }
 }
 
+// 📱 ローディングスケルトン
+function ArticleGridSkeleton() {
+  return (
+    <section className="py-24">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
+          The charm of Japanese culture
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-700 rounded-lg h-64 mb-4"></div>
+              <div className="bg-gray-600 rounded h-6 mb-2"></div>
+              <div className="bg-gray-600 rounded h-4 w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 🚀 記事セクションの分離（Suspense用）
+async function CultureArticlesSection({
+  currentPage,
+}: {
+  currentPage: number;
+}) {
+  const { articles = [], pagination } = await getCultureArticles(currentPage);
+  const totalPages = pagination.pageCount;
+
+  return (
+    <section className="py-24">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
+          The charm of Japanese culture
+        </h2>
+
+        {articles.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
+              {articles.map((article: articleType) => (
+                <ArticleCard
+                  key={`${article.id}-${currentPage}`}
+                  article={article}
+                />
+              ))}
+            </div>
+
+            {/* 📈 既存のページネーションを活用 */}
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <PaginationWrapper
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  basePath="/culture"
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="text-white mb-4">
+              Culture posts will be available soon.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// 🎯 メインページコンポーネント
 export default async function CulturePage({
   searchParams,
 }: {
   searchParams?: { page?: string };
 }) {
-  // クエリパラメータからページ番号を取得
-  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
-
-  // 記事データを取得
-  const { articles = [], pagination } = await getCultureArticles(currentPage);
-
-  // 総ページ数
-  const totalPages = pagination.pageCount;
+  const currentPage = Math.max(
+    1,
+    searchParams?.page ? parseInt(searchParams.page) : 1
+  );
 
   return (
     <div>
@@ -99,7 +171,7 @@ export default async function CulturePage({
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Culture
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-left">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
             Japan has cultivated a rich cultural heritage for over a thousand
             years, blending refined traditions, craftsmanship, and everyday
             practices. We will explore the depth and beauty of Japanese culture
@@ -109,39 +181,10 @@ export default async function CulturePage({
         </div>
       </section>
 
-      {/* 文化記事一覧 (ページネーション追加) */}
-      <section className="py-24">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
-            The charm of Japanese culture
-          </h2>
-
-          {articles.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
-                {articles.map((article: articleType) => (
-                  <ArticleCard key={article.id} article={article} />
-                ))}
-              </div>
-
-              {/* ページネーションコンポーネント */}
-              {totalPages > 1 && (
-                <div className="mt-8">
-                  <PaginationWrapper
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    basePath="/culture"
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-center text-white">
-              Culture posts will be available soon.
-            </p>
-          )}
-        </div>
-      </section>
+      {/* 📱 Suspense による非同期読み込み最適化 */}
+      <Suspense fallback={<ArticleGridSkeleton />}>
+        <CultureArticlesSection currentPage={currentPage} />
+      </Suspense>
 
       <WhiteLine />
 
@@ -151,14 +194,7 @@ export default async function CulturePage({
           <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
             Japanese Culture Category
           </h2>
-          <div
-            className="
-              grid 
-              gap-6 
-              grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]
-              justify-items-center
-            "
-          >
+          <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] justify-items-center">
             {CULTURE_CATEGORIES.map((category, index) => (
               <div key={index} className="text-center">
                 <div className="w-32 h-32 bg-indigo-100 rounded-full relative overflow-hidden mx-auto">
@@ -168,6 +204,7 @@ export default async function CulturePage({
                     fill
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 8rem, 8rem"
+                    loading="lazy"
                   />
                 </div>
                 <p className="mt-2 font-medium text-white">{category.name}</p>
@@ -178,7 +215,6 @@ export default async function CulturePage({
       </section>
 
       <WhiteLine />
-
       <RedBubble />
     </div>
   );

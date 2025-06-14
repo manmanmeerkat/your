@@ -1,4 +1,5 @@
-// app/festivals/page.tsx
+// app/festivals/page.tsx - パフォーマンス最適化版
+import { Suspense } from "react";
 import Image from "next/image";
 import { SEASONAL_FESTIVALS } from "@/constants/constants";
 import ArticleCard from "../../components/articleCard/articleCard";
@@ -8,9 +9,9 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import RedBubble from "@/components/redBubble/RedBubble";
 import PaginationWrapper from "@/components/pagination-wrapper";
 
-// ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
 
+// 📊 最適化された記事取得関数
 async function getFestivalArticles(page = 1) {
   try {
     const baseUrl =
@@ -23,26 +24,20 @@ async function getFestivalArticles(page = 1) {
       `${baseUrl}/api/articles?category=festivals&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
         next: {
-          revalidate: 3600, // 1時間キャッシュ
-          tags: ["festivals-articles"],
+          revalidate: 1800,
+          tags: ["festivals-articles", `festivals-page-${page}`],
+        },
+        headers: {
+          "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
         },
       }
     );
 
-    if (!res.ok)
-      return {
-        articles: [],
-        pagination: {
-          total: 0,
-          page: 1,
-          pageSize: ARTICLES_PER_PAGE,
-          pageCount: 1,
-        },
-      };
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
     const data = await res.json();
-
-    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
     const articles = Array.isArray(data.articles) ? data.articles : [];
 
     return {
@@ -68,19 +63,93 @@ async function getFestivalArticles(page = 1) {
   }
 }
 
+// 📱 フェスティバル用スケルトン
+function FestivalArticlesSkeleton() {
+  return (
+    <section className="py-16">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold mb-16 mt-8 text-center bg-[#180614] py-2">
+          Festivals around Japan
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-700 rounded-lg h-64 mb-4"></div>
+              <div className="bg-gray-600 rounded h-6 mb-2"></div>
+              <div className="bg-gray-600 rounded h-4 w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 🚀 記事セクション
+async function FestivalArticlesSection({
+  currentPage,
+}: {
+  currentPage: number;
+}) {
+  const { articles = [], pagination } = await getFestivalArticles(currentPage);
+  const totalPages = pagination.pageCount;
+
+  return (
+    <section className="py-16">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold mb-16 mt-8 text-center bg-[#180614] py-2">
+          Festivals around Japan
+        </h2>
+
+        {articles.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
+              {articles.map((article: articleType) => (
+                <ArticleCard
+                  key={`${article.id}-${currentPage}`}
+                  article={article}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <PaginationWrapper
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  basePath="/festivals"
+                  prefetchRange={2}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="text-white mb-4">
+              Festivals posts will be available soon.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default async function FestivalsPage({
   searchParams,
 }: {
   searchParams?: { page?: string };
 }) {
-  // クエリパラメータからページ番号を取得
-  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
-
-  // 記事データを取得
-  const { articles = [], pagination } = await getFestivalArticles(currentPage);
-
-  // 総ページ数
-  const totalPages = pagination.pageCount;
+  const currentPage = Math.max(
+    1,
+    searchParams?.page ? parseInt(searchParams.page) : 1
+  );
 
   return (
     <div>
@@ -100,7 +169,7 @@ export default async function FestivalsPage({
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Festivals
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left text-left">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
             Japan&apos;s festivals reflect the beauty of the changing seasons
             and the spirit of each region. We will explore the vibrant world of
             Japanese festivals through traditional celebrations, local customs,
@@ -109,39 +178,10 @@ export default async function FestivalsPage({
         </div>
       </section>
 
-      {/* 記事一覧 */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-16 mt-8 text-center bg-[#180614] py-2">
-            Festivals around Japan
-          </h2>
-
-          {articles.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:px-16">
-                {articles.map((article: articleType) => (
-                  <ArticleCard key={article.id} article={article} />
-                ))}
-              </div>
-
-              {/* ページネーションコンポーネント */}
-              {totalPages > 1 && (
-                <div className="mt-8">
-                  <PaginationWrapper
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    basePath="/festivals"
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-center text-white">
-              Festivals posts will be available soon.
-            </p>
-          )}
-        </div>
-      </section>
+      {/* 📱 Suspense による記事読み込み */}
+      <Suspense fallback={<FestivalArticlesSkeleton />}>
+        <FestivalArticlesSection currentPage={currentPage} />
+      </Suspense>
 
       <WhiteLine />
 
@@ -161,6 +201,7 @@ export default async function FestivalsPage({
                     fill
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 8rem, 8rem"
+                    loading="lazy"
                     unoptimized
                   />
                 </div>
@@ -199,10 +240,13 @@ export default async function FestivalsPage({
                     fill
                     style={{ objectFit: "cover" }}
                     sizes="(max-width: 768px) 100vw, 33vw"
+                    loading="lazy"
                   />
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-[#180614]">{festival.title}</h3>
+                  <h3 className="text-xl font-bold mb-2 text-[#180614]">
+                    {festival.title}
+                  </h3>
                   <p className="text-[#180614] mb-4">{festival.text}</p>
                 </div>
               </div>
@@ -212,7 +256,6 @@ export default async function FestivalsPage({
       </section>
 
       <WhiteLine />
-
       <RedBubble />
     </div>
   );

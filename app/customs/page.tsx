@@ -1,4 +1,5 @@
-// app/customs/page.tsx
+// app/customs/page.tsx - パフォーマンス最適化版
+import { Suspense } from "react";
 import Image from "next/image";
 import { articleType } from "@/types/types";
 import ArticleCard from "@/components/articleCard/articleCard";
@@ -10,6 +11,7 @@ import PaginationWrapper from "@/components/pagination-wrapper";
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
 
+// 📊 パフォーマンス改善: キャッシュ戦略最適化
 async function getCustomsArticles(page = 1) {
   try {
     const baseUrl =
@@ -22,26 +24,20 @@ async function getCustomsArticles(page = 1) {
       `${baseUrl}/api/articles?category=customs&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
         next: {
-          revalidate: 3600, // 1時間キャッシュ
-          tags: ["customs-articles"],
+          revalidate: 1800, // 30分キャッシュ
+          tags: ["customs-articles", `customs-page-${page}`],
+        },
+        headers: {
+          "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
         },
       }
     );
 
-    if (!res.ok)
-      return {
-        articles: [],
-        pagination: {
-          total: 0,
-          page: 1,
-          pageSize: ARTICLES_PER_PAGE,
-          pageCount: 1,
-        },
-      };
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
 
     const data = await res.json();
-
-    // ⭐ APIで既にフィルタされている前提（不要な再フィルタを削除）
     const articles = Array.isArray(data.articles) ? data.articles : [];
 
     return {
@@ -67,19 +63,93 @@ async function getCustomsArticles(page = 1) {
   }
 }
 
+// 📱 ローディングスケルトン
+function CustomsArticlesSkeleton() {
+  return (
+    <section className="py-16 md:px-16">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
+          Discover Japanese customs
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-700 rounded-lg h-64 mb-4"></div>
+              <div className="bg-gray-600 rounded h-6 mb-2"></div>
+              <div className="bg-gray-600 rounded h-4 w-3/4"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// 🚀 記事セクションの分離
+async function CustomsArticlesSection({
+  currentPage,
+}: {
+  currentPage: number;
+}) {
+  const { articles = [], pagination } = await getCustomsArticles(currentPage);
+  const totalPages = pagination.pageCount;
+
+  return (
+    <section className="py-16 md:px-16">
+      <div className="container mx-auto px-6">
+        <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
+          Discover Japanese customs
+        </h2>
+
+        {articles.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {articles.map((article: articleType) => (
+                <ArticleCard
+                  key={`${article.id}-${currentPage}`}
+                  article={article}
+                />
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8">
+                <PaginationWrapper
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  basePath="/customs"
+                  prefetchRange={2}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center">
+            <p className="text-white mb-4">
+              Customs posts will be available soon.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export default async function CustomsPage({
   searchParams,
 }: {
   searchParams?: { page?: string };
 }) {
-  // クエリパラメータからページ番号を取得
-  const currentPage = searchParams?.page ? parseInt(searchParams.page) : 1;
-
-  // 記事データを取得
-  const { articles = [], pagination } = await getCustomsArticles(currentPage);
-
-  // 総ページ数
-  const totalPages = pagination.pageCount;
+  const currentPage = Math.max(
+    1,
+    searchParams?.page ? parseInt(searchParams.page) : 1
+  );
 
   return (
     <div>
@@ -109,39 +179,10 @@ export default async function CustomsPage({
         </div>
       </section>
 
-      {/* 記事一覧 */}
-      <section className="py-16 md:px-16">
-        <div className="container mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
-            Discover Japanese customs
-          </h2>
-
-          {articles.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {articles.map((article: articleType) => (
-                  <ArticleCard key={article.id} article={article} />
-                ))}
-              </div>
-
-              {/* ページネーションコンポーネント */}
-              {totalPages > 1 && (
-                <div className="mt-8">
-                  <PaginationWrapper
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    basePath="/customs"
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-center">
-              Customs posts will be available soon.
-            </p>
-          )}
-        </div>
-      </section>
+      {/* 📱 Suspense による非同期読み込み最適化 */}
+      <Suspense fallback={<CustomsArticlesSkeleton />}>
+        <CustomsArticlesSection currentPage={currentPage} />
+      </Suspense>
 
       <WhiteLine />
 
@@ -151,14 +192,7 @@ export default async function CustomsPage({
           <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">
             Japanese Way of Life
           </h2>
-          <div
-            className="
-              grid 
-              gap-6 
-              grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]
-              justify-items-center
-            "
-          >
+          <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] justify-items-center">
             {WAY_OF_LIFE.map((item, index) => (
               <div key={index} className="text-center">
                 <div className="w-32 h-32 mx-auto bg-amber-100 rounded-full relative overflow-hidden">
@@ -168,6 +202,7 @@ export default async function CustomsPage({
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 8rem, 8rem"
+                    loading="lazy"
                   />
                 </div>
                 <p className="mt-2 font-medium text-white">{item.label}</p>
@@ -178,7 +213,6 @@ export default async function CustomsPage({
       </section>
 
       <WhiteLine />
-
       <Redbubble />
     </div>
   );
