@@ -1,9 +1,16 @@
-// components/pagination-wrapper.tsx - スマートスクロール対応版
+// components/pagination-wrapper.tsx - 神々戻り干渉対策版
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useTransition, useRef } from "react";
 import { Pagination } from "@/components/pagination/Pagination";
+
+// 🎯 グローバル変数の型定義
+declare global {
+  interface Window {
+    DISABLE_PAGINATION_SCROLL?: boolean;
+  }
+}
 
 interface PaginationWrapperProps {
   currentPage: number;
@@ -28,16 +35,41 @@ export default function PaginationWrapper({
   const [isPending, startTransition] = useTransition();
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // 🎯 スマートスクロール関数
+  // 🎯 スマートスクロール関数（神々戻り対策付き）
   const scrollToArticlesSection = useCallback(
     (smooth = true) => {
+      // 🚀 クライアントサイドチェック
+      if (typeof window === "undefined") return;
+
+      // 🚀 神々からの戻りの場合はスクロールを無効化
+      const disablePaginationScroll = sessionStorage.getItem(
+        "disable-pagination-scroll"
+      );
+      const windowDisableFlag = window.DISABLE_PAGINATION_SCROLL;
+
+      if (disablePaginationScroll === "true" || windowDisableFlag) {
+        console.log("🚫 pagination自動スクロール無効化中 - スキップ");
+        return;
+      }
+
       // 既存のタイムアウトをクリア
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
 
       const scrollToTarget = () => {
+        // 🔄 再度クライアントサイドチェック
+        if (typeof window === "undefined") return;
+
         try {
+          // 🔄 再度チェック（タイムアウト後の実行時）
+          if (window.DISABLE_PAGINATION_SCROLL) {
+            console.log(
+              "🚫 タイムアウト後チェック: pagination自動スクロール無効化中"
+            );
+            return;
+          }
+
           // 1. 記事カードグリッドエリアを優先的に探す
           let targetElement = null;
 
@@ -113,7 +145,9 @@ export default function PaginationWrapper({
         } catch (error) {
           console.error("❌ スクロールエラー:", error);
           // エラー時はページ上部へ
-          window.scrollTo({ top: 0, behavior: "auto" });
+          if (typeof window !== "undefined") {
+            window.scrollTo({ top: 0, behavior: "auto" });
+          }
         }
       };
 
@@ -139,13 +173,36 @@ export default function PaginationWrapper({
     [currentPage, totalPages, searchParams, basePath, router]
   );
 
-  // 🎯 ページ変更完了後のスクロール
+  // 🎯 ページ変更完了後のスクロール（神々戻り対策付き）
   useEffect(() => {
+    // 🚀 クライアントサイドチェック
+    if (typeof window === "undefined") return;
+
     if (!isPending) {
-      // トランジション完了後にスクロール
-      scrollToArticlesSection(true);
+      // 🚀 神々戻りチェック
+      const disablePaginationScroll = sessionStorage.getItem(
+        "disable-pagination-scroll"
+      );
+
+      if (disablePaginationScroll === "true") {
+        console.log("🚫 ページ変更後のスクロール無効化中");
+        return;
+      }
+
+      // URL パラメータに 'page' がある場合のみスクロール実行
+      const pageParam = searchParams?.get("page");
+
+      if (pageParam && parseInt(pageParam) > 1) {
+        console.log("🎯 ページネーション検出:", pageParam);
+        // トランジション完了後にスクロール
+        scrollToArticlesSection(true);
+      } else {
+        console.log(
+          "📄 1ページ目またはページパラメータなし - スクロールしない"
+        );
+      }
     }
-  }, [isPending, currentPage, scrollToArticlesSection]);
+  }, [isPending, currentPage, scrollToArticlesSection, searchParams]);
 
   // 🎯 プリフェッチ最適化
   const prefetchPages = useMemo(() => {
@@ -184,6 +241,9 @@ export default function PaginationWrapper({
 
   // ⌨️ キーボードナビゲーション（スクロール対応）
   useEffect(() => {
+    // 🚀 クライアントサイドチェック
+    if (typeof window === "undefined") return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         event.target instanceof HTMLInputElement ||
@@ -254,19 +314,6 @@ export default function PaginationWrapper({
         siblingCount={2}
         showQuickJumper={true}
       />
-
-      {/* 📋 使用方法ヒント */}
-      <div className="mt-2 text-center text-sm text-gray-400">
-        Use PageUp/PageDown keys • Ctrl+Home/End for first/last page
-      </div>
-
-      {/* 📊 デバッグ情報（開発時のみ） */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-2 text-center text-xs text-gray-500">
-          Scroll target: #{scrollToElementId} | Offset: {scrollOffset}px |
-          Prefetched: {prefetchPages.join(", ")}
-        </div>
-      )}
     </div>
   );
 }

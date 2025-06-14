@@ -1,4 +1,4 @@
-// app/mythology/page.tsx - パフォーマンス最適化版
+// app/mythology/page.tsx - スクロール制御の改善版
 import { Suspense } from "react";
 import Image from "next/image";
 import ArticleCard from "../../components/articleCard/articleCard";
@@ -8,10 +8,11 @@ import RedBubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import GodsGallery from "@/components/gods/GodsGallery";
+import ScrollHandler from "@/components/scroll/ScrollHandler"; // 新しいコンポーネント
 
 const ARTICLES_PER_PAGE = 6;
 
-// 📊 記事取得関数の最適化
+// 記事取得関数（元のまま）
 async function getMythologyArticles(page = 1): Promise<{
   articles: articleType[];
   pagination: {
@@ -28,21 +29,29 @@ async function getMythologyArticles(page = 1): Promise<{
         ? "http://localhost:3000"
         : "https://yourwebsite.com");
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const res = await fetch(
       `${baseUrl}/api/articles?category=mythology&published=true&page=${page}&pageSize=${ARTICLES_PER_PAGE}`,
       {
+        signal: controller.signal,
         next: {
           revalidate: 1800,
           tags: ["mythology-articles", `mythology-page-${page}`],
         },
         headers: {
           "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
       }
     );
 
+    clearTimeout(timeoutId);
+
     if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+      throw new Error(`HTTP error! status: ${res.status} - ${res.statusText}`);
     }
 
     const data = await res.json();
@@ -70,7 +79,7 @@ async function getMythologyArticles(page = 1): Promise<{
   }
 }
 
-// 🎯 神々データ取得の最適化
+// 神々データ取得（元のまま）
 async function getGodsSlugMap(): Promise<Record<string, string>> {
   try {
     const baseUrl =
@@ -79,29 +88,40 @@ async function getGodsSlugMap(): Promise<Record<string, string>> {
         ? "http://localhost:3000"
         : "https://yourwebsite.com");
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const godsData = await fetch(
       `${baseUrl}/api/category-items?category=about-japanese-gods`,
       {
+        signal: controller.signal,
         next: {
-          revalidate: 86400, // 24時間キャッシュ
+          revalidate: 86400,
           tags: ["gods-data"],
         },
         headers: {
           "Cache-Control":
             "public, s-maxage=86400, stale-while-revalidate=172800",
+          Accept: "application/json",
         },
       }
     );
 
+    clearTimeout(timeoutId);
+
     if (godsData.ok) {
       const gods = await godsData.json();
-      return gods.reduce(
-        (acc: Record<string, string>, god: { title: string; slug: string }) => {
-          acc[god.title] = god.slug;
-          return acc;
-        },
-        {}
-      );
+
+      const slugMap: Record<string, string> = {};
+      if (Array.isArray(gods)) {
+        gods.forEach((god: { title: string; slug: string }) => {
+          if (god.title && god.slug) {
+            slugMap[god.title] = god.slug;
+          }
+        });
+      }
+
+      return slugMap;
     }
     return {};
   } catch (error) {
@@ -110,7 +130,7 @@ async function getGodsSlugMap(): Promise<Record<string, string>> {
   }
 }
 
-// 📱 神話用スケルトン
+// スケルトンローダー（元のまま）
 function MythologyArticlesSkeleton() {
   return (
     <section className="py-16">
@@ -120,7 +140,7 @@ function MythologyArticlesSkeleton() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch md:px-16">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="animate-pulse">
+            <div key={`skeleton-${index}`} className="animate-pulse">
               <div className="bg-gray-700 rounded-lg h-64 mb-4"></div>
               <div className="bg-gray-600 rounded h-6 mb-2"></div>
               <div className="bg-gray-600 rounded h-4 w-3/4"></div>
@@ -132,7 +152,48 @@ function MythologyArticlesSkeleton() {
   );
 }
 
-// 🚀 記事セクション
+function GodsGallerySkeleton() {
+  return (
+    <div className="w-full">
+      <div className="flex justify-center gap-4 mb-6">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={`tab-skeleton-${index}`}
+            className="w-20 h-10 bg-gray-600 rounded-full animate-pulse"
+          ></div>
+        ))}
+      </div>
+
+      <div className="hidden lg:grid grid-cols-5 gap-6 justify-items-center">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div
+            key={`god-skeleton-${index}`}
+            className="flex flex-col items-center"
+          >
+            <div className="w-32 h-32 bg-gray-600 rounded-full animate-pulse mb-2"></div>
+            <div className="w-20 h-4 bg-gray-600 rounded animate-pulse"></div>
+          </div>
+        ))}
+      </div>
+
+      <div className="lg:hidden overflow-x-auto px-4">
+        <div className="inline-flex gap-8">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={`mobile-god-skeleton-${index}`}
+              className="flex-shrink-0 text-center"
+            >
+              <div className="w-32 h-32 bg-gray-600 rounded-full animate-pulse mb-2"></div>
+              <div className="w-20 h-4 bg-gray-600 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 記事セクション（元のまま）
 async function MythologyArticlesSection({
   currentPage,
 }: {
@@ -188,6 +249,36 @@ async function MythologyArticlesSection({
   );
 }
 
+// 神々ギャラリーのラッパーコンポーネント（元のまま）
+async function GodsGalleryWrapper({
+  godsSlugMapPromise,
+}: {
+  godsSlugMapPromise: Promise<Record<string, string>>;
+}) {
+  try {
+    const godsSlugMap = await godsSlugMapPromise;
+
+    const optimizedGods = JAPANESE_GODS.filter(
+      (god) => god.name && god.img && god.gender
+    );
+
+    return <GodsGallery gods={optimizedGods} slugMap={godsSlugMap} />;
+  } catch (error) {
+    console.error("Error loading gods gallery:", error);
+    return (
+      <div className="text-center text-white py-8">
+        <p>神々のギャラリーを読み込めませんでした</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 bg-[#df7163] hover:bg-[#c85a4c] px-4 py-2 rounded transition-colors"
+        >
+          再試行
+        </button>
+      </div>
+    );
+  }
+}
+
 export default async function MythologyPage({
   searchParams,
 }: {
@@ -198,11 +289,13 @@ export default async function MythologyPage({
     searchParams?.page ? parseInt(searchParams.page) : 1
   );
 
-  // 🎯 並列実行でパフォーマンス向上
   const godsSlugMapPromise = getGodsSlugMap();
 
   return (
     <div>
+      {/* 🎯 スクロール制御コンポーネントを追加 */}
+      <ScrollHandler />
+
       {/* ヘッダー */}
       <section className="relative bg-slate-950">
         <div className="absolute inset-0 z-0 opacity-40">
@@ -213,6 +306,8 @@ export default async function MythologyPage({
             style={{ objectFit: "cover" }}
             priority={true}
             sizes="100vw"
+            placeholder="blur"
+            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkbHB0eH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/2gAMAwEAAhEDEQA/AKrAAAAAAAAAAAAAAAAA//2Q=="
           />
         </div>
         <div className="container mx-auto px-6 py-36 relative z-10 text-center">
@@ -229,31 +324,20 @@ export default async function MythologyPage({
         </div>
       </section>
 
-      {/* 📱 Suspense による記事読み込み */}
+      {/* Suspense による記事読み込み */}
       <Suspense fallback={<MythologyArticlesSkeleton />}>
         <MythologyArticlesSection currentPage={currentPage} />
       </Suspense>
 
       <WhiteLine />
 
-      {/* 神々ギャラリー */}
+      {/* 🎯 神々ギャラリー - IDを明確に設定 */}
       <section className="py-16" id="about-japanese-gods">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-12 text-center bg-[#180614] py-2">
             About Japanese Gods
           </h2>
-          <Suspense
-            fallback={
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="animate-pulse bg-gray-700 rounded-lg h-40"
-                  ></div>
-                ))}
-              </div>
-            }
-          >
+          <Suspense fallback={<GodsGallerySkeleton />}>
             <GodsGalleryWrapper godsSlugMapPromise={godsSlugMapPromise} />
           </Suspense>
         </div>
@@ -263,14 +347,4 @@ export default async function MythologyPage({
       <RedBubble />
     </div>
   );
-}
-
-// 🎯 神々ギャラリーのラッパーコンポーネント
-async function GodsGalleryWrapper({
-  godsSlugMapPromise,
-}: {
-  godsSlugMapPromise: Promise<Record<string, string>>;
-}) {
-  const godsSlugMap = await godsSlugMapPromise;
-  return <GodsGallery gods={JAPANESE_GODS} slugMap={godsSlugMap} />;
 }

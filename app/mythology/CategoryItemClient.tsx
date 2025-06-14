@@ -1,20 +1,17 @@
-// app/category-item/[slug]/CategoryItemClient.tsx - 戻りナビゲーション最適化版
+// app/category-item/[slug]/CategoryItemClient.tsx - 完成版（デバッグなし）
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { CATEGORY_CONFIG } from "@/constants/constants";
-import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 import { TableOfContents } from "@/components/japanese-style/TableOfContents";
-import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
 
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
 
 // 型定義
-type Image = {
+type ImageType = {
   id: string;
   url: string;
   altText: string | null;
@@ -32,36 +29,35 @@ type CategoryItem = {
   published: boolean;
   createdAt: Date;
   updatedAt: Date;
-  images: Image[];
+  images: ImageType[];
 };
 
-// テーブル・オブ・コンテンツの項目型定義
 export type TocItem = {
   id: string;
   text: string;
   level: number;
 };
 
-// 🎯 戻りナビゲーション用のカテゴリ設定
-const NAVIGATION_CONFIG: Record<
-  string,
-  { path: string; anchor: string; label: string }
-> = {
-  "about-japanese-gods": {
-    path: "/mythology",
-    anchor: "about-japanese-gods", // 神々ギャラリーのセクションID
-    label: "Japanese Gods",
-  },
-  // 他のカテゴリも必要に応じて追加
-  mythology: {
-    path: "/mythology",
-    anchor: "",
-    label: "Mythology",
-  },
-  // デフォルト
-};
+interface ReturnData {
+  url: string;
+  exactScrollY: number;
+  godsSectionTop: number;
+  sectionId: string;
+  timestamp: number;
+  debug: {
+    scrollY1: number;
+    scrollY2: number;
+    scrollY3: number;
+    windowInnerHeight: number;
+    documentHeight: number;
+  };
+}
 
-// 安全なID生成ヘルパー関数
+interface CategoryItemClientProps {
+  item: CategoryItem;
+}
+
+// ヘルパー関数
 const safeId = (text: unknown): string => {
   if (typeof text !== "string") {
     return `heading-${Math.random().toString(36).substring(2, 9)}`;
@@ -69,49 +65,42 @@ const safeId = (text: unknown): string => {
 
   try {
     return text.toLowerCase().replace(/[^\w]+/g, "-");
-  } catch (error) {
-    console.error("ID generation error:", error);
+  } catch {
     return `heading-${Math.random().toString(36).substring(2, 9)}`;
   }
 };
 
-// インライン要素の処理（リンク、強調、コードなど）
+// インライン要素の処理
 const processInlineMarkdown = (text: string): string => {
   if (!text) return "";
 
   let processed = text;
 
-  // リンクを処理
   processed = processed.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a href="$2" class="japanese-style-modern-a">$1</a>'
   );
 
-  // 流派名を特別に処理 (太字の前に行う必要がある)
   processed = processed.replace(
     /\*\*(.*?-ryu)\*\*/g,
     '<strong class="ryu-name">$1</strong>'
   );
 
-  // 太字を処理
   processed = processed.replace(
     /\*\*(.*?)\*\*/g,
     '<strong class="japanese-style-modern-strong">$1</strong>'
   );
 
-  // 斜体を処理
   processed = processed.replace(
     /\*(.*?)\*/g,
     '<em class="japanese-style-modern-em">$1</em>'
   );
 
-  // インラインコードを処理
   processed = processed.replace(
     /`([^`]+)`/g,
     '<code class="japanese-style-modern-code">$1</code>'
   );
 
-  // 画像を処理
   processed = processed.replace(
     /!\[([^\]]*)\]\(([^)]+)\)/g,
     '<img src="$2" alt="$1" class="japanese-style-modern-img">'
@@ -120,32 +109,23 @@ const processInlineMarkdown = (text: string): string => {
   return processed;
 };
 
-// 改良されたマークダウンレンダラー
+// マークダウンレンダラー
 const renderEnhancedMarkdown = (content: string): string => {
   if (!content) return "";
 
-  // セクション開始タグの追加
   let html = '<section class="japanese-style-modern-section">';
-
-  // 段落に分割
   const paragraphs = content.split(/\n\s*\n/);
 
-  // 各段落を処理
   for (let i = 0; i < paragraphs.length; i++) {
     const paragraph = paragraphs[i].trim();
+    if (!paragraph) continue;
 
-    if (!paragraph) continue; // 空の段落はスキップ
-
-    // 見出しを処理
     if (paragraph.startsWith("# ")) {
       const headingText = paragraph.substring(2).trim();
       const id = safeId(headingText);
-
-      // 新しいセクションの開始（最初のセクション以外）
       if (i > 0) {
         html += '</section><section class="japanese-style-modern-section">';
       }
-
       html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
         headingText
       )}</h1>`;
@@ -161,9 +141,7 @@ const renderEnhancedMarkdown = (content: string): string => {
       html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
         headingText
       )}</h3>`;
-    }
-    // コードブロックを処理
-    else if (paragraph.startsWith("```")) {
+    } else if (paragraph.startsWith("```")) {
       const codePattern = /```(?:(\w+))?\n([\s\S]*?)```/;
       const match = paragraph.match(codePattern);
 
@@ -174,15 +152,11 @@ const renderEnhancedMarkdown = (content: string): string => {
           language ? `language-${language}` : ""
         }"><code class="japanese-style-modern-code">${code}</code></pre>`;
       } else {
-        // マッチしなかった場合は単純な段落として扱う
         html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
           paragraph
         )}</p>`;
       }
-    }
-    // 引用を処理
-    else if (paragraph.startsWith("> ")) {
-      // 複数行の引用をサポート
+    } else if (paragraph.startsWith("> ")) {
       const quoteLines = paragraph.split("\n");
       const quoteContent = quoteLines
         .map((line) => (line.startsWith("> ") ? line.substring(2) : line))
@@ -191,144 +165,58 @@ const renderEnhancedMarkdown = (content: string): string => {
       html += `<blockquote class="japanese-style-modern-blockquote"><p class="japanese-style-modern-p">${processInlineMarkdown(
         quoteContent
       )}</p></blockquote>`;
-    }
-    // テーブルを処理
-    else if (paragraph.includes("|") && paragraph.trim().startsWith("|")) {
-      const rows = paragraph.trim().split("\n");
-      let tableHtml =
-        '<div class="japanese-style-modern-table-container"><table class="japanese-style-modern-table">';
-
-      // ヘッダー行が存在するか確認
-      const hasHeader = rows.length > 1 && rows[1].includes("--");
-
-      rows.forEach((row, rowIndex) => {
-        // 区切り行（---）はスキップ
-        if (row.replace(/[\s|:-]/g, "") === "") return;
-
-        // 行を処理
-        const cells = row.split("|").filter((cell) => cell.trim() !== "");
-        const isHeaderRow = hasHeader && rowIndex === 0;
-
-        tableHtml += '<tr class="japanese-style-modern-tr">';
-
-        cells.forEach((cell) => {
-          const cellContent = cell.trim();
-          if (isHeaderRow) {
-            tableHtml += `<th class="japanese-style-modern-th">${processInlineMarkdown(
-              cellContent
-            )}</th>`;
-          } else {
-            tableHtml += `<td class="japanese-style-modern-td">${processInlineMarkdown(
-              cellContent
-            )}</td>`;
-          }
-        });
-
-        tableHtml += "</tr>";
-      });
-
-      tableHtml += "</table></div>";
-      html += tableHtml;
-    }
-    // 箇条書きリストを処理（改良版）
-    else if (/^\s*-\s/.test(paragraph)) {
+    } else if (/^\s*-\s/.test(paragraph)) {
       const listLines = paragraph.split("\n");
       let listHtml = '<ul class="japanese-style-modern-ul">';
-      let currentItemContent = "";
-      let isInItem = false;
 
-      listLines.forEach((line, lineIndex) => {
+      listLines.forEach((line) => {
         const trimmed = line.trim();
-
         if (trimmed.startsWith("- ")) {
-          // 前の項目があれば追加
-          if (isInItem) {
+          const content = trimmed.substring(2);
+          if (content) {
             listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-              currentItemContent
+              content
             )}</li>`;
           }
-
-          // 新しい項目を開始
-          currentItemContent = trimmed.substring(2);
-          isInItem = true;
-        } else if (isInItem && trimmed !== "") {
-          // 現在の項目の続き
-          currentItemContent += "\n" + trimmed;
-        }
-
-        // 最後の行なら項目を閉じる
-        if (lineIndex === listLines.length - 1 && isInItem) {
-          listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-            currentItemContent
-          )}</li>`;
         }
       });
 
       listHtml += "</ul>";
       html += listHtml;
-    }
-    // 番号付きリストを処理（改良版）
-    else if (/^\s*\d+\.\s/.test(paragraph)) {
+    } else if (/^\s*\d+\.\s/.test(paragraph)) {
       const listLines = paragraph.split("\n");
       let listHtml = '<ol class="japanese-style-modern-ol">';
-      let currentItemContent = "";
-      let isInItem = false;
 
-      listLines.forEach((line, lineIndex) => {
+      listLines.forEach((line) => {
         const trimmed = line.trim();
-        const numberMatch = trimmed.match(/^\d+\.\s(.+)/);
-
-        if (numberMatch) {
-          // 前の項目があれば追加
-          if (isInItem) {
-            listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-              currentItemContent
-            )}</li>`;
-          }
-
-          // 新しい項目を開始
-          currentItemContent = numberMatch[1];
-          isInItem = true;
-        } else if (isInItem && trimmed !== "") {
-          // 現在の項目の続き
-          currentItemContent += "\n" + trimmed;
-        }
-
-        // 最後の行なら項目を閉じる
-        if (lineIndex === listLines.length - 1 && isInItem) {
+        const match = trimmed.match(/^\d+\.\s+(.+)$/);
+        if (match && match[1]) {
           listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-            currentItemContent
+            match[1]
           )}</li>`;
         }
       });
 
       listHtml += "</ol>";
       html += listHtml;
-    }
-    // 水平線を処理
-    else if (
+    } else if (
       paragraph === "---" ||
       paragraph === "***" ||
       paragraph === "___"
     ) {
       html += '<hr class="japanese-style-modern-hr" />';
-    }
-    // 通常の段落を処理
-    else {
-      // インライン要素を処理して段落タグを追加
+    } else {
       html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
         paragraph
       )}</p>`;
     }
   }
 
-  // セクション終了タグを追加
   html += "</section>";
-
   return html;
 };
 
-// 記事の内容からヘッダー（見出し）を抽出する関数
+// ヘッダー抽出
 const extractHeaders = (content: string): TocItem[] => {
   const headingRegex = /^(#{1,3})\s+(.+)$/gm;
   const headers: TocItem[] = [];
@@ -338,22 +226,100 @@ const extractHeaders = (content: string): TocItem[] => {
     const level = match[1].length;
     const text = match[2].trim();
     const id = safeId(text);
-
     headers.push({ id, text, level });
   }
 
   return headers;
 };
 
-export default function CategoryItemClient({ item }: { item: CategoryItem }) {
+// メインコンポーネント
+export default function CategoryItemClient({ item }: CategoryItemClientProps) {
   const [tableOfContents, setTableOfContents] = useState<TocItem[]>([]);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [showMobileToc, setShowMobileToc] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [renderedContent, setRenderedContent] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
+  const [returnData, setReturnData] = useState<ReturnData | null>(null);
 
-  // マークダウンの検出とレンダリング
+  // クライアントサイド確認
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // 戻り先データ確認
+  useEffect(() => {
+    if (!isClient) return;
+
+    const checkReturnData = () => {
+      try {
+        const savedReturnData = sessionStorage.getItem("gods-return-data");
+
+        if (savedReturnData) {
+          const data: ReturnData = JSON.parse(savedReturnData);
+          const isRecent = Date.now() - data.timestamp < 5 * 60 * 1000;
+
+          if (isRecent) {
+            setReturnData(data);
+          } else {
+            sessionStorage.removeItem("gods-return-data");
+          }
+        }
+      } catch {
+        sessionStorage.removeItem("gods-return-data");
+      }
+    };
+
+    checkReturnData();
+    const timer = setTimeout(checkReturnData, 500);
+
+    return () => clearTimeout(timer);
+  }, [isClient]);
+
+  // スマート戻り機能
+  const handleSmartReturn = useCallback(() => {
+    if (!isClient) return;
+
+    const godsReturnData = sessionStorage.getItem("gods-return-data");
+    if (godsReturnData) {
+      try {
+        const data = JSON.parse(godsReturnData);
+
+        const exactReturnData = {
+          originalScrollY: data.exactScrollY,
+          godsSectionTop: data.godsSectionTop,
+          shouldRestorePosition: true,
+          disablePaginationScroll: true,
+          timestamp: Date.now(),
+          debugInfo: data.debug,
+        };
+
+        sessionStorage.setItem(
+          "exact-scroll-restore",
+          JSON.stringify(exactReturnData)
+        );
+        sessionStorage.setItem("disable-pagination-scroll", "true");
+        sessionStorage.removeItem("gods-return-data");
+
+        setTimeout(() => {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = data.url;
+          }
+        }, 100);
+      } catch {
+        window.location.href = "/mythology#about-japanese-gods";
+      }
+    } else {
+      const sectionId = item.category;
+      const returnPath = CATEGORY_CONFIG[item.category]?.path || "/";
+      window.location.href = `${returnPath}#${sectionId}`;
+    }
+  }, [isClient, item.category]);
+
+  // マークダウンレンダリング
   useEffect(() => {
     if (!item.content) {
       setRenderedContent(
@@ -362,13 +328,9 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
       return;
     }
 
-    console.log("Item content type:", typeof item.content);
-    console.log("Item content sample:", item.content.substring(0, 100));
-
-    // マークダウンかどうかを判定
     const mdPatterns = [
       /^#\s+.+$/m,
-      /\*\*.+\*\*/,
+      /\*\*.+\**/,
       /\*.+\*/,
       /^\s*-\s+.+$/m,
       /^\s*\d+\.\s+.+$/m,
@@ -378,43 +340,36 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
       /^>.+$/m,
       /^```[\s\S]*?```$/m,
     ];
+
     const contentIsMarkdown = mdPatterns.some((pattern) =>
       pattern.test(item.content!)
     );
 
-    console.log("Is Markdown:", contentIsMarkdown);
-
-    // マークダウンの場合、レンダリングと目次抽出
     if (contentIsMarkdown) {
       try {
-        // 改良されたマークダウンレンダラーを使用
         const html = renderEnhancedMarkdown(item.content);
         setRenderedContent(html);
-
-        // 目次の抽出
         const extractedToc = extractHeaders(item.content);
-        console.log("Extracted TOC:", extractedToc);
         setTableOfContents(extractedToc);
-      } catch (error) {
-        console.error("Error rendering markdown:", error);
+      } catch {
         setRenderedContent(
           "<p class='japanese-style-modern-p'>マークダウンの処理中にエラーが発生しました。</p>"
         );
       }
     } else {
-      // マークダウンでない場合はそのまま表示
       setRenderedContent(
         `<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">${item.content}</p></section>`
       );
     }
   }, [item.content]);
 
-  // スクロール処理と目次の位置調整
+  // スクロール処理
   useEffect(() => {
+    if (!isClient) return;
+
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
 
-      // 現在表示されているセクションを特定
       if (tableOfContents.length > 0) {
         const headings = Array.from(
           document.querySelectorAll(
@@ -425,79 +380,73 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
         let currentId = "";
         for (const heading of headings) {
           const rect = heading.getBoundingClientRect();
-
           if (rect.top <= 100) {
             currentId = heading.id;
           } else {
             break;
           }
         }
-
         setActiveSection(currentId);
       }
     };
 
-    // スクロールイベントの設定
     window.addEventListener("scroll", handleScroll);
-
-    // リサイズ時にも位置調整
     window.addEventListener("resize", handleScroll);
-
-    // 初期化時に一度実行
     setTimeout(handleScroll, 100);
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleScroll);
     };
-  }, [tableOfContents]);
+  }, [tableOfContents, isClient]);
 
-  // トップへスクロール
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // その他の関数
+  const scrollToTop = useCallback(() => {
+    if (isClient) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isClient]);
 
-  // 目次項目クリック時のスクロール
-  const scrollToHeading = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setActiveSection(id);
+  const scrollToHeading = useCallback(
+    (id: string) => {
+      if (!isClient) return;
 
-      // モバイル版では、クリック後に目次を非表示にする
-      if (window.innerWidth <= 768) {
-        setShowMobileToc(false);
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+        setActiveSection(id);
+        if (window.innerWidth <= 768) {
+          setShowMobileToc(false);
+        }
       }
-    }
-  };
+    },
+    [isClient]
+  );
 
-  // 目次の表示切り替え
-  const toggleMobileToc = () => {
-    setShowMobileToc(!showMobileToc);
-  };
+  const toggleMobileToc = useCallback(() => {
+    setShowMobileToc((prev) => !prev);
+  }, []);
 
-  // 🎯 戻りナビゲーション情報を取得
-  const getNavigationInfo = () => {
-    const navConfig = NAVIGATION_CONFIG[item.category];
+  // レンダリング変数
+  const sectionId = item.category;
+  const returnPath = CATEGORY_CONFIG[item.category]?.path || "/";
+  const label = CATEGORY_CONFIG[item.category]?.label || "Category";
 
-    if (navConfig) {
-      return {
-        href: navConfig.anchor
-          ? `${navConfig.path}#${navConfig.anchor}`
-          : navConfig.path,
-        label: navConfig.label,
-      };
-    }
-
-    // フォールバック: 既存のCATEGORY_CONFIGを使用
-    const fallbackConfig = CATEGORY_CONFIG[item.category];
-    return {
-      href: fallbackConfig?.path || "/",
-      label: fallbackConfig?.label || "Category",
-    };
-  };
-
-  const navigationInfo = getNavigationInfo();
+  // SSR時は基本構造のみ表示
+  if (!isClient) {
+    return (
+      <div className="min-h-screen article-page-container">
+        <div className="container mx-auto px-4 py-8">
+          <div className="japanese-style-modern">
+            <div className="japanese-style-modern-header">
+              <h1 className="japanese-style-modern-title">{item.title}</h1>
+            </div>
+            <div className="text-center">読み込み中...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen article-page-container">
@@ -519,7 +468,6 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
 
       <div className="container mx-auto px-4 py-8">
         <div className="japanese-style-modern">
-          {/* ヘッダー部分 */}
           <div className="japanese-style-modern-header">
             <h1 className="japanese-style-modern-title">{item.title}</h1>
             <div className="japanese-style-modern-date">
@@ -531,56 +479,122 @@ export default function CategoryItemClient({ item }: { item: CategoryItem }) {
             </div>
           </div>
 
-          <div className="japanese-style-modern-container">
-            {/* サイドバー（目次） */}
-            <TableOfContents
-              tableOfContents={tableOfContents}
-              activeSection={activeSection}
-              scrollToHeading={scrollToHeading}
-              showMobileToc={showMobileToc}
-              closeMobileToc={() => setShowMobileToc(false)}
-            />
+          {/* 目次とコンテンツ */}
+          <TableOfContents
+            tableOfContents={tableOfContents}
+            activeSection={activeSection}
+            scrollToHeading={scrollToHeading}
+            showMobileToc={showMobileToc}
+            closeMobileToc={() => setShowMobileToc(false)}
+          />
 
-            {/* メインコンテンツ */}
-            <div className="japanese-style-modern-content">
-              <div
-                ref={contentRef}
-                dangerouslySetInnerHTML={{
-                  __html: renderedContent,
-                }}
-              />
-            </div>
+          <div className="japanese-style-modern-content">
+            <div
+              ref={contentRef}
+              dangerouslySetInnerHTML={{ __html: renderedContent }}
+            />
           </div>
 
           {/* フローティングボタン */}
-          <FloatingButtons
-            showScrollTop={showScrollTop}
-            scrollToTop={scrollToTop}
-            toggleMobileToc={toggleMobileToc}
-          />
+          <button
+            className="japanese-style-modern-toc-button fixed bottom-2 left-2 z-50
+              w-12 h-12 bg-[#df7163] border-2 border-[#df7163] rounded-full
+              flex items-center justify-center text-white
+              hover:bg-white hover:text-[#df7163] transition-all duration-300
+              lg:hidden"
+            onClick={toggleMobileToc}
+            aria-label="目次を表示"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h7"
+              />
+            </svg>
+          </button>
+
+          {showScrollTop && (
+            <button
+              className="fixed bottom-2 right-2 z-50
+                w-12 h-12 bg-[#df7163] border-2 border-[#df7163] rounded-full
+                flex items-center justify-center text-white
+                hover:bg-white hover:text-[#df7163] transition-all duration-300"
+              onClick={scrollToTop}
+              aria-label="トップに戻る"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 10l7-7m0 0l7 7m-7-7v18"
+                />
+              </svg>
+            </button>
+          )}
         </div>
 
-        {/* 🎯 最適化されたボタン部分 */}
+        {/* 戻りボタン */}
         <div className="flex flex-col justify-center items-center mt-24 mb-16 gap-8">
-          <Link href={navigationInfo.href}>
-            <Button
-              size="lg"
+          {returnData && returnData.sectionId === "about-japanese-gods" ? (
+            <button
+              onClick={handleSmartReturn}
               className="
-                max-w-[340px] 
-                w-full
+                max-w-[340px] w-full
                 border border-[#df7163] bg-[#df7163] text-[#f3f3f2] 
                 hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
-                shadow hover:shadow-lg
-                px-6
-                transition-all duration-300
-                text-center
-                break-words
+                shadow hover:shadow-lg px-6 py-3
+                transition-all duration-300 text-center break-words
+                rounded-md font-medium text-lg
               "
             >
-              Back to {navigationInfo.label} ≫
-            </Button>
+              Back to about Japanese Gods ≫
+            </button>
+          ) : (
+            <Link href={`${returnPath}#${sectionId}`}>
+              <button
+                className="
+                  max-w-[340px] w-full
+                  border border-[#df7163] bg-[#df7163] text-[#f3f3f2] 
+                  hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
+                  shadow hover:shadow-lg px-6 py-3
+                  transition-all duration-300 text-center break-words
+                  rounded-md font-medium text-lg
+                "
+              >
+                Back to {label} ≫
+              </button>
+            </Link>
+          )}
+
+          <Link href="/">
+            <button
+              className="
+                max-w-[340px] w-full
+                border border-gray-400 bg-transparent text-gray-300
+                hover:bg-gray-700 hover:text-white hover:border-gray-300
+                shadow hover:shadow-lg px-6 py-3
+                transition-all duration-300 text-center break-words
+                rounded-md font-medium text-lg
+              "
+            >
+              ← Back to Home
+            </button>
           </Link>
-          <BackToHomeBtn />
         </div>
       </div>
     </div>
