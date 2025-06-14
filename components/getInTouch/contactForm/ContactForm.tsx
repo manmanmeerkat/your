@@ -21,18 +21,104 @@ export function ContactForm() {
     message: "",
   });
 
+  // 🚀 バリデーションエラー状態の追加
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string;
+    email?: string;
+    subject?: string;
+    message?: string;
+  }>({});
+
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // 🎯 リアルタイムバリデーション（入力時にエラーをクリア）
+    if (validationErrors[name as keyof typeof validationErrors]) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
+
+    // 🎯 メールアドレスのリアルタイムバリデーション
+    if (name === "email" && value.trim()) {
+      const emailValid = validateEmail(value);
+      if (!emailValid) {
+        setValidationErrors((prev) => ({
+          ...prev,
+          email: "Please enter a valid email address",
+        }));
+      }
+    }
   };
 
-  // ContactForm.tsx の handleSubmit 関数の修正部分
+  // 🚀 メールアドレス検証関数
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // 🚀 フォーム全体のバリデーション関数
+  const validateForm = (): boolean => {
+    const errors: typeof validationErrors = {};
+    let isValid = true;
+
+    // 名前の検証
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+      isValid = false;
+    } else if (formData.name.trim().length < 2) {
+      errors.name = "Name must be at least 2 characters";
+      isValid = false;
+    }
+
+    // メールアドレスの検証
+    if (!formData.email.trim()) {
+      errors.email = "Email address is required";
+      isValid = false;
+    } else if (!validateEmail(formData.email)) {
+      errors.email = "Please enter a valid email address (example@domain.com)";
+      isValid = false;
+    }
+
+    // 件名の検証
+    if (!formData.subject.trim()) {
+      errors.subject = "Subject is required";
+      isValid = false;
+    } else if (formData.subject.trim().length < 3) {
+      errors.subject = "Subject must be at least 3 characters";
+      isValid = false;
+    }
+
+    // メッセージの検証
+    if (!formData.message.trim()) {
+      errors.message = "Message is required";
+      isValid = false;
+    } else if (formData.message.trim().length < 10) {
+      errors.message = "Message must be at least 10 characters";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  // 🚀 改善されたhandleSubmit関数
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // バリデーション部分は同じ
+    // 🎯 フォームバリデーション実行
+    if (!validateForm()) {
+      setFeedback({
+        visible: true,
+        success: false,
+        message: "Please correct the errors below and try again.",
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     setFeedback({ visible: false, success: true, message: "" });
@@ -43,7 +129,14 @@ export function ContactForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          // 🎯 データをトリムして送信
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim(),
+        }),
       });
 
       // レスポンスの詳細をコンソールに記録（デバッグ用）
@@ -76,7 +169,9 @@ export function ContactForm() {
           success: true,
           message: "Thank you! Your message has been successfully sent.",
         });
+        // 🎯 成功時にフォームとエラーをリセット
         setFormData({ name: "", email: "", subject: "", message: "" });
+        setValidationErrors({});
       } else {
         setFeedback({
           visible: true,
@@ -106,6 +201,7 @@ export function ContactForm() {
       <form
         onSubmit={handleSubmit}
         className="bg-[#1b1b1b] rounded-lg shadow-lg p-8 space-y-6"
+        noValidate // 🎯 ブラウザのデフォルトバリデーションを無効化
       >
         <FormGroup
           id="name"
@@ -113,14 +209,20 @@ export function ContactForm() {
           value={formData.name}
           onChange={handleChange}
           placeholder="John Smith"
+          error={validationErrors.name} // 🚀 エラー表示
+          required
+          showAsterisk={true}
         />
         <FormGroup
           id="email"
           label="Email Address"
-          type="text"
+          type="email" // 🎯 typeをemailに変更
           value={formData.email}
           onChange={handleChange}
           placeholder="your-email@example.com"
+          error={validationErrors.email} // 🚀 エラー表示
+          required
+          showAsterisk={true}
         />
         <FormGroup
           id="subject"
@@ -128,6 +230,9 @@ export function ContactForm() {
           value={formData.subject}
           onChange={handleChange}
           placeholder="Enter the subject"
+          error={validationErrors.subject} // 🚀 エラー表示
+          required
+          showAsterisk={true}
         />
         <div>
           <label htmlFor="message" className="block text-md font-medium mb-2">
@@ -139,9 +244,20 @@ export function ContactForm() {
             rows={6}
             value={formData.message}
             onChange={handleChange}
-            placeholder="Please enter your message"
-            className="resize-none"
+            placeholder="Please enter your message (minimum 10 characters)"
+            className={`resize-none ${
+              validationErrors.message
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : ""
+            }`}
+            required
           />
+          {/* 🚀 メッセージ用エラー表示 */}
+          {validationErrors.message && (
+            <p className="mt-1 text-sm text-red-600">
+              {validationErrors.message}
+            </p>
+          )}
         </div>
 
         {feedback.visible && (
@@ -167,10 +283,17 @@ export function ContactForm() {
           whitespace-nowrap
           w-full
           px-6
+          disabled:opacity-50 disabled:cursor-not-allowed
           "
         >
           {isSubmitting ? "Sending..." : "Send　≫"}
         </Button>
+
+        {/* 🎯 フォーム説明 */}
+        <p className="text-sm text-gray-400 text-center">
+          All fields marked with <span className="text-red-600">*</span> are
+          required. Please ensure your email address is valid.
+        </p>
       </form>
     </div>
   );
