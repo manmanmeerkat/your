@@ -977,10 +977,10 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
           <div className="japanese-style-modern-container">
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* 🚨 修正：右サイドバー - レスポンシブ対応 */}
+              {/* 🚨 修正：右サイドバー - デスクトップ専用 */}
               <div className="order-1 lg:order-2 lg:w-80 flex-shrink-0">
                 <div className="space-y-6 lg:sticky lg:top-8">
-                  {/* デスクトップ用目次（モバイルでは非表示） */}
+                  {/* デスクトップ専用目次（タブレット・モバイルでは非表示） */}
                   <div className="hidden lg:block">
                     <aside className="japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
                       <h3 className="japanese-style-modern-sidebar-title">
@@ -1004,7 +1004,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                     </aside>
                   </div>
 
-                  {/* 🚨 修正：関連記事 - デスクトップ用サイドバー */}
+                  {/* 🚨 修正：関連記事 - デスクトップ専用サイドバー */}
                   <div className="hidden lg:block">
                     <RelatedArticles
                       currentCategory={article.category}
@@ -1035,7 +1035,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           />
         </div>
 
-        {/* 🚨 追加：モバイル・タブレット専用関連記事エリア */}
+        {/* 🚨 修正：モバイル・タブレット専用関連記事エリア */}
         <div className="block lg:hidden mt-8">
           <RelatedArticles
             currentCategory={article.category}
@@ -1083,7 +1083,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         <Redbubble />
       </div>
 
-      {/* 🚨 重要修正：モバイル専用目次をモバイルのみに制限 */}
+      {/* 🚨 重要修正：モバイル・タブレット専用目次 */}
       <div className="lg:hidden">
         <TableOfContents
           tableOfContents={tableOfContents}

@@ -1,4 +1,4 @@
-/*japanese-style-modern.css - 最適化版（重複削除 + タイトル中央配置修正）*/
+/*japanese-style-modern.css - 完全修正版（エラー解消）*/
 
 /* 🎌 和風カラーパレット */
 :root {
@@ -33,7 +33,6 @@
   z-index: 1;
   border: 1px solid rgba(241, 144, 114, 0.6);
   font-weight: 400;
-  /* 🚨 はみ出し防止 */
   overflow-x: hidden !important;
   word-wrap: break-word !important;
 }
@@ -45,7 +44,6 @@
   display: flex;
   flex-direction: row-reverse;
   gap: 2rem;
-  /* 🚨 はみ出し防止 */
   overflow-x: hidden !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -54,7 +52,6 @@
 .japanese-style-modern-content {
   flex: 1;
   min-width: 0;
-  /* 🚨 はみ出し防止 */
   overflow-x: hidden !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
@@ -90,7 +87,6 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 2;
   letter-spacing: 0.1em;
-  /* 🚨 修正：確実な中央配置 */
   margin: 0 auto;
   max-width: 90%;
   width: auto;
@@ -112,8 +108,8 @@
   display: none;
 }
 
-/* 🎌 サイドバー */
-.japanese-style-modern-sidebar {
+/* 🎌 デスクトップ・タブレット専用サイドバー */
+.japanese-style-modern-sidebar.desktop-sidebar {
   position: sticky;
   top: 2rem;
   width: 100%;
@@ -137,7 +133,7 @@
   transition: all 0.3s ease;
 }
 
-.japanese-style-modern-sidebar:hover {
+.japanese-style-modern-sidebar.desktop-sidebar:hover {
   border-color: rgba(241, 144, 114, 0.3);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 6px 20px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(241, 144, 114, 0.15);
@@ -727,8 +723,8 @@ body.toc-open {
   background: rgba(223, 113, 99, 0.3) !important;
 }
 
-/* 🎌 レスポンシブ対応 */
-@media (max-width: 768px) {
+/* 🎌 レスポンシブ対応 - モバイル・タブレット共通 */
+@media (max-width: 1023px) {
   .japanese-style-modern-container {
     flex-direction: column;
     padding: 1rem !important;
@@ -737,7 +733,6 @@ body.toc-open {
     max-width: 100% !important;
   }
 
-  /* 🚨 記事本文のはみ出し修正 - 強化版 */
   .japanese-style-modern {
     margin: 1rem auto !important;
     max-width: 100% !important;
@@ -773,29 +768,24 @@ body.toc-open {
     word-break: break-word !important;
     padding: 0 !important;
     margin: 0.75rem 0 !important;
-    /* 🚨 長い単語の強制改行 */
     -webkit-word-break: break-all !important;
     -ms-word-break: break-all !important;
     white-space: pre-wrap !important;
   }
 
-  /* 🚨 全ての要素に強制的な幅制限を適用 */
   .japanese-style-modern * {
     max-width: 100% !important;
     word-wrap: break-word !important;
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
     box-sizing: border-box !important;
-    /* 🚨 長い英単語の強制改行 */
     -webkit-hyphens: auto !important;
     -moz-hyphens: auto !important;
     hyphens: auto !important;
-    /* 🚨 英語専用の改行設定 */
     word-spacing: normal !important;
     letter-spacing: normal !important;
   }
 
-  /* 🚨 特に段落とテキスト要素の改行を強化 */
   .japanese-style-modern-p,
   .japanese-style-modern p,
   .japanese-style-modern span,
@@ -805,45 +795,6 @@ body.toc-open {
     word-wrap: break-word !important;
     white-space: normal !important;
     max-width: calc(100vw - 2rem) !important;
-  }
-
-  /* 🚨 タイトル中央配置修正 */
-  .japanese-style-modern-header {
-    padding: 2rem 40px 2rem 2rem !important;
-    height: auto !important;
-    min-height: 140px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-
-  .japanese-style-modern-title {
-    /* 🚨 完全な中央配置 */
-    margin: 0 auto !important;
-    padding: 1rem 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    text-align: center !important;
-    display: block !important;
-    position: relative !important;
-    left: 0 !important; /* オフセットを削除して純粋な中央配置 */
-    /* 改行調整 - より少ない改行 */
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    hyphens: auto !important;
-    white-space: normal !important;
-    line-height: 1.3 !important;
-    word-break: normal !important;
-    /* 日本語の改行を自然に */
-    line-break: auto !important;
-  }
-
-  .japanese-style-modern-title::after {
-    left: 50% !important;
-    right: auto !important;
-    width: 85% !important;
-    transform: translateX(-50%) !important;
-    bottom: -0.5rem !important;
   }
 
   .japanese-style-modern-toc-button {
@@ -858,11 +809,6 @@ body.toc-open {
     background: rgba(0, 0, 0, 0.1) !important;
     border-radius: 50% !important;
     z-index: -1 !important;
-  }
-
-  .japanese-style-modern {
-    margin: 1rem auto;
-    max-width: 100%;
   }
 
   .japanese-style-modern-h1,
@@ -897,7 +843,7 @@ body.toc-open {
     margin: 1rem 0;
   }
 
-  /* モバイル目次 */
+  /* モバイル・タブレット目次 */
   .japanese-style-modern-sidebar.mobile-visible {
     display: block !important;
     position: fixed !important;
@@ -1140,6 +1086,44 @@ body.toc-open {
   }
 }
 
+/* モバイル専用調整 */
+@media (max-width: 767px) {
+  .japanese-style-modern-header {
+    padding: 2rem 40px 2rem 2rem !important;
+    height: auto !important;
+    min-height: 140px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .japanese-style-modern-title {
+    margin: 0 auto !important;
+    padding: 1rem 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    text-align: center !important;
+    display: block !important;
+    position: relative !important;
+    left: 0 !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    word-break: normal !important;
+    line-break: auto !important;
+  }
+
+  .japanese-style-modern-title::after {
+    left: 50% !important;
+    right: auto !important;
+    width: 85% !important;
+    transform: translateX(-50%) !important;
+    bottom: -0.5rem !important;
+  }
+}
+
 @media (max-width: 480px) {
   .japanese-style-modern-header {
     padding: 1.5rem 35px 1.5rem 1.5rem !important;
@@ -1153,14 +1137,7 @@ body.toc-open {
     font-size: 1.4rem !important;
     line-height: 1.25 !important;
     letter-spacing: 0.05em !important;
-    left: 0 !important; /* オフセット削除 */
-  }
-
-  .japanese-style-modern-title::after {
-    left: 50% !important;
-    right: auto !important;
-    width: 80% !important;
-    transform: translateX(-50%) !important;
+    left: 0 !important;
   }
 
   .japanese-style-modern-title::after {
@@ -1194,7 +1171,7 @@ body.toc-open {
   .japanese-style-modern-title {
     font-size: 1.3rem !important;
     line-height: 1.2 !important;
-    left: 0 !important; /* オフセット削除 */
+    left: 0 !important;
   }
 
   .japanese-style-modern-title::after {
@@ -1203,8 +1180,8 @@ body.toc-open {
   }
 }
 
-/* デスクトップ非表示 */
-@media (min-width: 769px) {
+/* デスクトップ専用（1024px以上） */
+@media (min-width: 1024px) {
   .japanese-style-modern-overlay,
   .japanese-style-modern-toc-button {
     display: none !important;
@@ -1214,17 +1191,14 @@ body.toc-open {
     display: none !important;
   }
 
-  /* 🚨 デスクトップでモバイル目次を完全非表示 */
   .japanese-style-modern-sidebar.mobile-visible {
     display: none !important;
   }
 
-  /* 🚨 デスクトップで目次が下部に表示されるのを防ぐ */
-  .japanese-style-modern-sidebar:not(.mobile-visible) {
+  .japanese-style-modern-sidebar.desktop-sidebar {
     display: block !important;
   }
 
-  /* 🚨 独立した目次コンポーネントを非表示 */
   .table-of-contents,
   .toc-component,
   .mobile-toc,
