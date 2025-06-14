@@ -39,14 +39,12 @@ const nextConfig = {
     // 🚨 Prisma関連の最適化（競合回避）
     serverComponentsExternalPackages: ['prisma'],
     
+    // 🚨 ブラウザ専用ライブラリの除外
+    esmExternals: 'loose',
+    
     // 開発環境でのキャッシュ完全無効化
     ...(process.env.NODE_ENV === 'development' && {
       isrMemoryCacheSize: 0, // ISRキャッシュを無効化
-    }),
-    
-    // 🚀 ビルド最適化
-    ...(process.env.NODE_ENV === 'production' && {
-      optimizeCss: true,
     }),
   },
 
@@ -61,31 +59,20 @@ const nextConfig = {
 
   // 🚀 webpack最適化（ビルド高速化）
   webpack: (config, { dev, isServer }) => {
+    // 🚨 サーバーサイドでのブラウザAPI問題を解決
+    if (isServer) {
+      // サーバーサイドでブラウザAPIを無効化
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    }
+
     // 🚨 プロダクションビルドの最適化
     if (!dev) {
-      // メモリ使用量を削減
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 10,
-            },
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 5,
-              reuseExistingChunk: true,
-            },
-          },
-        },
-      };
-
       // 🚨 クライアントサイドでPrismaを完全に除外
       if (!isServer) {
         config.resolve.alias = {
@@ -94,7 +81,31 @@ const nextConfig = {
           'prisma': false,
         };
       }
+
+      // 📊 splitChunks設定を簡素化（'self' エラー回避）
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'async', // 'all' から 'async' に変更
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'async', // 同期読み込みを避ける
+              priority: 10,
+              enforce: true,
+            },
+          },
+        },
+      };
     }
+
+    // 🚨 'self' 参照エラーの回避
+    config.node = {
+      ...config.node,
+      __dirname: true,
+      __filename: true,
+    };
 
     return config;
   },
