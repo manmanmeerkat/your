@@ -1,4 +1,4 @@
-/*japanese-style-modern.css - スクロール位置維持完全版 + 目次デザイン改善 + 完璧なボタン中心合わせ*/
+/*japanese-style-modern.css - 最適化版（重複削除 + タイトル中央配置修正）*/
 
 /* 🎌 和風カラーパレット */
 :root {
@@ -11,41 +11,15 @@
   --japanese-text-primary: #f3f3f2;
   --japanese-text-secondary: #e2e8f0;
   --japanese-border: #2b2b2b;
-  --japanese-gradient-bg: linear-gradient(
-    135deg,
-    #16160e 0%,
-    #1b1b1b 50%,
-    #16160e 100%
-  );
-
-  /* 🚨 ボタン位置とサイズの統一管理 - より精密な調整 */
-  --button-size-desktop: 56px; /* 3.5rem = 56px */
-  --button-size-mobile: 48px; /* 3rem = 48px */
-  --button-right-desktop: 24px; /* 1.5rem = 24px - より内側に調整 */
-  --button-right-mobile: 16px; /* 1rem = 16px - より内側に調整 */
+  --button-right-desktop: 24px;
+  --button-right-mobile: 16px;
 }
 
-/* スクロールバーのカスタムスタイル */
-.article-page-container .scrollbar-custom::-webkit-scrollbar {
-  height: 3px;
-  width: 3px;
-}
-
-.article-page-container .scrollbar-custom::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.article-page-container .scrollbar-custom::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 9999px;
-}
-
-/* ハイコントラスト和風スタイル */
+/* 🎌 基本スタイル */
 .japanese-style-modern {
   line-height: 1.7;
   letter-spacing: 0.05em;
   background: var(--japanese-black-primary);
-  padding: 0;
   margin: 2rem auto;
   border-radius: 0.3rem;
   position: relative;
@@ -54,15 +28,16 @@
   font-feature-settings: "palt";
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   color: var(--japanese-text-primary);
   max-width: 95%;
-  z-index: 1 !important;
+  z-index: 1;
   border: 1px solid rgba(241, 144, 114, 0.6);
   font-weight: 400;
+  /* 🚨 はみ出し防止 */
+  overflow-x: hidden !important;
+  word-wrap: break-word !important;
 }
 
-/* 記事全体を包むコンテナ */
 .japanese-style-modern-container {
   padding: 2rem 1.5rem;
   position: relative;
@@ -70,32 +45,30 @@
   display: flex;
   flex-direction: row-reverse;
   gap: 2rem;
+  /* 🚨 はみ出し防止 */
+  overflow-x: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-/* メインコンテンツ領域 */
 .japanese-style-modern-content {
   flex: 1;
   min-width: 0;
+  /* 🚨 はみ出し防止 */
+  overflow-x: hidden !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
 }
 
-/* 記事ページコンテナのz-index強制調整 */
 .article-page-container {
-  z-index: 1 !important;
+  z-index: 1;
   position: relative;
 }
 
-@media (max-width: 768px) {
-  .japanese-style-modern-container {
-    flex-direction: column;
-    padding: 1.5rem 1rem;
-  }
-}
-
-/* ヘッダー部分 */
+/* 🎌 ヘッダー部分 - タイトル中央配置修正 */
 .japanese-style-modern-header {
   position: relative;
-  height: 180px;
-  overflow: hidden;
   background: #1f1d1c;
   border-radius: 0.3rem 0.3rem 0 0;
   display: flex;
@@ -104,47 +77,48 @@
   justify-content: center;
   z-index: 1;
   padding: 1.5rem;
+  height: 180px;
 }
 
-/* ヘッダータイトル */
 .japanese-style-modern-title {
   color: var(--japanese-text-primary);
   font-size: 1.8rem;
   font-weight: 500;
   text-align: center;
-  max-width: 90%;
   position: relative;
   padding: 1rem 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 2;
   letter-spacing: 0.1em;
+  /* 🚨 修正：確実な中央配置 */
+  margin: 0 auto;
+  max-width: 90%;
+  width: auto;
 }
 
-/* タイトルの下の線 */
 .japanese-style-modern-title::after {
   content: "";
   position: absolute;
   bottom: 0;
-  left: 20%;
-  right: 20%;
+  left: 50% !important;
+  right: auto !important;
+  width: 100% !important;
+  transform: translateX(-48%) !important;
   height: 1px;
   background: rgba(217, 119, 6, 0.5);
 }
 
-/* 日付表示 - 非表示に設定 */
 .japanese-style-modern-date {
   display: none;
 }
 
-/* サイドバー - 目次固定表示（デスクトップ用改善版） */
+/* 🎌 サイドバー */
 .japanese-style-modern-sidebar {
   position: sticky;
   top: 2rem;
   width: 100%;
   flex-shrink: 0;
   padding: 1.5rem;
-
-  /* 🎌 記事と調和する背景デザイン */
   background: linear-gradient(
     145deg,
     var(--japanese-black-secondary) 0%,
@@ -152,20 +126,14 @@
     var(--japanese-black-secondary) 70%,
     #232323 100%
   );
-
   border-radius: 12px;
-
-  /* 🎌 記事と統一されたボーダーとシャドウ */
   border: 1px solid rgba(241, 144, 114, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(241, 144, 114, 0.1);
-
   z-index: 10;
   max-height: calc(100vh - 4rem);
   overflow-y: auto;
   align-self: flex-start;
-
-  /* 🎌 微細なアニメーション */
   transition: all 0.3s ease;
 }
 
@@ -175,15 +143,12 @@
     inset 0 1px 0 rgba(241, 144, 114, 0.15);
 }
 
-/* 見出し3（Contents）- より洗練されたデザイン */
 .japanese-style-modern-sidebar-title {
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--japanese-text-primary);
   margin: 0 0 1.5rem 0;
   padding: 1rem 1.25rem;
-
-  /* 🎌 美しいグラデーション背景 */
   background: linear-gradient(
     135deg,
     rgba(241, 144, 114, 0.12) 0%,
@@ -191,28 +156,14 @@
     rgba(238, 131, 111, 0.06) 70%,
     rgba(241, 144, 114, 0.12) 100%
   );
-
   border-radius: 8px;
   position: relative;
   text-align: center;
   letter-spacing: 0.1em;
-
-  /* 🎌 エレガントなボーダー */
   border: 1px solid rgba(241, 144, 114, 0.2);
-
-  /* 🎌 深みのある影 */
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.japanese-style-modern-sidebar-title::before {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.1rem;
-  opacity: 0.8;
 }
 
 .japanese-style-modern-sidebar-title::after {
@@ -233,7 +184,7 @@
   border-radius: 1px;
 }
 
-/* 目次項目 - より記事に調和したデザイン */
+/* 🎌 目次項目 */
 .japanese-style-modern-toc-item {
   padding: 0.75rem 1rem;
   margin-bottom: 0.5rem;
@@ -244,61 +195,47 @@
   font-weight: 500;
   color: var(--japanese-text-secondary);
   line-height: 1.5;
-
-  /* 🎌 記事と調和する背景 */
   background: linear-gradient(
     135deg,
     rgba(27, 27, 27, 0.6) 0%,
     rgba(22, 22, 14, 0.4) 50%,
     rgba(27, 27, 27, 0.6) 100%
   );
-
   border-radius: 8px;
   border: 1px solid rgba(241, 144, 114, 0.1);
-
-  /* 🎌 上品なシャドウ */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-/* 目次項目のホバー効果 - より美しく */
 .japanese-style-modern-toc-item:hover {
   color: var(--japanese-text-primary);
   transform: translateX(4px) translateY(-1px);
-
   background: linear-gradient(
     135deg,
     rgba(241, 144, 114, 0.08) 0%,
     rgba(241, 191, 153, 0.06) 50%,
     rgba(241, 144, 114, 0.08) 100%
   );
-
   border-color: rgba(241, 144, 114, 0.25);
-
   box-shadow: 0 6px 20px rgba(241, 144, 114, 0.15),
     0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-/* アクティブ状態 */
 .japanese-style-modern-toc-item.active {
   color: var(--japanese-orange-primary);
   font-weight: 600;
-
   background: linear-gradient(
     135deg,
     rgba(241, 144, 114, 0.15) 0%,
     rgba(238, 131, 111, 0.12) 50%,
     rgba(241, 144, 114, 0.15) 100%
   );
-
   border-color: rgba(241, 144, 114, 0.4);
-
   box-shadow: 0 8px 24px rgba(241, 144, 114, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3),
     inset 0 2px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(241, 144, 114, 0.3);
 }
 
-/* 目次項目のマーカー - より美しいアイコン */
 .japanese-style-modern-toc-item::before {
   content: "▸";
   position: absolute;
@@ -312,18 +249,17 @@
   transition: all 0.3s ease;
 }
 
-.japanese-style-modern-toc-item:hover::before {
+.japanese-style-modern-toc-item:hover::before,
+.japanese-style-modern-toc-item.active::before {
   opacity: 1;
   left: -0.2rem;
 }
 
 .japanese-style-modern-toc-item.active::before {
-  opacity: 1;
-  left: -0.2rem;
   color: var(--japanese-orange-light);
 }
 
-/* 目次の階層レベル - より美しい階層表現 */
+/* 階層レベル */
 .japanese-style-modern-toc-item[data-level="1"] {
   font-size: 1rem;
   font-weight: 600;
@@ -357,29 +293,8 @@
   font-size: 0.6rem;
 }
 
-/* 見出し1 */
-.japanese-style-modern-h1 {
-  font-size: 1.7rem;
-  font-weight: 600;
-  color: var(--japanese-text-primary);
-  margin: 2.5rem 0 1.5rem;
-  padding: 0.75rem 0;
-  position: relative;
-  letter-spacing: 0.05em;
-}
-
-/* 見出し1の下線 */
-.japanese-style-modern-h1::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(241, 144, 114, 0.8), transparent);
-}
-
-/* 後方互換性のため、古いセレクターも残す */
+/* 🎌 見出しスタイル */
+.japanese-style-modern-h1,
 .japanese-style-modern h1 {
   font-size: 1.7rem;
   font-weight: 600;
@@ -390,6 +305,7 @@
   letter-spacing: 0.05em;
 }
 
+.japanese-style-modern-h1::after,
 .japanese-style-modern h1::after {
   content: "";
   position: absolute;
@@ -400,7 +316,6 @@
   background: linear-gradient(90deg, rgba(241, 144, 114, 0.8), transparent);
 }
 
-/* 見出し2 */
 .japanese-style-modern-h2 {
   font-size: 1.4rem;
   font-weight: 500;
@@ -408,11 +323,10 @@
   margin: 2rem 0 1rem;
   padding: 0.5rem 0.75rem;
   position: relative;
-  background: rgb(44, 41, 41, 0.8);
+  background: rgba(44, 41, 41, 0.8);
   border-radius: 0.25rem;
 }
 
-/* 見出し2の左の装飾 */
 .japanese-style-modern-h2::before {
   content: "";
   position: absolute;
@@ -423,7 +337,6 @@
   background: var(--japanese-orange-accent);
 }
 
-/* 見出し3 */
 .japanese-style-modern-h3 {
   font-size: 1.2rem;
   font-weight: 500;
@@ -435,7 +348,6 @@
   border-radius: 0.25rem;
 }
 
-/* 見出し3の左装飾 */
 .japanese-style-modern-h3::before {
   content: "";
   position: absolute;
@@ -446,7 +358,7 @@
   background: var(--japanese-orange-light);
 }
 
-/* セクション */
+/* 🎌 基本要素 */
 .japanese-style-modern-section {
   margin: 1.5rem 0 2.5rem;
   padding: 1.5rem;
@@ -457,7 +369,6 @@
   contain: layout style;
 }
 
-/* パラグラフスタイル */
 .japanese-style-modern-p {
   margin-bottom: 1.25rem;
   line-height: 1.9;
@@ -465,7 +376,6 @@
   font-size: 1rem;
 }
 
-/* 引用ブロック */
 .japanese-style-modern-blockquote {
   margin: 2rem 0;
   padding: 1.5rem 1.5rem 1.5rem 2rem;
@@ -476,7 +386,6 @@
   font-style: italic;
 }
 
-/* 引用の文字色 */
 .japanese-style-modern blockquote p,
 .japanese-style-modern-blockquote p {
   color: #59b9c6;
@@ -484,7 +393,6 @@
   font-weight: 500;
 }
 
-/* リンクスタイル */
 .japanese-style-modern-a {
   color: #000;
   text-decoration: none;
@@ -500,20 +408,17 @@
   color: var(--japanese-text-primary);
 }
 
-/* 強調テキスト */
 .japanese-style-modern-strong {
   font-weight: 700;
   color: var(--japanese-orange-light);
 }
 
-/* 斜体 */
 .japanese-style-modern-em {
   font-style: italic;
   color: #59b9c6;
   font-weight: 600;
 }
 
-/* コード */
 .japanese-style-modern code,
 .japanese-style-modern-code {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
@@ -524,7 +429,6 @@
   font-size: 0.9em;
 }
 
-/* コードブロック */
 .japanese-style-modern pre,
 .japanese-style-modern-pre {
   background: #0c0a09;
@@ -545,7 +449,7 @@
   line-height: 1.7;
 }
 
-/* リスト */
+/* 🎌 リスト */
 .japanese-style-modern-ul {
   margin: 1.25rem 0;
   padding-left: 0.5rem;
@@ -564,7 +468,6 @@
   line-height: 1.7;
 }
 
-/* 箇条書きリストのマーカー */
 .japanese-style-modern-ul .japanese-style-modern-li::before {
   content: "";
   position: absolute;
@@ -575,7 +478,6 @@
   background: var(--japanese-orange-primary);
 }
 
-/* 番号付きリストのマーカー */
 .japanese-style-modern ol li,
 .japanese-style-modern-ol .japanese-style-modern-li {
   counter-increment: item;
@@ -592,7 +494,7 @@
   font-weight: 500;
 }
 
-/* テーブルスタイル */
+/* 🎌 テーブル・画像・その他 */
 .japanese-style-modern-table-container {
   overflow-x: auto;
   margin: 1.5rem 0;
@@ -620,7 +522,6 @@
   background: var(--japanese-black-secondary);
 }
 
-/* 水平線 */
 .japanese-style-modern hr,
 .japanese-style-modern-hr {
   border: 0;
@@ -629,7 +530,6 @@
   margin: 2rem 0;
 }
 
-/* 画像スタイル */
 .japanese-style-modern img,
 .japanese-style-modern-img {
   max-width: 100%;
@@ -644,8 +544,8 @@
   contain: layout;
 }
 
-/* Markdown内画像コンテナ */
-.markdown-image-container {
+.markdown-image-container,
+.image-container {
   position: relative;
   margin: 1.5rem 0;
   min-height: 200px;
@@ -655,8 +555,8 @@
   contain: layout style paint;
 }
 
-/* Markdown内画像ローダー */
-.markdown-image-loader {
+.markdown-image-loader,
+.image-loader {
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
@@ -671,33 +571,6 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 画像コンテナ */
-.image-container {
-  position: relative;
-  margin: 1.5rem 0;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  contain: layout style paint;
-}
-
-/* 画像ローダー */
-.image-loader {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-  z-index: 10;
-  color: #9ca3af;
-  font-size: 0.9rem;
-}
-
-/* パルスアニメーション */
 @keyframes pulse {
   0%,
   100% {
@@ -712,100 +585,6 @@
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* 画像エラー状態 */
-.image-error {
-  background: linear-gradient(135deg, #262626, #1a1a1a);
-  border-radius: 8px;
-  padding: 2rem;
-  text-align: center;
-  color: #9ca3af;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #383838;
-}
-
-/* フェードイン効果 */
-.fade-in {
-  opacity: 0;
-  transition: opacity 0.5s ease-in-out;
-}
-
-.fade-in.loaded {
-  opacity: 1;
-}
-
-/* 高パフォーマンス画像最適化 */
-.article-content-img {
-  max-width: 100% !important;
-  height: auto !important;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin: 1.5rem 0;
-  transition: opacity 0.5s ease, transform 0.3s ease;
-  will-change: opacity;
-  content-visibility: auto;
-  contain: layout style paint;
-}
-
-.article-content-img[loading="lazy"] {
-  background: linear-gradient(135deg, #2b2b2b, #1a1a1a, #2b2b2b);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite linear;
-}
-
-.article-content-img:hover {
-  transform: scale(1.02);
-}
-
-/* スケルトンアニメーション */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.skeleton {
-  background: linear-gradient(90deg, #2b2b2b 25%, #1a1a1a 50%, #2b2b2b 75%);
-  background-size: 200px 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Intersection Observer最適化 */
-.high-perf-img-container {
-  contain: layout style paint;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--japanese-black-secondary);
-  border-radius: 8px;
-}
-
-/* 記事カード最適化 */
-.article-card-image {
-  content-visibility: auto;
-  contain: layout style paint;
-  background: linear-gradient(135deg, #1a1a1a, #2b2b2b);
-}
-
-/* プログレスバーコンテナ */
-.japanese-style-modern-progress-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: #0c0a09;
-  z-index: 999;
-}
-
-/* 特別な和風装飾要素 - 流派名 */
-.japanese-style-modern .ryu-name,
 .ryu-name {
   position: relative;
   display: inline-block;
@@ -814,25 +593,18 @@
   letter-spacing: 0.08em;
 }
 
-/* パフォーマンス向上のための一般的な最適化 */
 .japanese-style-modern * {
   box-sizing: border-box;
 }
 
-/* ============================================= */
-/* 🎌 最終修正：スクロール位置完全維持 + 美しい目次デザイン */
-/* ============================================= */
-
-/* 🚨 重要：JSで使われるposition: fixedを無効化してスクロール位置を維持 */
+/* 🎌 モバイル目次システム */
 body.toc-open {
   overflow: hidden !important;
-  /* JSがposition: fixedを設定してもCSSで強制的に無効化 */
   position: static !important;
   top: auto !important;
   width: auto !important;
 }
 
-/* 🎌 モバイル目次オーバーレイ - 適度な透明度 */
 .japanese-style-modern-overlay {
   display: none;
   position: fixed !important;
@@ -857,48 +629,6 @@ body.toc-open {
   visibility: visible !important;
 }
 
-/* 🎌 モバイル目次サイドバー - 洗練されたデザイン */
-@media (max-width: 768px) {
-  .japanese-style-modern-sidebar.mobile-visible {
-    display: block !important;
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 88% !important;
-    max-width: 420px !important;
-    max-height: 80vh !important;
-    z-index: 999999 !important;
-
-    /* 🎌 記事と統一された背景 */
-    background: linear-gradient(
-      135deg,
-      var(--japanese-black-secondary) 0%,
-      #1f1f1f 50%,
-      var(--japanese-black-secondary) 100%
-    ) !important;
-    border: 2px solid var(--japanese-orange-primary) !important;
-    border-radius: 20px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-
-    /* 🎌 上品なシャドウ */
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 12px 25px rgba(0, 0, 0, 0.4),
-      0 6px 12px rgba(241, 144, 114, 0.2),
-      inset 0 1px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
-
-    /* 🎌 滑らかなアニメーション */
-    animation: elegantSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    pointer-events: all !important;
-    isolation: isolate !important;
-  }
-
-  .japanese-style-modern-sidebar:not(.mobile-visible) {
-    display: none !important;
-  }
-}
-
-/* 🎌 上品な登場アニメーション */
 @keyframes elegantSlideIn {
   0% {
     opacity: 0;
@@ -910,283 +640,13 @@ body.toc-open {
   }
 }
 
-/* 🎌 目次タイトル - 洗練されたデザイン */
-@media (max-width: 768px) {
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-sidebar-title {
-    font-size: 1.4rem !important;
-    font-weight: 600 !important;
-    color: var(--japanese-text-primary) !important;
-    margin: 0 0 1.5rem 0 !important;
-    padding: 2rem 4rem 2rem 2rem !important;
-
-    /* 🎌 美しいグラデーション背景 */
-    background: linear-gradient(
-      135deg,
-      rgba(241, 144, 114, 0.15) 0%,
-      rgba(241, 191, 153, 0.08) 30%,
-      rgba(238, 131, 111, 0.1) 70%,
-      rgba(241, 144, 114, 0.15) 100%
-    ) !important;
-
-    position: relative !important;
-    text-align: center !important;
-    border-bottom: 2px solid rgba(241, 144, 114, 0.3) !important;
-    letter-spacing: 0.08em !important;
-
-    /* 🎌 深みのある影 */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
-      0 1px 2px rgba(241, 144, 114, 0.2) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-sidebar-title::before {
-    display: none !important;
-  }
-
-  /* 🎌 洗練された×ボタン - より目立たない配置 */
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-sidebar-title::after {
-    content: "✕" !important;
-    position: absolute !important;
-    top: 36px !important; /* より上に配置 */
-    right: 8px !important; /* より右端に配置 */
-    transform: none !important; /* transform を削除 */
-    color: rgba(241, 144, 114, 0.6) !important; /* より薄い色 */
-    font-size: 1.2rem !important; /* より小さく */
-    font-weight: 300 !important;
-    cursor: pointer !important;
-    width: 28px !important; /* より小さく */
-    height: 28px !important; /* より小さく */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border-radius: 50% !important;
-
-    /* 🎌 より控えめなデザイン */
-    background: rgba(0, 0, 0, 0.2) !important;
-    border: 1px solid rgba(241, 144, 114, 0.2) !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    backdrop-filter: blur(4px) !important;
-
-    /* 🎌 控えめなシャドウ */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-sidebar-title::after:hover {
-    background: rgba(241, 144, 114, 0.15) !important;
-    border-color: rgba(241, 144, 114, 0.4) !important;
-    color: rgba(241, 144, 114, 0.9) !important;
-    transform: scale(1.1) !important;
-    box-shadow: 0 4px 12px rgba(241, 144, 114, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  }
-}
-
-/* 🎌 目次項目リスト - 美しいスクロール領域 */
-@media (max-width: 768px) {
-  .japanese-style-modern-sidebar.mobile-visible nav {
-    padding: 1.8rem !important;
-    max-height: calc(80vh - 120px) !important;
-    overflow-y: auto !important;
-
-    /* 🎌 美しいスクロールバー */
-    scrollbar-width: thin !important;
-    scrollbar-color: var(--japanese-orange-primary) rgba(0, 0, 0, 0.2) !important;
-  }
-
-  /* 🎌 Webkit系ブラウザの美しいスクロールバー */
-  .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar {
-    width: 8px !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-track {
-    background: linear-gradient(
-      180deg,
-      rgba(22, 22, 14, 0.3),
-      rgba(27, 27, 27, 0.5),
-      rgba(22, 22, 14, 0.3)
-    ) !important;
-    border-radius: 4px !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      var(--japanese-orange-primary),
-      var(--japanese-orange-light),
-      var(--japanese-orange-primary)
-    ) !important;
-    border-radius: 4px !important;
-    border: 1px solid rgba(241, 144, 114, 0.3) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    nav::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(
-      180deg,
-      var(--japanese-orange-light),
-      var(--japanese-orange-accent),
-      var(--japanese-orange-light)
-    ) !important;
-    box-shadow: 0 2px 8px rgba(241, 144, 114, 0.4) !important;
-  }
-}
-
-/* 🎌 目次項目 - 読みやすく美しいデザイン */
-@media (max-width: 768px) {
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item {
-    padding: 1.2rem 1.2rem 1.2rem 2.8rem !important;
-    margin-bottom: 0.8rem !important;
-
-    /* 🎌 読みやすい背景 */
-    background: linear-gradient(
-      135deg,
-      rgba(27, 27, 27, 0.8) 0%,
-      rgba(22, 22, 14, 0.6) 50%,
-      rgba(27, 27, 27, 0.8) 100%
-    ) !important;
-    border: 1px solid rgba(241, 144, 114, 0.15) !important;
-    border-radius: 12px !important;
-    cursor: pointer !important;
-    position: relative !important;
-    font-size: 1.05rem !important;
-    font-weight: 500 !important;
-    color: var(--japanese-text-primary) !important;
-    line-height: 1.6 !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    min-height: 56px !important;
-    display: flex !important;
-    align-items: center !important;
-
-    /* 🎌 テキストの可読性向上 */
-    overflow-wrap: break-word !important;
-    word-break: break-word !important;
-    hyphens: auto !important;
-
-    /* 🎌 上品なシャドウ */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(241, 144, 114, 0.12) 0%,
-      rgba(241, 191, 153, 0.08) 50%,
-      rgba(241, 144, 114, 0.12) 100%
-    ) !important;
-    border-color: rgba(241, 144, 114, 0.4) !important;
-    transform: translateX(6px) translateY(-1px) !important;
-    color: var(--japanese-orange-primary) !important;
-
-    /* 🎌 ホバー時の美しいシャドウ */
-    box-shadow: 0 6px 20px rgba(241, 144, 114, 0.2),
-      0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item.active {
-    background: linear-gradient(
-      135deg,
-      rgba(241, 144, 114, 0.2) 0%,
-      rgba(238, 131, 111, 0.15) 50%,
-      rgba(241, 144, 114, 0.2) 100%
-    ) !important;
-    border-color: rgba(241, 144, 114, 0.6) !important;
-    color: var(--japanese-orange-primary) !important;
-    font-weight: 600 !important;
-
-    /* 🎌 アクティブ状態の特別なシャドウ */
-    box-shadow: 0 8px 24px rgba(241, 144, 114, 0.3),
-      0 4px 12px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(241, 144, 114, 0.3) !important;
-  }
-
-  /* 🎌 美しいアイコン - 矢印デザイン */
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item::before {
-    content: "▶" !important;
-    position: absolute !important;
-    left: 1.2rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    color: var(--japanese-orange-primary) !important;
-    font-size: 0.9rem !important;
-    font-weight: bold !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    opacity: 0.8 !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item:hover::before {
-    transform: translateY(-50%) translateX(3px) scale(1.1) !important;
-    opacity: 1 !important;
-    color: var(--japanese-orange-light) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item.active::before {
-    color: var(--japanese-orange-accent) !important;
-    opacity: 1 !important;
-    transform: translateY(-50%) translateX(2px) scale(1.05) !important;
-  }
-
-  /* 🎌 階層別のエレガントなデザイン */
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item[data-level="2"] {
-    padding-left: 3.2rem !important;
-    font-size: 1rem !important;
-    min-height: 52px !important;
-    opacity: 0.96 !important;
-    margin-left: 0.8rem !important;
-    margin-right: 0.8rem !important;
-    border-left: 3px solid rgba(241, 191, 153, 0.3) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item[data-level="3"] {
-    padding-left: 3.8rem !important;
-    font-size: 0.95rem !important;
-    min-height: 48px !important;
-    opacity: 0.92 !important;
-    margin-left: 1.6rem !important;
-    margin-right: 1.6rem !important;
-    border-left: 2px solid rgba(241, 191, 153, 0.2) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item[data-level="2"]::before {
-    content: "▸" !important;
-    font-size: 0.8rem !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item[data-level="3"]::before {
-    content: "◆" !important;
-    font-size: 0.7rem !important;
-  }
-}
-
-/* ============================================= */
-/* 🚨 完璧なボタン中心合わせ - 最終修正版（デザイン統一） */
-/* ============================================= */
-
-/* 🎌 目次ボタン - より精密なポジショニング */
+/* 🎌 フローティングボタン */
 .japanese-style-modern-toc-button {
   position: fixed !important;
   top: 80px !important;
   right: var(--button-right-desktop) !important;
-
-  /* 🚨 サイズを少し小さく調整 */
-  width: 52px !important; /* 56px から 52px に縮小 */
-  height: 52px !important; /* 56px から 52px に縮小 */
-
-  /* 🎌 統一されたデザイン - トップスクロールボタンと同じスタイル */
+  width: 52px !important;
+  height: 52px !important;
   background: linear-gradient(
     135deg,
     var(--japanese-black-secondary),
@@ -1194,399 +654,42 @@ body.toc-open {
   ) !important;
   border: 2px solid var(--japanese-orange-primary) !important;
   border-radius: 50% !important;
-
-  /* 🎌 完全に同じシャドウ */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3),
     inset 0 2px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
-
   display: none !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
   z-index: 999997 !important;
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-
-  /* 🚨 完璧な中心合わせ */
   margin: 0 !important;
   padding: 0 !important;
-  box-sizing: border-box !important;
-
-  /* 🚨 追加の位置調整 */
   transform: translateX(0) !important;
 }
 
-/* 🎌 トップスクロールボタン - 目次ボタンに合わせて調整 */
-.scroll-to-top-button,
-.floating-scroll-button,
-.back-to-top-button,
-[class*="scroll"][class*="top"],
-[class*="floating"][class*="button"] {
-  position: fixed !important;
-  bottom: 24px !important; /* 32px から 24px に調整 */
-  right: var(--button-right-desktop) !important;
-
-  /* 🚨 目次ボタンと同じサイズに調整 */
-  width: 52px !important; /* 56px から 52px に縮小 */
-  height: 52px !important; /* 56px から 52px に縮小 */
-
-  /* 🎌 目次ボタンと完全に同じデザイン */
-  background: linear-gradient(
-    135deg,
-    var(--japanese-black-secondary),
-    #2a2a2a
-  ) !important;
-  border: 2px solid var(--japanese-orange-primary) !important;
-  border-radius: 50% !important;
-
-  /* 🎌 完全に同じシャドウ */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 2px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
-
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  z-index: 999996 !important;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-
-  /* 🚨 完璧な中心合わせ */
-  margin: 0 !important;
-  padding: 0 !important;
-  box-sizing: border-box !important;
-
-  /* 🚨 追加の位置調整 */
-  transform: translateX(0) !important;
-}
-
-/* モバイル表示設定 - 完全統一 */
-@media (max-width: 768px) {
-  .japanese-style-modern-toc-button {
-    display: flex !important;
-    right: var(--button-right-desktop) !important;
-    width: 52px !important;
-    height: 52px !important;
-    transform: translateX(0) !important;
-  }
-
-  .scroll-to-top-button,
-  .floating-scroll-button,
-  .back-to-top-button,
-  [class*="scroll"][class*="top"],
-  [class*="floating"][class*="button"] {
-    right: var(--button-right-desktop) !important;
-    width: 52px !important;
-    height: 52px !important;
-    transform: translateX(0) !important;
-  }
-}
-
-/* 🎌 小画面での調整 - 完全統一 */
-@media (max-width: 480px) {
-  .japanese-style-modern-toc-button {
-    top: 70px !important;
-    right: var(--button-right-mobile) !important;
-    width: 44px !important; /* 48px から 44px に縮小 */
-    height: 44px !important; /* 48px から 44px に縮小 */
-    transform: translateX(0) !important;
-  }
-
-  .scroll-to-top-button,
-  .floating-scroll-button,
-  .back-to-top-button,
-  [class*="scroll"][class*="top"],
-  [class*="floating"][class*="button"] {
-    right: var(--button-right-mobile) !important;
-    width: 44px !important; /* 48px から 44px に縮小 */
-    height: 44px !important; /* 48px から 44px に縮小 */
-    transform: translateX(0) !important;
-  }
-}
-
-/* 🎌 SVGアイコンのサイズ統一 - サイズに合わせて調整 */
 .japanese-style-modern-toc-button svg {
-  width: 20px !important; /* 22px から 20px に縮小 */
-  height: 20px !important; /* 22px から 20px に縮小 */
+  width: 20px !important;
+  height: 20px !important;
   color: var(--japanese-orange-primary) !important;
   transition: all 0.3s ease !important;
   stroke-width: 2 !important;
 }
 
-.scroll-to-top-button svg,
-.floating-scroll-button svg,
-.back-to-top-button svg,
-[class*="scroll"][class*="top"] svg,
-[class*="floating"][class*="button"] svg {
-  width: 20px !important; /* 22px から 20px に縮小 */
-  height: 20px !important; /* 22px から 20px に縮小 */
-  color: var(--japanese-orange-primary) !important;
-  transition: all 0.3s ease !important;
-  stroke-width: 2 !important;
-}
-
-/* 小画面でのSVGサイズ調整 - 完全統一 */
-@media (max-width: 480px) {
-  .japanese-style-modern-toc-button svg {
-    width: 18px !important; /* 20px から 18px に縮小 */
-    height: 18px !important; /* 20px から 18px に縮小 */
-  }
-
-  .scroll-to-top-button svg,
-  .floating-scroll-button svg,
-  .back-to-top-button svg,
-  [class*="scroll"][class*="top"] svg,
-  [class*="floating"][class*="button"] svg {
-    width: 18px !important; /* 20px から 18px に縮小 */
-    height: 18px !important; /* 20px から 18px に縮小 */
-  }
-}
-
-/* 🎌 ホバーエフェクトの完全統一 */
-.japanese-style-modern-toc-button:hover,
-.scroll-to-top-button:hover,
-.floating-scroll-button:hover,
-.back-to-top-button:hover,
-[class*="scroll"][class*="top"]:hover,
-[class*="floating"][class*="button"]:hover {
+.japanese-style-modern-toc-button:hover {
   transform: scale(1.08) translateY(-2px) !important;
   background: linear-gradient(135deg, #2a2a2a, #3a3a3a) !important;
   border-color: var(--japanese-orange-light) !important;
-
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5),
     0 6px 16px rgba(241, 144, 114, 0.3), inset 0 2px 0 rgba(241, 191, 153, 0.3),
     0 0 0 2px rgba(241, 144, 114, 0.4) !important;
 }
 
-.japanese-style-modern-toc-button:hover svg,
-.scroll-to-top-button:hover svg,
-.floating-scroll-button:hover svg,
-.back-to-top-button:hover svg,
-[class*="scroll"][class*="top"]:hover svg,
-[class*="floating"][class*="button"]:hover svg {
+.japanese-style-modern-toc-button:hover svg {
   transform: scale(1.1) !important;
   color: var(--japanese-orange-light) !important;
 }
 
-/* デスクトップでの確実な表示制御 */
-@media (min-width: 769px) {
-  .japanese-style-modern-toc-button {
-    display: none !important;
-  }
-}
-
-/* 🚨 既存のFloatingButtonsコンポーネントのスタイルを強制上書き */
-.floating-buttons-container button,
-.floating-buttons button,
-[class*="floating"] button {
-  position: fixed !important;
-  bottom: 24px !important; /* 32px から 24px に調整 */
-  right: var(--button-right-desktop) !important;
-  width: 52px !important; /* 統一されたサイズ */
-  height: 52px !important; /* 統一されたサイズ */
-  margin: 0 !important;
-  padding: 0 !important;
-  transform: translateX(0) !important;
-
-  /* 🎌 統一されたデザイン */
-  background: linear-gradient(
-    135deg,
-    var(--japanese-black-secondary),
-    #2a2a2a
-  ) !important;
-  border: 2px solid var(--japanese-orange-primary) !important;
-  border-radius: 50% !important;
-
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 2px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
-}
-
-@media (max-width: 480px) {
-  .floating-buttons-container button,
-  .floating-buttons button,
-  [class*="floating"] button {
-    right: var(--button-right-mobile) !important;
-    width: 44px !important; /* 統一されたサイズ */
-    height: 44px !important; /* 統一されたサイズ */
-    transform: translateX(0) !important;
-  }
-}
-
-/* モバイル対応の調整 */
-@media (max-width: 768px) {
-  .japanese-style-modern {
-    margin: 1rem auto;
-    max-width: 100%;
-  }
-
-  .japanese-style-modern-header {
-    padding: 1rem;
-  }
-
-  .japanese-style-modern-title {
-    font-size: 1.6rem;
-  }
-
-  /* モバイル用見出しサイズ調整 */
-  .japanese-style-modern-h1,
-  .japanese-style-modern h1 {
-    font-size: 1.5rem;
-    margin: 2rem 0 1.2rem;
-  }
-
-  .japanese-style-modern-h2 {
-    font-size: 1.3rem;
-    margin: 1.5rem 0 0.8rem;
-  }
-
-  .japanese-style-modern-h3 {
-    font-size: 1.1rem;
-    margin: 1.2rem 0 0.6rem;
-  }
-
-  /* モバイル画像最適化 */
-  .markdown-image-container,
-  .image-container {
-    margin: 1rem 0;
-    min-height: 150px;
-  }
-
-  .markdown-image-loader,
-  .image-loader {
-    min-height: 150px;
-  }
-
-  .japanese-style-modern img,
-  .japanese-style-modern-img {
-    margin: 1rem 0;
-  }
-}
-
-/* デスクトップでの確実な非表示 */
-@media (min-width: 769px) {
-  .japanese-style-modern-overlay {
-    display: none !important;
-  }
-
-  .japanese-style-modern-toc-button {
-    display: none !important;
-  }
-}
-
-/* アクセシビリティ：motion縮減対応 */
-@media (prefers-reduced-motion: reduce) {
-  .japanese-style-modern-sidebar,
-  .japanese-style-modern-overlay,
-  .japanese-style-modern-toc-item,
-  .japanese-style-modern-toc-button {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* フォーカス管理の改善 */
-.japanese-style-modern-toc-item:focus {
-  outline: 2px solid var(--japanese-orange-primary);
-  outline-offset: 2px;
-  border-radius: 8px;
-}
-
-.japanese-style-modern-toc-button:focus {
-  outline: 2px solid var(--japanese-orange-primary);
-  outline-offset: 2px;
-}
-
-/* タッチデバイス用の調整 */
-@media (hover: none) and (pointer: coarse) {
-  .japanese-style-modern-toc-item {
-    min-height: 60px !important;
-    padding: 1.4rem !important;
-  }
-
-  .japanese-style-modern-toc-button {
-    width: 60px !important;
-    height: 60px !important;
-  }
-}
-
-/* 🎌 追加の和風装飾要素 */
-.japanese-style-modern-divider {
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--japanese-orange-primary) 20%,
-    var(--japanese-orange-light) 50%,
-    var(--japanese-orange-primary) 80%,
-    transparent 100%
-  );
-  margin: 2rem 0;
-  opacity: 0.6;
-}
-
-/* 🎌 読み込み中のスピナー */
-.japanese-style-modern-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(241, 144, 114, 0.3);
-  border-top: 3px solid var(--japanese-orange-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-/* 🎌 ツールチップ */
-.japanese-style-modern-tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.japanese-style-modern-tooltip::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--japanese-black-secondary);
-  color: var(--japanese-text-primary);
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
-  z-index: 1000;
-  border: 1px solid var(--japanese-orange-primary);
-}
-
-.japanese-style-modern-tooltip:hover::after {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* 🎌 完成：最終的な調整とクリーンアップ */
-.japanese-style-modern *::selection {
-  background: rgba(241, 144, 114, 0.3);
-  color: var(--japanese-text-primary);
-}
-
-.japanese-style-modern *::-moz-selection {
-  background: rgba(241, 144, 114, 0.3);
-  color: var(--japanese-text-primary);
-}
-/* ========================================== */
-/* 🚨 新規追加：×ボタン専用スタイル - Hydrationエラー修正版 */
-/* ========================================== */
-
+/* 🎌 ×ボタン */
 .japanese-style-modern-close-button {
   position: absolute !important;
   top: 50% !important;
@@ -1624,14 +727,412 @@ body.toc-open {
   background: rgba(223, 113, 99, 0.3) !important;
 }
 
-/* モバイル専用の×ボタンスタイル */
+/* 🎌 レスポンシブ対応 */
 @media (max-width: 768px) {
+  .japanese-style-modern-container {
+    flex-direction: column;
+    padding: 1rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 🚨 記事本文のはみ出し修正 - 強化版 */
+  .japanese-style-modern {
+    margin: 1rem auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  .japanese-style-modern-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    padding: 0 !important;
+  }
+
+  .japanese-style-modern-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.75rem !important;
+    margin: 1rem 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .japanese-style-modern-p {
+    width: 100% !important;
+    max-width: calc(100vw - 3rem) !important;
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    hyphens: auto !important;
+    line-break: anywhere !important;
+    word-break: break-word !important;
+    padding: 0 !important;
+    margin: 0.75rem 0 !important;
+    /* 🚨 長い単語の強制改行 */
+    -webkit-word-break: break-all !important;
+    -ms-word-break: break-all !important;
+    white-space: pre-wrap !important;
+  }
+
+  /* 🚨 全ての要素に強制的な幅制限を適用 */
+  .japanese-style-modern * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    /* 🚨 長い英単語の強制改行 */
+    -webkit-hyphens: auto !important;
+    -moz-hyphens: auto !important;
+    hyphens: auto !important;
+    /* 🚨 英語専用の改行設定 */
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+  }
+
+  /* 🚨 特に段落とテキスト要素の改行を強化 */
+  .japanese-style-modern-p,
+  .japanese-style-modern p,
+  .japanese-style-modern span,
+  .japanese-style-modern div {
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  /* 🚨 タイトル中央配置修正 */
+  .japanese-style-modern-header {
+    padding: 2rem 40px 2rem 2rem !important;
+    height: auto !important;
+    min-height: 140px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .japanese-style-modern-title {
+    /* 🚨 完全な中央配置 */
+    margin: 0 auto !important;
+    padding: 1rem 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    text-align: center !important;
+    display: block !important;
+    position: relative !important;
+    left: 0 !important; /* オフセットを削除して純粋な中央配置 */
+    /* 改行調整 - より少ない改行 */
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    word-break: normal !important;
+    /* 日本語の改行を自然に */
+    line-break: auto !important;
+  }
+
+  .japanese-style-modern-title::after {
+    left: 50% !important;
+    right: auto !important;
+    width: 85% !important;
+    transform: translateX(-50%) !important;
+    bottom: -0.5rem !important;
+  }
+
+  .japanese-style-modern-toc-button {
+    display: flex !important;
+    opacity: 0.9 !important;
+  }
+
+  .japanese-style-modern-toc-button::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: -2px !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-radius: 50% !important;
+    z-index: -1 !important;
+  }
+
+  .japanese-style-modern {
+    margin: 1rem auto;
+    max-width: 100%;
+  }
+
+  .japanese-style-modern-h1,
+  .japanese-style-modern h1 {
+    font-size: 1.5rem;
+    margin: 2rem 0 1.2rem;
+  }
+
+  .japanese-style-modern-h2 {
+    font-size: 1.3rem;
+    margin: 1.5rem 0 0.8rem;
+  }
+
+  .japanese-style-modern-h3 {
+    font-size: 1.1rem;
+    margin: 1.2rem 0 0.6rem;
+  }
+
+  .markdown-image-container,
+  .image-container {
+    margin: 1rem 0;
+    min-height: 150px;
+  }
+
+  .markdown-image-loader,
+  .image-loader {
+    min-height: 150px;
+  }
+
+  .japanese-style-modern img,
+  .japanese-style-modern-img {
+    margin: 1rem 0;
+  }
+
+  /* モバイル目次 */
+  .japanese-style-modern-sidebar.mobile-visible {
+    display: block !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 88% !important;
+    max-width: 420px !important;
+    max-height: 80vh !important;
+    z-index: 999999 !important;
+    background: linear-gradient(
+      135deg,
+      var(--japanese-black-secondary) 0%,
+      #1f1f1f 50%,
+      var(--japanese-black-secondary) 100%
+    ) !important;
+    border: 2px solid var(--japanese-orange-primary) !important;
+    border-radius: 20px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 12px 25px rgba(0, 0, 0, 0.4),
+      0 6px 12px rgba(241, 144, 114, 0.2),
+      inset 0 1px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
+    animation: elegantSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    pointer-events: all !important;
+    isolation: isolate !important;
+  }
+
+  .japanese-style-modern-sidebar:not(.mobile-visible) {
+    display: none !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-sidebar-title {
+    font-size: 1.4rem !important;
+    font-weight: 600 !important;
+    color: var(--japanese-text-primary) !important;
+    margin: 0 0 1.5rem 0 !important;
+    padding: 2rem 4rem 2rem 2rem !important;
+    background: linear-gradient(
+      135deg,
+      rgba(241, 144, 114, 0.15) 0%,
+      rgba(241, 191, 153, 0.08) 30%,
+      rgba(238, 131, 111, 0.1) 70%,
+      rgba(241, 144, 114, 0.15) 100%
+    ) !important;
+    position: relative !important;
+    text-align: center !important;
+    border-bottom: 2px solid rgba(241, 144, 114, 0.3) !important;
+    letter-spacing: 0.08em !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
+      0 1px 2px rgba(241, 144, 114, 0.2) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-sidebar-title::before {
+    display: none !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-sidebar-title::after {
+    display: none !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible nav {
+    padding: 1.8rem !important;
+    max-height: calc(80vh - 120px) !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--japanese-orange-primary) rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar {
+    width: 8px !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-track {
+    background: linear-gradient(
+      180deg,
+      rgba(22, 22, 14, 0.3),
+      rgba(27, 27, 27, 0.5),
+      rgba(22, 22, 14, 0.3)
+    ) !important;
+    border-radius: 4px !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+      180deg,
+      var(--japanese-orange-primary),
+      var(--japanese-orange-light),
+      var(--japanese-orange-primary)
+    ) !important;
+    border-radius: 4px !important;
+    border: 1px solid rgba(241, 144, 114, 0.3) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    nav::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      180deg,
+      var(--japanese-orange-light),
+      var(--japanese-orange-accent),
+      var(--japanese-orange-light)
+    ) !important;
+    box-shadow: 0 2px 8px rgba(241, 144, 114, 0.4) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item {
+    padding: 1.2rem 1.2rem 1.2rem 2.8rem !important;
+    margin-bottom: 0.8rem !important;
+    background: linear-gradient(
+      135deg,
+      rgba(27, 27, 27, 0.8) 0%,
+      rgba(22, 22, 14, 0.6) 50%,
+      rgba(27, 27, 27, 0.8) 100%
+    ) !important;
+    border: 1px solid rgba(241, 144, 114, 0.15) !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+    position: relative !important;
+    font-size: 1.05rem !important;
+    font-weight: 500 !important;
+    color: var(--japanese-text-primary) !important;
+    line-height: 1.6 !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    min-height: 56px !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(241, 144, 114, 0.12) 0%,
+      rgba(241, 191, 153, 0.08) 50%,
+      rgba(241, 144, 114, 0.12) 100%
+    ) !important;
+    border-color: rgba(241, 144, 114, 0.4) !important;
+    transform: translateX(6px) translateY(-1px) !important;
+    color: var(--japanese-orange-primary) !important;
+    box-shadow: 0 6px 20px rgba(241, 144, 114, 0.2),
+      0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item.active {
+    background: linear-gradient(
+      135deg,
+      rgba(241, 144, 114, 0.2) 0%,
+      rgba(238, 131, 111, 0.15) 50%,
+      rgba(241, 144, 114, 0.2) 100%
+    ) !important;
+    border-color: rgba(241, 144, 114, 0.6) !important;
+    color: var(--japanese-orange-primary) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 8px 24px rgba(241, 144, 114, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.1),
+      inset 0 -1px 0 rgba(241, 144, 114, 0.3) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item::before {
+    content: "▶" !important;
+    position: absolute !important;
+    left: 1.2rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: var(--japanese-orange-primary) !important;
+    font-size: 0.9rem !important;
+    font-weight: bold !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+    opacity: 0.8 !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item:hover::before {
+    transform: translateY(-50%) translateX(3px) scale(1.1) !important;
+    opacity: 1 !important;
+    color: var(--japanese-orange-light) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item.active::before {
+    color: var(--japanese-orange-accent) !important;
+    opacity: 1 !important;
+    transform: translateY(-50%) translateX(2px) scale(1.05) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item[data-level="2"] {
+    padding-left: 3.2rem !important;
+    font-size: 1rem !important;
+    min-height: 52px !important;
+    opacity: 0.96 !important;
+    margin-left: 0.8rem !important;
+    margin-right: 0.8rem !important;
+    border-left: 3px solid rgba(241, 191, 153, 0.3) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item[data-level="3"] {
+    padding-left: 3.8rem !important;
+    font-size: 0.95rem !important;
+    min-height: 48px !important;
+    opacity: 0.92 !important;
+    margin-left: 1.6rem !important;
+    margin-right: 1.6rem !important;
+    border-left: 2px solid rgba(241, 191, 153, 0.2) !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item[data-level="2"]::before {
+    content: "▸" !important;
+    font-size: 0.8rem !important;
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible
+    .japanese-style-modern-toc-item[data-level="3"]::before {
+    content: "◆" !important;
+    font-size: 0.7rem !important;
+  }
+
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-close-button {
     display: flex !important;
   }
 
-  /* 🚨 修正：タイトルが relative であることを確認 */
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-sidebar-title {
     position: relative !important;
@@ -1639,17 +1140,142 @@ body.toc-open {
   }
 }
 
-/* デスクトップでは×ボタンを非表示 */
+@media (max-width: 480px) {
+  .japanese-style-modern-header {
+    padding: 1.5rem 35px 1.5rem 1.5rem !important;
+    min-height: 120px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .japanese-style-modern-title {
+    font-size: 1.4rem !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0.05em !important;
+    left: 0 !important; /* オフセット削除 */
+  }
+
+  .japanese-style-modern-title::after {
+    left: 50% !important;
+    right: auto !important;
+    width: 80% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .japanese-style-modern-title::after {
+    left: 50% !important;
+    right: auto !important;
+    width: 80% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .japanese-style-modern-toc-button {
+    top: 70px !important;
+    right: var(--button-right-mobile) !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .japanese-style-modern-toc-button svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .japanese-style-modern-header {
+    padding: 1rem 32px 1rem 1rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .japanese-style-modern-title {
+    font-size: 1.3rem !important;
+    line-height: 1.2 !important;
+    left: 0 !important; /* オフセット削除 */
+  }
+
+  .japanese-style-modern-title::after {
+    left: 30% !important;
+    right: 30% !important;
+  }
+}
+
+/* デスクトップ非表示 */
 @media (min-width: 769px) {
+  .japanese-style-modern-overlay,
+  .japanese-style-modern-toc-button {
+    display: none !important;
+  }
+
   .japanese-style-modern-close-button {
+    display: none !important;
+  }
+
+  /* 🚨 デスクトップでモバイル目次を完全非表示 */
+  .japanese-style-modern-sidebar.mobile-visible {
+    display: none !important;
+  }
+
+  /* 🚨 デスクトップで目次が下部に表示されるのを防ぐ */
+  .japanese-style-modern-sidebar:not(.mobile-visible) {
+    display: block !important;
+  }
+
+  /* 🚨 独立した目次コンポーネントを非表示 */
+  .table-of-contents,
+  .toc-component,
+  .mobile-toc,
+  [class*="toc"]:not(.japanese-style-modern-toc-item):not(
+      .japanese-style-modern-toc-button
+    ) {
     display: none !important;
   }
 }
 
-/* 🚨 修正：既存の::afterスタイルを無効化（重複を避けるため） */
-@media (max-width: 768px) {
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-sidebar-title::after {
-    display: none !important;
+/* アクセシビリティ */
+@media (prefers-reduced-motion: reduce) {
+  .japanese-style-modern-sidebar,
+  .japanese-style-modern-overlay,
+  .japanese-style-modern-toc-item,
+  .japanese-style-modern-toc-button {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
+}
+
+.japanese-style-modern-toc-item:focus {
+  outline: 2px solid var(--japanese-orange-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.japanese-style-modern-toc-button:focus {
+  outline: 2px solid var(--japanese-orange-primary);
+  outline-offset: 2px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .japanese-style-modern-toc-item {
+    min-height: 60px !important;
+    padding: 1.4rem !important;
+  }
+
+  .japanese-style-modern-toc-button {
+    width: 60px !important;
+    height: 60px !important;
+  }
+}
+
+.japanese-style-modern *::selection {
+  background: rgba(241, 144, 114, 0.3);
+  color: var(--japanese-text-primary);
+}
+
+.japanese-style-modern *::-moz-selection {
+  background: rgba(241, 144, 114, 0.3);
+  color: var(--japanese-text-primary);
 }

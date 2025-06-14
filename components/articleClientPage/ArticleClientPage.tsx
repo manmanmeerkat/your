@@ -982,7 +982,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
                 <div className="space-y-6 lg:sticky lg:top-8">
                   {/* デスクトップ用目次（モバイルでは非表示） */}
                   <div className="hidden lg:block">
-                    <aside className="japanese-style-modern-sidebar scrollbar-custom">
+                    <aside className="japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
                       <h3 className="japanese-style-modern-sidebar-title">
                         Contents
                       </h3>
@@ -1083,14 +1083,16 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         <Redbubble />
       </div>
 
-      {/* 🚨 重要：モバイル目次を記事コンテナの外側に配置 */}
-      <TableOfContents
-        tableOfContents={tableOfContents}
-        activeSection={activeSection}
-        scrollToHeading={scrollToHeading}
-        showMobileToc={showMobileToc}
-        closeMobileToc={closeMobileToc}
-      />
+      {/* 🚨 重要修正：モバイル専用目次をモバイルのみに制限 */}
+      <div className="lg:hidden">
+        <TableOfContents
+          tableOfContents={tableOfContents}
+          activeSection={activeSection}
+          scrollToHeading={scrollToHeading}
+          showMobileToc={showMobileToc}
+          closeMobileToc={closeMobileToc}
+        />
+      </div>
     </div>
   );
 }
