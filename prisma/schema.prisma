@@ -8,8 +8,8 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// カテゴリ項目専用テーブル（Articleテーブルと同じ構造）
-model CategoryItem {
+// db pullで取得した現在のスキーマをベースに、インデックスのみ追加
+model Article {
   id          String   @id @default(uuid()) @db.Uuid
   title       String   @db.VarChar(255)
   slug        String   @unique @db.VarChar(255)
@@ -20,38 +20,66 @@ model CategoryItem {
   published   Boolean  @default(false)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  images      Image[]
+
+  // 🚀 新規追加：パフォーマンス最適化インデックス
+  @@index([published, createdAt(sort: Desc)], name: "articles_published_created_idx")
+  @@index([category, published, createdAt(sort: Desc)], name: "articles_category_published_idx")
+  @@index([title], name: "articles_title_idx")
+  @@index([updatedAt(sort: Desc)], name: "articles_updated_idx")
+  
+  @@map("articles")
+}
+
+model CategoryItem {
+  id          String              @id @default(uuid()) @db.Uuid
+  title       String              @db.VarChar(255)
+  slug        String              @unique @db.VarChar(255)
+  summary     String?
+  description String?
+  content     String
+  category    String              @db.VarChar(100)
+  published   Boolean             @default(false)
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
   images      CategoryItemImage[]
+
+  // 🚀 新規追加：パフォーマンス最適化インデックス
+  @@index([published, createdAt(sort: Desc)], name: "category_items_published_created_idx")
+  @@index([category, published, createdAt(sort: Desc)], name: "category_items_category_published_idx")
   
   @@map("category_items")
 }
 
-// CategoryItem専用のImage関連テーブル（Articleとの区別のため）
 model CategoryItemImage {
-  id              String       @id @default(uuid()) @db.Uuid
-  categoryItemId  String       @map("category_item_id") @db.Uuid
-  url             String
-  altText         String?      @map("alt_text") @db.VarChar(255)
-  isFeatured      Boolean      @default(false) @map("is_featured")
-  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
-  categoryItem    CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+  id             String       @id @default(uuid()) @db.Uuid
+  categoryItemId String       @map("category_item_id") @db.Uuid
+  url            String
+  altText        String?      @map("alt_text") @db.VarChar(255)
+  isFeatured     Boolean      @default(false) @map("is_featured")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+
+  // 🚀 新規追加：画像検索最適化インデックス
+  @@index([categoryItemId, isFeatured, createdAt(sort: Desc)], name: "category_item_images_featured_idx")
   
   @@map("category_item_images")
 }
 
-model Article {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String   @db.VarChar(255)
-  slug        String   @unique @db.VarChar(255)
-  summary     String?
-  description String?  // ここに新しいフィールドを追加
-  content     String
-  category    String   @db.VarChar(100)
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
-  images      Image[]
+model ContactMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(255)
+  email     String   @db.VarChar(255)
+  subject   String   @db.VarChar(255)
+  message   String
+  status    String   @default("unread") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  @@map("articles")
+  // 🚀 新規追加：管理画面用最適化インデックス
+  @@index([status, createdAt(sort: Desc)], name: "contact_messages_status_created_idx")
+  @@index([createdAt(sort: Desc)], name: "contact_messages_created_idx")
+  
+  @@map("contact_messages")
 }
 
 model Image {
@@ -63,17 +91,10 @@ model Image {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
+  // 🚀 新規追加：画像検索最適化インデックス（最重要）
+  @@index([articleId, isFeatured, createdAt(sort: Desc)], name: "images_article_featured_idx")
+  @@index([articleId], name: "images_article_idx")
+  @@index([isFeatured], name: "images_featured_idx")
+  
   @@map("images")
-}
-
-model ContactMessage {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String   @db.VarChar(255)
-  email     String   @db.VarChar(255)
-  subject   String   @db.VarChar(255)
-  message   String
-  status    String   @db.VarChar(50) @default("unread")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  @@map("contact_messages")
 }
