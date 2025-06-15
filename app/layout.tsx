@@ -1,6 +1,7 @@
+//app/layout.tsx
 import "./globals.css";
 import "./styles/japanese-style-modern.css";
-import "highlight.js/styles/github-dark.css";
+import "highlight.js/styles/github-dark.css"; // or any highlight.js theme
 import type { Metadata } from "next";
 import { Noto_Serif_JP } from "next/font/google";
 import { Toaster } from "sonner";
@@ -9,13 +10,10 @@ import Footer from "../components/layout/footer";
 import BackToTopButton from "@/components/backToTopBtn/BackToTopBtn";
 import Script from "next/script";
 
-// 🚀 フォント最適化
 const notoSerifJP = Noto_Serif_JP({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  display: "swap", // ✅ 既に最適
-  preload: true, // 🚀 プリロード追加
-  fallback: ["serif"], // 🚀 フォールバック追加
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -62,6 +60,7 @@ export const metadata: Metadata = {
   },
 };
 
+// themeColorをviewportに移動（Next.js 14の新しい方式）
 export const viewport = {
   themeColor: "#020617",
 };
@@ -74,53 +73,17 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
-        {/* 🚀 DNS プリフェッチとプリロード最適化 */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//www.googletagmanager.com" />
-
-        {/* 🚀 重要リソースのプリロード */}
-        <link rel="preload" href="/ogp-image.png" as="image" type="image/png" />
-
-        {/* 🚀 クリティカルCSSのインライン化ヒント */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-            /* クリティカルCSS - ヘッダー部分のみ */
-            .fixed { position: fixed !important; }
-            .top-0 { top: 0px !important; }
-            .left-0 { left: 0px !important; }
-            .right-0 { right: 0px !important; }
-            .z-50 { z-index: 50 !important; }
-            .transition-all { transition-property: all !important; }
-            .duration-75 { transition-duration: 75ms !important; }
-          `,
-          }}
-        />
-
-        {/* 🚀 Google Tag Manager - 最適化版 */}
-        <Script
-          id="gtm-init"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','GTM-MZDHPBHT');
-            `,
-          }}
-        />
+        <Script id="gtm-init" strategy="afterInteractive">
+          {`
+         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+         j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+         })(window,document,'script','dataLayer','GTM-MZDHPBHT');
+       `}
+        </Script>
       </head>
-      <body
-        className={notoSerifJP.className}
-        style={{
-          // 🚀 初期レンダリング最適化
-          transform: "translateZ(0)",
-          backfaceVisibility: "hidden",
-        }}
-      >
-        {/* GTM noscript */}
+      <body className={notoSerifJP.className}>
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-MZDHPBHT"
@@ -129,42 +92,13 @@ export default function RootLayout({
             style={{ display: "none", visibility: "hidden" }}
           />
         </noscript>
-
-        <div
-          className="flex flex-col min-h-screen bg-[#2b1e1c] text-[#f3f3f2]"
-          style={{
-            // 🚀 GPU層最適化
-            transform: "translateZ(0)",
-            willChange: "transform",
-          }}
-        >
+        <div className="flex flex-col min-h-screen bg-[#2b1e1c] text-[#f3f3f2]">
           <Header />
-          <main
-            className="flex-grow pt-18"
-            style={{
-              // 🚀 メインコンテンツ最適化
-              contain: "layout style",
-              willChange: "contents",
-            }}
-          >
-            {children}
-          </main>
+          <main className="flex-grow pt-18">{children}</main>
           <BackToTopButton />
           <Footer />
         </div>
-
-        {/* 🚀 Toaster最適化 */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: "#1a1a1a",
-              color: "#f3f3f2",
-              border: "1px solid #df7163",
-            },
-          }}
-        />
+        <Toaster />
       </body>
     </html>
   );
