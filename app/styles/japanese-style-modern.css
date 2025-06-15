@@ -1321,3 +1321,180 @@ body.toc-open {
   background: rgba(241, 144, 114, 0.3);
   color: var(--japanese-text-primary);
 }
+/* 🚨 緊急修正：横スクロール完全防止 */
+
+/* 基本コンテナの強化 */
+.japanese-style-modern,
+.japanese-style-modern-container,
+.japanese-style-modern-content {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 全ての要素に対する横スクロール防止 */
+.japanese-style-modern * {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* 長いURL/リンクの強制改行 */
+.japanese-style-modern-a {
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  display: inline !important;
+  max-width: 100% !important;
+}
+
+/* 段落とテキスト要素の強化 */
+.japanese-style-modern-p {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+}
+
+/* 引用ブロックの修正 */
+.japanese-style-modern-blockquote {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+}
+
+.japanese-style-modern-blockquote * {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+/* 強調テキスト（太字・斜体）の修正 */
+.japanese-style-modern-strong,
+.japanese-style-modern-em {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+/* セクション全体の強化 */
+.japanese-style-modern-section {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+}
+
+.japanese-style-modern-section * {
+  max-width: 100% !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* 見出し要素の修正 */
+.japanese-style-modern-h1,
+.japanese-style-modern-h2,
+.japanese-style-modern-h3 {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+}
+
+/* リスト要素の修正 */
+.japanese-style-modern-ul,
+.japanese-style-modern-ol,
+.japanese-style-modern-li {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+/* 特殊要素の修正 */
+.ryu-name {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+  max-width: 100% !important;
+}
+
+/* コードブロックの修正 */
+.japanese-style-modern-code {
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
+}
+
+.japanese-style-modern-pre {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+}
+
+/* 画像コンテナの修正 */
+.markdown-image-container,
+.image-container {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* テーブルの修正 */
+.japanese-style-modern-table-container {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+}
+
+.japanese-style-modern-table {
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.japanese-style-modern-th,
+.japanese-style-modern-td {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+/* 全体的なページコンテナの修正 */
+.article-page-container {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+/* レスポンシブ強化 */
+@media (max-width: 768px) {
+  .japanese-style-modern {
+    margin: 0 !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .japanese-style-modern-container {
+    padding: 1rem !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .japanese-style-modern-content {
+    max-width: calc(100vw - 2rem) !important;
+    overflow-x: hidden !important;
+  }
+
+  .japanese-style-modern * {
+    max-width: 100% !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+  }
+}

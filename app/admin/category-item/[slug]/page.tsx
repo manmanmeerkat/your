@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ExternalLink, Copy, Check } from "lucide-react";
 import Image from "next/image";
 
 const categoryOptions = [
@@ -40,7 +40,23 @@ export default function EditCategoryItemPage({
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
+
+  // 🚨 新機能：本番環境URLの生成
+  const productionUrl = `https://www.yoursecretjapan.com/category-item/${slug}`;
+
+  // 🚨 新機能：URLコピー機能
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(productionUrl);
+      setCopied(true);
+      toast.success("URLをコピーしました");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("URLのコピーに失敗しました");
+    }
+  };
 
   // 既存データの読み込み
   useEffect(() => {
@@ -276,6 +292,63 @@ export default function EditCategoryItemPage({
             </div>
           )}
 
+          {/* 🚨 新機能：本番環境URL表示 */}
+          {slug && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-blue-800">
+                    本番環境URL:
+                  </span>
+                  {published && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                      公開中
+                    </span>
+                  )}
+                  {!published && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                      下書き
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 p-2 bg-white border rounded">
+                  <code className="flex-1 text-sm text-blue-600 break-all">
+                    {productionUrl}
+                  </code>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={copyUrl}
+                    className="shrink-0"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                  {published && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(productionUrl, "_blank")}
+                      className="shrink-0"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                {!published && (
+                  <p className="text-xs text-blue-600">
+                    ※ 下書き状態のため、公開後にアクセス可能になります
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-medium">
               タイトル*
@@ -300,10 +373,7 @@ export default function EditCategoryItemPage({
               placeholder="izanagi-no-mikoto"
               required
             />
-            <p className="text-xs text-gray-500">
-              URLの一部として使用されます: your-secret-japan.com/category-item/
-              {slug}
-            </p>
+            <p className="text-xs text-gray-500">URLの一部として使用されます</p>
           </div>
 
           <div className="space-y-2">
