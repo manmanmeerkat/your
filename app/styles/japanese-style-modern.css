@@ -1,4 +1,4 @@
-/*japanese-style-modern.css - 完全修正版（エラー解消）*/
+/*japanese-style-modern.css - 完全修正版（重要な部分復元）*/
 
 /* 🎌 和風カラーパレット */
 :root {
@@ -131,6 +131,48 @@
   overflow-y: auto;
   align-self: flex-start;
   transition: all 0.3s ease;
+
+  /* 🚨 改善：デスクトップ用スクロールバーを細く上品に */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 144, 114, 0.4) rgba(0, 0, 0, 0.1);
+}
+
+/* 🚨 デスクトップ専用：Webkit系ブラウザ用スクロールバー（細く上品に） */
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-track {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 22, 14, 0.2),
+    rgba(27, 27, 27, 0.3),
+    rgba(22, 22, 14, 0.2)
+  ) !important;
+  border-radius: 3px !important;
+  margin: 4px 0 !important;
+}
+
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(241, 144, 114, 0.6),
+    rgba(241, 191, 153, 0.4),
+    rgba(241, 144, 114, 0.6)
+  ) !important;
+  border-radius: 3px !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(241, 144, 114, 0.8),
+    rgba(241, 191, 153, 0.6),
+    rgba(241, 144, 114, 0.8)
+  ) !important;
+  box-shadow: 0 1px 4px rgba(241, 144, 114, 0.3) !important;
 }
 
 .japanese-style-modern-sidebar.desktop-sidebar:hover {
@@ -908,6 +950,7 @@ body.toc-open {
     display: none !important;
   }
 
+  /* 🚨 モバイル・タブレット用スクロールバー（従来通り） */
   .japanese-style-modern-sidebar.mobile-visible nav {
     padding: 1.8rem !important;
     max-height: calc(80vh - 120px) !important;
@@ -1207,6 +1250,31 @@ body.toc-open {
     ) {
     display: none !important;
   }
+}
+
+/* 🚨 汎用スクロールバークラス */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 144, 114, 0.4) rgba(0, 0, 0, 0.1);
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(22, 22, 14, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(241, 144, 114, 0.6);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(241, 144, 114, 0.8);
 }
 
 /* アクセシビリティ */
