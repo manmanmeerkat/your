@@ -14,8 +14,15 @@ import Redbubble from "../redBubble/RedBubble";
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
 
+// 🚨 型定義をローカルで定義（循環インポートを回避）
+export type TocItem = {
+  id: string;
+  text: string;
+  level: number;
+};
+
 // 型定義
-type Image = {
+type ArticleImage = {
   id: string;
   url: string;
   altText: string | null;
@@ -34,13 +41,7 @@ type Article = {
   published: boolean;
   createdAt: Date;
   updatedAt: Date;
-  images: Image[];
-};
-
-export type TocItem = {
-  id: string;
-  text: string;
-  level: number;
+  images: ArticleImage[];
 };
 
 // ⭐ 改良された画像コンポーネント（unoptimized + キャッシュ対応）
