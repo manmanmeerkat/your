@@ -1,5 +1,64 @@
 /* 管理画面専用のオーバーライドスタイル */
 
+/* 🚨 全体的な管理画面の文字色強制修正 */
+.admin-layout,
+.admin-layout * {
+  color: #1e293b !important; /* 濃いグレー */
+}
+
+/* 🚨 特定のコンポーネント要素の強制修正 */
+.admin-layout input,
+.admin-layout textarea,
+.admin-layout select,
+.admin-layout label,
+.admin-layout p,
+.admin-layout div,
+.admin-layout span,
+.admin-layout h1,
+.admin-layout h2,
+.admin-layout h3,
+.admin-layout h4,
+.admin-layout h5,
+.admin-layout h6 {
+  color: #1e293b !important;
+  background-color: inherit !important;
+}
+
+/* 🚨 カード要素の強制修正 */
+.admin-layout [class*="card"],
+.admin-layout [class*="Card"] {
+  color: #1e293b !important;
+}
+
+/* 🚨 フォーム要素の背景色も強制修正 */
+.admin-layout input[type="text"],
+.admin-layout input[type="email"],
+.admin-layout input[type="password"],
+.admin-layout input[type="search"],
+.admin-layout input[type="file"],
+.admin-layout textarea,
+.admin-layout select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+}
+
+/* 🚨 ボタン要素の修正 */
+.admin-layout button {
+  color: #1e293b !important;
+}
+
+.admin-layout button.bg-blue-600,
+.admin-layout button[class*="bg-blue"] {
+  color: #ffffff !important;
+}
+
+/* 🚨 プレースホルダーテキストの修正 */
+.admin-layout input::placeholder,
+.admin-layout textarea::placeholder {
+  color: #9ca3af !important;
+}
+
 /* カードのタイトル部分の修正 */
 .text-lg.font-semibold.mb-1,
 h3.text-lg,
@@ -80,4 +139,55 @@ table th {
 
 table td {
   color: #334155 !important; /* slate-700 */
+}
+
+/* 🚨 shadcn/ui コンポーネントの修正 */
+.admin-layout [data-radix-scroll-area-viewport],
+.admin-layout [class*="radix"],
+.admin-layout [data-state],
+.admin-layout [role="textbox"],
+.admin-layout [role="button"] {
+  color: #1e293b !important;
+}
+
+/* 🚨 エラーメッセージや警告の色は保持 */
+.admin-layout .text-red-600,
+.admin-layout .text-red-700,
+.admin-layout [class*="text-red"] {
+  color: #dc2626 !important;
+}
+
+.admin-layout .text-green-600,
+.admin-layout .text-green-700,
+.admin-layout [class*="text-green"] {
+  color: #16a34a !important;
+}
+
+.admin-layout .text-amber-600,
+.admin-layout .text-amber-700,
+.admin-layout [class*="text-amber"] {
+  color: #d97706 !important;
+}
+
+/* 🚨 リンク要素の修正 */
+.admin-layout a {
+  color: #2563eb !important;
+}
+
+.admin-layout a:hover {
+  color: #1d4ed8 !important;
+}
+
+/* 🚨 チェックボックスとラジオボタンの修正 */
+.admin-layout input[type="checkbox"],
+.admin-layout input[type="radio"] {
+  background-color: #ffffff !important;
+}
+
+/* 🚨 ドロップダウンメニューの修正 */
+.admin-layout [role="menu"],
+.admin-layout [role="listbox"],
+.admin-layout [role="option"] {
+  color: #1e293b !important;
+  background-color: #ffffff !important;
 }
