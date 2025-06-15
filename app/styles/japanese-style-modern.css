@@ -1,4 +1,4 @@
-/*japanese-style-modern.css - 完全修正版（重要な部分復元）*/
+/*japanese-style-modern.css - スクロールバー修正版*/
 
 /* 🎌 和風カラーパレット */
 :root {
@@ -108,7 +108,7 @@
   display: none;
 }
 
-/* 🎌 デスクトップ・タブレット専用サイドバー */
+/* 🎌 デスクトップ・タブレット専用サイドバー - スクロールバー修正版 */
 .japanese-style-modern-sidebar.desktop-sidebar {
   position: sticky;
   top: 2rem;
@@ -139,7 +139,7 @@
 
 /* 🚨 デスクトップ専用：Webkit系ブラウザ用スクロールバー（細く上品に） */
 .japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar {
-  width: 6px !important;
+  width: 6px !important; /* 8pxから6pxに縮小 */
 }
 
 .japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-track {
@@ -149,8 +149,8 @@
     rgba(27, 27, 27, 0.3),
     rgba(22, 22, 14, 0.2)
   ) !important;
-  border-radius: 3px !important;
-  margin: 4px 0 !important;
+  border-radius: 3px !important; /* 4pxから3pxに */
+  margin: 4px 0 !important; /* 上下に余白を追加 */
 }
 
 .japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-thumb {
@@ -160,8 +160,8 @@
     rgba(241, 191, 153, 0.4),
     rgba(241, 144, 114, 0.6)
   ) !important;
-  border-radius: 3px !important;
-  border: none !important;
+  border-radius: 3px !important; /* 4pxから3pxに */
+  border: none !important; /* ボーダーを削除してより細く */
   transition: all 0.2s ease !important;
 }
 
@@ -172,7 +172,7 @@
     rgba(241, 191, 153, 0.6),
     rgba(241, 144, 114, 0.8)
   ) !important;
-  box-shadow: 0 1px 4px rgba(241, 144, 114, 0.3) !important;
+  box-shadow: 0 1px 4px rgba(241, 144, 114, 0.3) !important; /* より控えめな影 */
 }
 
 .japanese-style-modern-sidebar.desktop-sidebar:hover {
@@ -960,7 +960,7 @@ body.toc-open {
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar {
-    width: 8px !important;
+    width: 8px !important; /* モバイルは少し太めを維持 */
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-track {
