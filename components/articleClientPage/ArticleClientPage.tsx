@@ -10,6 +10,7 @@ import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
 import RelatedArticles from "@/components/sidebar/RelatedArticles";
 import Redbubble from "../redBubble/RedBubble";
+import { MarkdownRenderer } from "@/lib/simpleMarkdownRenderer";
 
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
@@ -1019,10 +1020,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
               <div className="order-2 lg:order-1 flex-1 min-w-0">
                 <div className="flex-1 min-w-0">
                   <div className="japanese-style-modern-content">
-                    <div
-                      ref={contentRef}
-                      dangerouslySetInnerHTML={{ __html: renderedContent }}
-                    />
+                    <MarkdownRenderer content={article.content} />
                   </div>
                 </div>
               </div>

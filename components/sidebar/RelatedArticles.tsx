@@ -1,4 +1,4 @@
-// components/sidebar/RelatedArticles.tsx
+// components/sidebar/RelatedArticles.tsx - 修正版
 "use client";
 
 import { useEffect, useState } from "react";
@@ -112,7 +112,7 @@ export default function RelatedArticles({
         <div className="mt-8 pt-6 border-t border-slate-700 text-center">
           <Link
             href={`/${currentCategory}`}
-                          className="
+            className="
                 font-normal
                 border border-[#df7163] bg-[#df7163] text-[#f3f3f2]
                 hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
@@ -144,19 +144,52 @@ function RelatedArticleCard({ article }: { article: articleType }) {
     imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== "";
 
   return (
-    <Link href={`/articles/${article.slug}`} className="group flex gap-4 p-3 rounded-lg bg-[#2c2929] hover:bg-[#bbc8e6] transition-all duration-300 border border-slate-600/50 hover:border-[#bbc8e6] hover:shadow-lg">
-        {/* 画像エリア - 余白修正 */}
-        <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden relative border border-slate-500">
+    <Link 
+      href={`/articles/${article.slug}`} 
+      className="group flex gap-4 rounded-lg bg-[#2c2929] hover:bg-[#bbc8e6] transition-all duration-300 border border-slate-600/50 hover:border-[#bbc8e6] hover:shadow-lg"
+      style={{ padding: 0, margin: 0 }} // 🚨 padding除去
+    >
+        {/* 🚨 画像エリア - 完全修正 */}
+        <div 
+          className="flex-shrink-0 rounded-lg overflow-hidden relative border border-slate-500"
+          style={{ 
+            width: '80px', 
+            height: '80px', 
+            position: 'relative', 
+            margin: 0, 
+            padding: 0 
+          }}
+        >
           {hasValidImage ? (
             <>
               {!imageLoaded && !imageError && (
-                <div className="absolute inset-0 animate-pulse flex items-center justify-center">
+                <div 
+                  className="absolute inset-0 animate-pulse flex items-center justify-center"
+                  style={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    width: '100%', 
+                    height: '100%',
+                    zIndex: 2 
+                  }}
+                >
                   <div className="w-4 h-4 border-2 rounded-full animate-spin"></div>
                 </div>
               )}
 
               {imageError && (
-                <div className="w-full h-full flex items-center justify-center">
+                <div 
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ 
+                    position: 'absolute', 
+                    top: 0, 
+                    left: 0, 
+                    width: '100%', 
+                    height: '100%',
+                    zIndex: 2 
+                  }}
+                >
                   <div className="text-slate-400 text-sm">🖼️</div>
                 </div>
               )}
@@ -167,10 +200,20 @@ function RelatedArticleCard({ article }: { article: articleType }) {
                   alt={imageAlt}
                   width={80}
                   height={80}
-                  className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-110 ${
+                  className={`transition-all duration-300 group-hover:scale-110 ${
                     imageLoaded ? "opacity-100" : "opacity-0"
                   }`}
-                  style={{ margin: 0, padding: 0 }}
+                  style={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    margin: 0, 
+                    padding: 0,
+                    zIndex: 1
+                  }}
                   onLoad={() => setImageLoaded(true)}
                   onError={() => setImageError(true)}
                   unoptimized
@@ -178,14 +221,23 @@ function RelatedArticleCard({ article }: { article: articleType }) {
               )}
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{ 
+                position: 'absolute', 
+                top: 0, 
+                left: 0, 
+                width: '100%', 
+                height: '100%' 
+              }}
+            >
               <div className="text-slate-400 text-sm">🖼️</div>
             </div>
           )}
         </div>
 
         {/* コンテンツエリア */}
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-3 px-3">
           <h4 className="font-semibold text-[#f3f3f2] group-hover:text-[#1b1b1b] transition-colors duration-200 leading-tight mb-3 line-clamp-2">
             {article.title}
           </h4>
