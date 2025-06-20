@@ -1,4 +1,4 @@
-// app/api/articles/[slug]/route.ts
+// app/api/articles/[slug]/route.ts - 一口メモ対応修正版
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
@@ -17,21 +17,47 @@ export async function GET(
     console.log('- 元のスラッグ:', rawSlug);
     console.log('- デコードされたスラッグ:', decodedSlug);
     
-    // すべての記事を取得
+    // すべての記事を取得（デバッグ用）
     const allArticles = await prisma.article.findMany({
       select: { id: true, slug: true, title: true }
     });
     
     console.log('データベース内の全記事:', allArticles.map(a => ({ id: a.id, slug: a.slug, title: a.title })));
     
+    // 🔧 一口メモを含むinclude設定
+    const includeConfig = {
+      images: true,
+      // 🆕 一口メモも含める
+      trivia: {
+        where: { isActive: true },
+        orderBy: { displayOrder: 'asc' } as const,
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          contentEn: true,
+          category: true,
+          tags: true,
+          iconEmoji: true,
+          colorTheme: true,
+          displayOrder: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+          articleId: true,
+        },
+      },
+    };
+    
     // 1. 完全一致
     let article = await prisma.article.findUnique({
       where: { slug: decodedSlug },
-      include: { images: true },
+      include: includeConfig,
     });
     
     if (article) {
       console.log('完全一致で記事が見つかりました:', article.slug);
+      console.log('一口メモ数:', article.trivia?.length || 0);
       return NextResponse.json(article);
     }
     
@@ -43,12 +69,13 @@ export async function GET(
           mode: 'insensitive',
         },
       },
-      include: { images: true },
+      include: includeConfig,
     });
     
     if (articlesIgnoreCase.length > 0) {
       article = articlesIgnoreCase[0];
       console.log('大文字小文字を無視して記事が見つかりました:', article.slug);
+      console.log('一口メモ数:', article.trivia?.length || 0);
       return NextResponse.json(article);
     }
     
@@ -70,11 +97,12 @@ export async function GET(
             { slug: { contains: possibleSlug, mode: 'insensitive' } }
           ]
         },
-        include: { images: true },
+        include: includeConfig,
       });
       
       if (article) {
         console.log('変換されたスラッグで記事が見つかりました:', article.slug);
+        console.log('一口メモ数:', article.trivia?.length || 0);
         return NextResponse.json(article);
       }
     }
@@ -87,11 +115,12 @@ export async function GET(
           mode: 'insensitive',
         },
       },
-      include: { images: true },
+      include: includeConfig,
     });
     
     if (article) {
       console.log('タイトルで記事が見つかりました:', article.slug);
+      console.log('一口メモ数:', article.trivia?.length || 0);
       return NextResponse.json(article);
     }
     
@@ -235,7 +264,7 @@ export async function PUT(
         title,
         slug,
         summary: summary || '',
-        description: description || '', // 追加: descriptionフィールド
+        description: description || '',
         content,
         category,
         published,
@@ -276,10 +305,32 @@ export async function PUT(
       console.log('画像処理完了');
     }
     
-    // 更新した記事を返す（画像付き）
+    // 🔧 更新した記事を返す（一口メモ付き）
     const updatedArticle = await prisma.article.findUnique({
       where: { id: article.id },
-      include: { images: true },
+      include: {
+        images: true,
+        // 🆕 一口メモも含める
+        trivia: {
+          where: { isActive: true },
+          orderBy: { displayOrder: 'asc' },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            contentEn: true,
+            category: true,
+            tags: true,
+            iconEmoji: true,
+            colorTheme: true,
+            displayOrder: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            articleId: true,
+          },
+        },
+      },
     });
     
     return NextResponse.json(updatedArticle);
@@ -394,17 +445,25 @@ export async function DELETE(
       );
     }
     
-    // 関連する画像を先に削除
-    await prisma.image.deleteMany({
-      where: { articleId: existingArticle.id },
+    // 🔧 一口メモも削除するように修正
+    await prisma.$transaction(async (tx) => {
+      // 関連する画像を削除
+      await tx.image.deleteMany({
+        where: { articleId: existingArticle.id },
+      });
+      
+      // 🆕 関連する一口メモを削除
+      await tx.articleTrivia.deleteMany({
+        where: { articleId: existingArticle.id },
+      });
+      
+      // 記事を削除
+      await tx.article.delete({
+        where: { id: existingArticle.id },
+      });
     });
     
-    // 記事を削除
-    await prisma.article.delete({
-      where: { id: existingArticle.id },
-    });
-    
-    console.log('記事削除成功');
+    console.log('記事削除成功（画像・一口メモも含む）');
     
     return NextResponse.json({ success: true });
   } catch (error) {
