@@ -1,5 +1,7 @@
 // utils/encoding.ts - 安全なエンコーディング・ユーティリティ
 
+// 🔧 修正版: Prismaから型をインポート
+import type { ArticleTrivia } from "@prisma/client";
 
 /**
  * 日本語文字列を含むデータを安全にBase64エンコード
