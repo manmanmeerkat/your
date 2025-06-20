@@ -3,32 +3,53 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-// db pullで取得した現在のスキーマをベースに、インデックスのみ追加
 model Article {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String   @db.VarChar(255)
-  slug        String   @unique @db.VarChar(255)
+  id          String          @id @default(uuid()) @db.Uuid
+  title       String          @db.VarChar(255)
+  slug        String          @unique @db.VarChar(255)
   summary     String?
-  description String?
   content     String
-  category    String   @db.VarChar(100)
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  category    String          @db.VarChar(100)
+  published   Boolean         @default(false)
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
+  description String?
+  trivia      ArticleTrivia[]
   images      Image[]
 
-  // 🚀 新規追加：パフォーマンス最適化インデックス
-  @@index([published, createdAt(sort: Desc)], name: "articles_published_created_idx")
-  @@index([category, published, createdAt(sort: Desc)], name: "articles_category_published_idx")
-  @@index([title], name: "articles_title_idx")
-  @@index([updatedAt(sort: Desc)], name: "articles_updated_idx")
-  
+  @@index([published, createdAt(sort: Desc)], map: "articles_published_created_idx")
+  @@index([category, published, createdAt(sort: Desc)], map: "articles_category_published_idx")
+  @@index([title])
+  @@index([updatedAt(sort: Desc)], map: "articles_updated_idx")
   @@map("articles")
+}
+
+model ArticleTrivia {
+  id           String   @id @default(uuid()) @db.Uuid
+  articleId    String   @map("article_id") @db.Uuid
+  title        String   @db.VarChar(200)
+  content      String
+  contentEn    String?  @map("content_en")
+  category     String   @db.VarChar(50)
+  tags         String[] @default([])
+  iconEmoji    String?  @map("icon_emoji") @db.VarChar(10)
+  colorTheme   String?  @map("color_theme") @db.VarChar(30)
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, displayOrder], map: "trivia_article_order_idx")
+  @@index([articleId, isActive, displayOrder], map: "trivia_article_active_idx")
+  @@index([category, isActive], map: "trivia_category_active_idx")
+  @@index([tags], map: "trivia_tags_idx")
+  @@map("article_trivia")
 }
 
 model CategoryItem {
@@ -44,10 +65,8 @@ model CategoryItem {
   updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
   images      CategoryItemImage[]
 
-  // 🚀 新規追加：パフォーマンス最適化インデックス
-  @@index([published, createdAt(sort: Desc)], name: "category_items_published_created_idx")
-  @@index([category, published, createdAt(sort: Desc)], name: "category_items_category_published_idx")
-  
+  @@index([published, createdAt(sort: Desc)], map: "category_items_published_created_idx")
+  @@index([category, published, createdAt(sort: Desc)], map: "category_items_category_published_idx")
   @@map("category_items")
 }
 
@@ -60,9 +79,7 @@ model CategoryItemImage {
   createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
 
-  // 🚀 新規追加：画像検索最適化インデックス
-  @@index([categoryItemId, isFeatured, createdAt(sort: Desc)], name: "category_item_images_featured_idx")
-  
+  @@index([categoryItemId, isFeatured, createdAt(sort: Desc)], map: "category_item_images_featured_idx")
   @@map("category_item_images")
 }
 
@@ -75,26 +92,22 @@ model ContactMessage {
   status    String   @default("unread") @db.VarChar(50)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  // 🚀 新規追加：管理画面用最適化インデックス
-  @@index([status, createdAt(sort: Desc)], name: "contact_messages_status_created_idx")
-  @@index([createdAt(sort: Desc)], name: "contact_messages_created_idx")
-  
+  @@index([status, createdAt(sort: Desc)], map: "contact_messages_status_created_idx")
+  @@index([createdAt(sort: Desc)], map: "contact_messages_created_idx")
   @@map("contact_messages")
 }
 
 model Image {
-  id        String   @id @default(uuid()) @db.Uuid
-  articleId String   @map("article_id") @db.Uuid
-  url       String
-  altText   String?  @map("alt_text") @db.VarChar(255)
+  id         String   @id @default(uuid()) @db.Uuid
+  articleId  String   @map("article_id") @db.Uuid
+  url        String
+  altText    String?  @map("alt_text") @db.VarChar(255)
   isFeatured Boolean  @default(false) @map("is_featured")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
-  // 🚀 新規追加：画像検索最適化インデックス（最重要）
-  @@index([articleId, isFeatured, createdAt(sort: Desc)], name: "images_article_featured_idx")
-  @@index([articleId], name: "images_article_idx")
-  @@index([isFeatured], name: "images_featured_idx")
-  
+  @@index([articleId, isFeatured, createdAt(sort: Desc)], map: "images_article_featured_idx")
+  @@index([articleId], map: "images_article_idx")
+  @@index([isFeatured], map: "images_featured_idx")
   @@map("images")
 }

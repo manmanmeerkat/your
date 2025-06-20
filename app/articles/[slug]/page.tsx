@@ -1,4 +1,4 @@
-// app/articles/[slug]/page.tsx - 静的設定版
+// app/articles/[slug]/page.tsx - 一口メモ対応版
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +10,7 @@ type Props = {
   params: { slug: string };
 };
 
-// ⭐ 本番環境用（適度なキャッシュ）
+// ⭐ 本番環境用（適度なキャッシュ）- 一口メモ対応
 const getArticleBySlugProd = unstable_cache(
   async (slug: string) => {
     return await prisma.article.findFirst({
@@ -26,17 +26,36 @@ const getArticleBySlugProd = unstable_cache(
             articleId: true,
           },
         },
+        // 🆕 一口メモも含める
+        trivia: {
+          where: { isActive: true },
+          orderBy: { displayOrder: "asc" },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            contentEn: true,
+            category: true,
+            tags: true,
+            iconEmoji: true,
+            colorTheme: true,
+            displayOrder: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
   },
   ["article-by-slug"],
   {
     revalidate: 300, // 本番では5分キャッシュ
-    tags: ["article"],
+    tags: ["article", "trivia"], // 🆕 trivia タグも追加
   }
 );
 
-// ⭐ 開発環境用（キャッシュなし）
+// ⭐ 開発環境用（キャッシュなし）- 一口メモ対応
 const getArticleBySlugDev = async (slug: string) => {
   return await prisma.article.findFirst({
     where: { slug },
@@ -49,6 +68,25 @@ const getArticleBySlugDev = async (slug: string) => {
           isFeatured: true,
           createdAt: true,
           articleId: true,
+        },
+      },
+      // 🆕 一口メモも含める
+      trivia: {
+        where: { isActive: true },
+        orderBy: { displayOrder: "asc" },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          contentEn: true,
+          category: true,
+          tags: true,
+          iconEmoji: true,
+          colorTheme: true,
+          displayOrder: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
         },
       },
     },
@@ -74,12 +112,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const featuredImage = article.images.find((img) => img.isFeatured);
   const imageUrl = featuredImage?.url || "/ogp-image.png";
 
+  // 🆕 一口メモの情報をメタデータに含める（オプション）
+  const triviaCount = article.trivia?.length || 0;
+  const baseDescription = article.summary || "Discover the spirit of Japan.";
+  const enhancedDescription =
+    triviaCount > 0
+      ? `${baseDescription} ${triviaCount}つの豆知識も含まれています。`
+      : baseDescription;
+
   return {
     title: `${article.title} | Your Secret Japan`,
-    description: article.summary || "Discover the spirit of Japan.",
+    description: enhancedDescription,
     openGraph: {
       title: `${article.title} | Your Secret Japan`,
-      description: article.summary || "",
+      description: enhancedDescription,
       url: `https://www.yoursecretjapan.com/articles/${article.slug}`,
       images: [
         {
@@ -93,9 +139,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: `${article.title} | Your Secret Japan`,
-      description: article.summary || "",
+      description: enhancedDescription,
       images: [imageUrl],
     },
+    // 🆕 一口メモ関連のキーワードをメタデータに追加
+    keywords: article.trivia?.flatMap((t) => t.tags).join(", ") || undefined,
   };
 }
 
@@ -113,6 +161,7 @@ export default async function Page({ params }: Props) {
   const featuredImage = article.images.find((img) => img.isFeatured);
   const imageUrl = featuredImage?.url || "/ogp-image.png";
 
+  // 🆕 一口メモの情報も含めたStructured Data
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -135,6 +184,50 @@ export default async function Page({ params }: Props) {
     },
     datePublished: new Date(article.createdAt).toISOString(),
     dateModified: new Date(article.updatedAt).toISOString(),
+    // 🆕 一口メモがある場合、追加的な構造化データ
+    ...(article.trivia &&
+      article.trivia.length > 0 && {
+        mainEntity: {
+          "@type": "FAQPage",
+          mainEntity: article.trivia.map((trivia) => ({
+            "@type": "Question",
+            name: trivia.title,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: trivia.content.replace(/\*\*|__/g, "").substring(0, 200), // Markdownを除去して200文字まで
+            },
+          })),
+        },
+      }),
+    // 🆕 カテゴリー情報
+    about: [
+      {
+        "@type": "Thing",
+        name: article.category,
+      },
+      // 一口メモのカテゴリーも追加
+      ...(article.trivia?.map((trivia) => ({
+        "@type": "Thing",
+        name: trivia.category,
+      })) || []),
+    ],
+    // 🆕 タグ情報
+    keywords: [
+      article.category,
+      ...(article.trivia?.flatMap((t) => t.tags) || []),
+    ]
+      .filter(Boolean)
+      .join(", "),
+  };
+
+  // Date型をstring型に変換
+  const formattedArticle = {
+    ...article,
+    trivia: article.trivia?.map((t) => ({
+      ...t,
+      createdAt: t.createdAt.toISOString(),
+      updatedAt: t.updatedAt.toISOString(),
+    })),
   };
 
   return (
@@ -145,7 +238,7 @@ export default async function Page({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         strategy="afterInteractive"
       />
-      <ArticleClientPage article={article} />
+      <ArticleClientPage article={formattedArticle} />
     </>
   );
 }

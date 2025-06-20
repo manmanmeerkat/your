@@ -1,8 +1,10 @@
+// components/articleClientPage/ArticleClientPage.tsx - Hydrationエラー修正版
 "use client";
 
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
@@ -10,19 +12,33 @@ import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
 import RelatedArticles from "@/components/sidebar/RelatedArticles";
 import Redbubble from "../redBubble/RedBubble";
-import { MarkdownRenderer } from "@/lib/simpleMarkdownRenderer";
+import { MarkdownRenderer } from "@/app/utils/simpleMarkdownRenderer";
 
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
 
-// 🚨 型定義をローカルで定義（循環インポートを回避）
+// 型定義（既存と同じ）
 export type TocItem = {
   id: string;
   text: string;
   level: number;
 };
 
-// 型定義
+type ArticleTrivia = {
+  id: string;
+  title: string;
+  content: string;
+  contentEn?: string | null;
+  category: string;
+  tags: string[];
+  iconEmoji?: string | null;
+  colorTheme?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 type ArticleImage = {
   id: string;
   url: string;
@@ -43,9 +59,555 @@ type Article = {
   createdAt: Date;
   updatedAt: Date;
   images: ArticleImage[];
+  trivia?: ArticleTrivia[];
 };
 
-// ⭐ 改良された画像コンポーネント（unoptimized + キャッシュ対応）
+interface ArticleClientPageProps {
+  article: Article;
+}
+
+// 🔧 プラグインを事前にインポート
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+
+// 🔧 ReactMarkdownを動的インポートでHydrationエラー回避
+const DynamicMarkdown = dynamic(() => import("react-markdown"), {
+  ssr: false,
+  loading: () => (
+    <div className="animate-pulse">
+      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2"></div>
+    </div>
+  ),
+});
+
+// 🔧 Hydration安全な一口メモマークダウンレンダラー
+const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // サーバーサイドまたはマウント前はプレーンテキストを表示
+  if (!isMounted) {
+    return (
+      <div className="text-gray-200 leading-relaxed text-sm sm:text-base font-normal space-y-2">
+        {content.split("\n").map((line, index) => (
+          <p key={index} className="mb-2 last:mb-0">
+            {line.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1")}
+          </p>
+        ))}
+      </div>
+    );
+  }
+
+  // クライアントサイドでのみReactMarkdownを使用
+  return (
+    <DynamicMarkdown
+      remarkPlugins={[remarkGfm]}
+      rehypePlugins={[rehypeRaw]}
+      components={{
+        // 段落
+        p: ({ children, ...props }) => (
+          <p
+            className="text-gray-200 leading-relaxed text-sm sm:text-base font-normal mb-3 last:mb-0"
+            style={{
+              fontFamily:
+                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+              letterSpacing: "0.025em",
+              lineHeight: "1.7",
+            }}
+            {...props}
+          >
+            {children}
+          </p>
+        ),
+
+        // 太字
+        strong: ({ children, ...props }) => {
+          const text = Array.isArray(children)
+            ? children.join("")
+            : String(children || "");
+
+          // 日本語の重要キーワードは黄色でハイライト
+          if (/^(重要|ポイント|特に|注目|注意|必見|覚えておこう)$/.test(text)) {
+            return (
+              <strong
+                className="text-yellow-400 font-bold bg-yellow-400/20 px-1 rounded"
+                {...props}
+              >
+                {children}
+              </strong>
+            );
+          }
+
+          return (
+            <strong className="text-white font-bold" {...props}>
+              {children}
+            </strong>
+          );
+        },
+
+        // 斜体
+        em: ({ children, ...props }) => (
+          <em className="text-gray-300 italic" {...props}>
+            {children}
+          </em>
+        ),
+
+        // リンク
+        a: ({ children, href, ...props }) => (
+          <a
+            href={href}
+            className="text-blue-400 hover:text-blue-300 underline transition-colors duration-200"
+            target={href?.startsWith("http") ? "_blank" : undefined}
+            rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
+            {...props}
+          >
+            {children}
+          </a>
+        ),
+
+        // インラインコード
+        code: ({ children, className, ...props }) => {
+          const match = /language-(\w+)/.exec(className || "");
+
+          if (!match) {
+            // インラインコード
+            return (
+              <code
+                className="bg-gray-700 text-yellow-300 px-2 py-1 rounded text-sm font-mono"
+                {...props}
+              >
+                {children}
+              </code>
+            );
+          }
+
+          // コードブロック
+          return (
+            <code
+              className="block bg-gray-800 text-yellow-300 p-3 rounded text-sm font-mono overflow-x-auto whitespace-pre my-2"
+              {...props}
+            >
+              {children}
+            </code>
+          );
+        },
+
+        // コードブロック
+        pre: ({ children, ...props }) => (
+          <pre
+            className="bg-gray-800 border border-gray-700 rounded-lg p-3 my-3 overflow-x-auto"
+            {...props}
+          >
+            {children}
+          </pre>
+        ),
+
+        // リスト
+        ul: ({ children, ...props }) => (
+          <ul
+            className="list-disc list-inside text-gray-200 space-y-1 my-2 pl-2"
+            {...props}
+          >
+            {children}
+          </ul>
+        ),
+
+        ol: ({ children, ...props }) => (
+          <ol
+            className="list-decimal list-inside text-gray-200 space-y-1 my-2 pl-2"
+            {...props}
+          >
+            {children}
+          </ol>
+        ),
+
+        li: ({ children, ...props }) => (
+          <li className="text-gray-200 leading-relaxed text-sm" {...props}>
+            {children}
+          </li>
+        ),
+
+        // 引用
+        blockquote: ({ children, ...props }) => (
+          <blockquote
+            className="border-l-4 border-yellow-400 bg-gray-800/50 pl-3 py-2 my-3 italic text-gray-300 text-sm"
+            {...props}
+          >
+            {children}
+          </blockquote>
+        ),
+
+        // 見出し（一口メモ内では小さめに）
+        h1: ({ children, ...props }) => (
+          <h1
+            className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0"
+            {...props}
+          >
+            {children}
+          </h1>
+        ),
+
+        h2: ({ children, ...props }) => (
+          <h2
+            className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0"
+            {...props}
+          >
+            {children}
+          </h2>
+        ),
+
+        h3: ({ children, ...props }) => (
+          <h3
+            className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0"
+            {...props}
+          >
+            {children}
+          </h3>
+        ),
+
+        // 水平線
+        hr: ({ ...props }) => (
+          <hr className="border-gray-600 my-3" {...props} />
+        ),
+
+        // 改行をそのまま反映
+        br: ({ ...props }) => <br {...props} />,
+      }}
+    >
+      {content}
+    </DynamicMarkdown>
+  );
+};
+
+// 🔧 Hydration安全な一口メモコンポーネント
+const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
+  trivia,
+  index,
+}) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const kanjiNumbers = [
+    "一",
+    "二",
+    "三",
+    "四",
+    "五",
+    "六",
+    "七",
+    "八",
+    "九",
+    "十",
+  ];
+
+  // 表示するコンテンツを決定（英語版があれば英語版、なければ日本語版）
+  const displayContent = trivia.contentEn || trivia.content;
+
+  return (
+    <div className="my-8 mx-auto max-w-4xl">
+      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+        {/* 上部装飾ライン */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+
+        {/* 四隅の角飾り */}
+        <div className="absolute top-3 left-3 w-2 h-2 border-l border-t border-gray-600 opacity-50"></div>
+        <div className="absolute top-3 right-3 w-2 h-2 border-r border-t border-gray-600 opacity-50"></div>
+        <div className="absolute bottom-3 left-3 w-2 h-2 border-l border-b border-gray-600 opacity-50"></div>
+        <div className="absolute bottom-3 right-3 w-2 h-2 border-r border-b border-gray-600 opacity-50"></div>
+
+        {/* 内容 */}
+        <div className="relative p-6 sm:p-8">
+          {/* 番号 */}
+          <div className="absolute top-4 left-4">
+            <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+              <span
+                className="text-xs font-bold text-gray-300 tracking-wider"
+                style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
+              >
+                {kanjiNumbers[index] || (index + 1).toString()}
+              </span>
+            </div>
+          </div>
+
+          {/* カスタムアイコン */}
+          {trivia.iconEmoji && isClient && (
+            <div className="absolute top-4 right-4">
+              <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 p-2 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <img
+                  src={trivia.iconEmoji}
+                  alt=""
+                  className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* メインテキスト */}
+          <div className="mt-4 pr-12 relative">
+            <div
+              className="absolute -left-3 -top-1 text-3xl text-gray-600 leading-none select-none opacity-50"
+              style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
+            >
+              「
+            </div>
+
+            <div className="relative z-10 pr-4">
+              {/* タイトル */}
+              <div className="flex items-center justify-center gap-1 py-1 px-3 rounded-md bg-gradient-to-r from-gray-50 via-white to-gray-50 border border-gray-200 mb-3">
+                <span className="text-gray-400 text-sm font-serif">※</span>
+                <span
+                  className="text-sm font-medium text-gray-700 font-serif"
+                  style={{ letterSpacing: "0.1em" }}
+                >
+                  Trivia
+                </span>
+                <span className="text-gray-400 text-sm font-serif">※</span>
+              </div>
+
+              {/* 🔧 マークダウンコンテンツをレンダリング（Hydration安全） */}
+              <div className="trivia-markdown-content">
+                <TriviaMarkdown content={displayContent} />
+              </div>
+
+              {/* 英語と日本語両方がある場合の補足表示 */}
+              {trivia.contentEn &&
+                trivia.content !== trivia.contentEn &&
+                isClient && (
+                  <details className="mt-3 border-t border-gray-600 pt-3">
+                    <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-300">
+                      日本語版を表示
+                    </summary>
+                    <div className="mt-2 text-xs text-gray-400 border-l-2 border-gray-600 pl-3">
+                      <TriviaMarkdown content={trivia.content} />
+                    </div>
+                  </details>
+                )}
+            </div>
+
+            <div
+              className="absolute -right-1 -bottom-3 text-3xl text-gray-600 leading-none select-none opacity-50"
+              style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
+            >
+              」
+            </div>
+          </div>
+
+          {/* 下部飾り */}
+          <div className="mt-6 flex justify-center">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+              <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600"></div>
+              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+            </div>
+          </div>
+
+          {/* タグ表示（クライアントサイドのみ） */}
+          {trivia.tags && trivia.tags.length > 0 && isClient && (
+            <div className="mt-4 flex flex-wrap gap-1 justify-center">
+              {trivia.tags.slice(0, 3).map((tag, tagIndex) => (
+                <span
+                  key={tagIndex}
+                  className="text-xs bg-gray-700/50 text-gray-400 px-2 py-1 rounded-full border border-gray-600"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 側面装飾 */}
+        <div className="absolute left-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-50"></div>
+        <div className="absolute right-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-30"></div>
+
+        {/* ホバー光沢 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+      </div>
+    </div>
+  );
+};
+
+// 🔧 プレースホルダーコンポーネント（SSR用）
+const TriviaPlaceholder: React.FC<{ index: number }> = ({ index }) => {
+  const kanjiNumbers = [
+    "一",
+    "二",
+    "三",
+    "四",
+    "五",
+    "六",
+    "七",
+    "八",
+    "九",
+    "十",
+  ];
+
+  return (
+    <div className="my-8 mx-auto max-w-4xl">
+      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-lg overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+
+        <div className="relative p-6 sm:p-8">
+          <div className="absolute top-4 left-4">
+            <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center">
+              <span className="text-xs font-bold text-gray-300 tracking-wider font-serif">
+                {kanjiNumbers[index] || (index + 1).toString()}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 pr-12 relative">
+            <div className="absolute -left-3 -top-1 text-3xl text-gray-600 leading-none select-none opacity-50 font-serif">
+              「
+            </div>
+
+            <div className="relative z-10 pr-4">
+              <h4 className="text-base font-semibold text-yellow-400 mb-3 font-serif">
+                Trivia
+              </h4>
+
+              {/* ローディングプレースホルダー */}
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+              </div>
+            </div>
+
+            <div className="absolute -right-1 -bottom-3 text-3xl text-gray-600 leading-none select-none opacity-50 font-serif">
+              」
+            </div>
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+              <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600"></div>
+              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 🔧 Hydration安全なコンテンツレンダリング - コンポーネント化
+const ContentWithTrivia: React.FC<{
+  content: string;
+  triviaList?: ArticleTrivia[];
+}> = ({ content, triviaList }) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!triviaList || triviaList.length === 0) {
+    return <MarkdownRenderer content={content} />;
+  }
+
+  // 一口メモ記法で分割
+  const triviaRegex = /(:::trivia\[[^\]]+\])/g;
+  const parts = content.split(triviaRegex);
+  const elements: React.ReactNode[] = [];
+  const usedTrivia = new Set<string>();
+
+  let currentContent = "";
+
+  parts.forEach((part, index) => {
+    const triviaMatch = part.match(/:::trivia\[([^\]]+)\]/);
+
+    if (triviaMatch) {
+      // 現在のコンテンツがある場合は先にレンダリング
+      if (currentContent.trim()) {
+        elements.push(
+          <MarkdownRenderer
+            key={`content-${index}`}
+            content={currentContent.trim()}
+          />
+        );
+        currentContent = "";
+      }
+
+      // 一口メモを追加
+      const identifier = triviaMatch[1];
+      let trivia: ArticleTrivia | undefined;
+      let triviaIndex = 0;
+
+      // IDまたはインデックスで一口メモを検索
+      if (isNaN(Number(identifier))) {
+        trivia = triviaList.find((t) => t.id === identifier && t.isActive);
+        triviaIndex = triviaList.findIndex((t) => t.id === identifier);
+      } else {
+        const idx = parseInt(identifier, 10);
+        trivia = triviaList[idx];
+        triviaIndex = idx;
+      }
+
+      if (trivia && trivia.isActive && !usedTrivia.has(trivia.id)) {
+        usedTrivia.add(trivia.id);
+
+        // クライアントサイドでのみTriviaCard、サーバーサイドではプレースホルダー
+        if (isClient) {
+          elements.push(
+            <TriviaCard
+              key={`trivia-${trivia.id}-${index}`}
+              trivia={trivia}
+              index={triviaIndex}
+            />
+          );
+        } else {
+          elements.push(
+            <TriviaPlaceholder
+              key={`trivia-placeholder-${index}`}
+              index={triviaIndex}
+            />
+          );
+        }
+      } else if (
+        !trivia &&
+        process.env.NODE_ENV === "development" &&
+        isClient
+      ) {
+        // 一口メモが見つからない場合の警告表示（開発時のみ、クライアントサイドのみ）
+        elements.push(
+          <div
+            key={`trivia-error-${index}`}
+            className="my-4 p-4 bg-red-100 border border-red-300 rounded-lg text-red-700 text-sm"
+          >
+            ⚠️ 一口メモ &quot;{identifier}&quot; が見つかりません
+          </div>
+        );
+      }
+    } else {
+      // 通常のマークダウンコンテンツを蓄積
+      currentContent += part;
+    }
+  });
+
+  // 最後に残ったコンテンツを追加
+  if (currentContent.trim()) {
+    elements.push(
+      <MarkdownRenderer key={`content-final`} content={currentContent.trim()} />
+    );
+  }
+
+  return <>{elements}</>;
+};
+
+// 既存のOptimizedImageコンポーネント（変更なし）
 const OptimizedImage = ({
   src,
   alt,
@@ -64,9 +626,7 @@ const OptimizedImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [shouldShowLoader, setShouldShowLoader] = useState(true);
-  const imgRef = useRef<HTMLImageElement>(null);
 
-  // ⭐ マウント時にキャッシュ確認
   useEffect(() => {
     const timer = setTimeout(() => {
       setShouldShowLoader(false);
@@ -74,7 +634,6 @@ const OptimizedImage = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // ⭐ src変更時の状態リセット
   useEffect(() => {
     setIsLoaded(false);
     setHasError(false);
@@ -114,7 +673,6 @@ const OptimizedImage = ({
       )}
 
       <Image
-        ref={imgRef}
         src={src}
         alt={alt}
         width={width}
@@ -140,368 +698,6 @@ const safeId = (text: unknown): string => {
     .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-");
 };
 
-// ⭐ テーブル処理関数を追加（黒ベース和風デザイン対応）
-const processTable = (tableText: string): string => {
-  const lines = tableText.trim().split("\n");
-  if (lines.length < 2) return tableText;
-
-  const headerLine = lines[0];
-  const separatorLine = lines[1];
-  const dataLines = lines.slice(2);
-
-  // セパレーター行の確認（|---|---|のような形式）
-  if (!separatorLine.match(/^\s*\|?[\s\-:|]+\|\s*$/)) {
-    return tableText; // テーブル形式でない場合は元のテキストを返す
-  }
-
-  // ヘッダーの解析
-  const headers = headerLine
-    .split("|")
-    .map((cell) => cell.trim())
-    .filter((cell) => cell !== "");
-
-  if (headers.length === 0) return tableText;
-
-  // 黒ベース和風カラーパレット
-  const colors = {
-    primary: "#1a1a1a",
-    primaryLight: "#2d2d2d",
-    accent: "#df7163",
-    accentLight: "#e8998f",
-    textPrimary: "#ffffff",
-    textSecondary: "#e2e8f0",
-    border: "#404040",
-    borderAccent: "#df7163",
-    alternateRow: "#262626",
-    hoverRow: "#333333",
-  };
-
-  // テーブルHTMLの構築（黒ベース和風スタイル）
-  let tableHtml = `
-    <div class="table-wrapper" style="
-      overflow-x: auto; 
-      margin: 2rem 0; 
-      border-radius: 12px; 
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(223, 113, 99, 0.2);
-      background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(45, 45, 45, 0.95));
-      padding: 1px;
-    ">
-      <table class="japanese-style-modern-table" style="
-        width: 100%; 
-        border-collapse: collapse; 
-        border-radius: 11px; 
-        overflow: hidden;
-        background: ${colors.primary};
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
-      ">`;
-
-  // ヘッダー行（黒ベースに朱色アクセント）
-  tableHtml += `
-    <thead style="
-      background: linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight});
-      position: relative;
-      border-bottom: 2px solid ${colors.accent};
-    ">
-      <tr>`;
-
-  headers.forEach((header, index) => {
-    const borderRight =
-      index < headers.length - 1
-        ? `border-right: 1px solid rgba(223, 113, 99, 0.3);`
-        : "";
-    tableHtml += `
-      <th style="
-        padding: 18px 24px; 
-        text-align: left; 
-        font-weight: 700; 
-        color: ${colors.textPrimary}; 
-        font-size: 1rem;
-        letter-spacing: 0.8px;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-        ${borderRight}
-        position: relative;
-        background: linear-gradient(135deg, rgba(223, 113, 99, 0.1), rgba(232, 153, 143, 0.05));
-      ">${processInlineMarkdown(header)}</th>`;
-  });
-
-  tableHtml += `
-      </tr>
-      <tr style="height: 3px;">
-        <td colspan="${headers.length}" style="
-          background: linear-gradient(90deg, 
-            transparent 0%, 
-            rgba(223, 113, 99, 0.5) 20%, 
-            rgba(223, 113, 99, 0.8) 50%, 
-            rgba(223, 113, 99, 0.5) 80%, 
-            transparent 100%
-          );
-          padding: 0;
-          border: none;
-        "></td>
-      </tr>
-    </thead>`;
-
-  // データ行（黒ベースの交互背景、ホバーエフェクトなし）
-  tableHtml += "<tbody>";
-  dataLines.forEach((line, index) => {
-    const cells = line
-      .split("|")
-      .map((cell) => cell.trim())
-      .filter((cell) => cell !== "");
-
-    if (cells.length > 0) {
-      const isEven = index % 2 === 0;
-      const bgColor = isEven ? colors.primary : colors.alternateRow;
-
-      tableHtml += `
-        <tr style="
-          background-color: ${bgColor};
-          border-bottom: 1px solid ${colors.border};
-        ">`;
-
-      // ヘッダー数に合わせてセルを調整
-      for (let i = 0; i < headers.length; i++) {
-        const cellContent = cells[i] || "";
-        const borderRight =
-          i < headers.length - 1
-            ? `border-right: 1px solid ${colors.border};`
-            : "";
-
-        tableHtml += `
-          <td style="
-            padding: 16px 24px; 
-            color: ${colors.textPrimary};
-            font-size: 0.95rem;
-            line-height: 1.7;
-            ${borderRight}
-            vertical-align: top;
-            font-weight: 400;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-          ">${processInlineMarkdown(cellContent)}</td>`;
-      }
-      tableHtml += "</tr>";
-    }
-  });
-
-  tableHtml += "</tbody></table></div>";
-
-  return tableHtml;
-};
-
-// ⭐ より堅牢なインライン処理関数（改行防止対応）
-const processInlineMarkdown = (text: string): string => {
-  if (!text || typeof text !== "string") return "";
-
-  try {
-    return (
-      text
-        // ⭐ 1. コードブロック（最初に処理してエスケープ）
-        .replace(
-          /`([^`]+)`/g,
-          '<code class="japanese-style-modern-code">$1</code>'
-        )
-
-        // ⭐ 2. リンク処理（より厳密な正規表現）
-        .replace(
-          /\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
-          '<a href="$2" class="japanese-style-modern-a" title="$3">$1</a>'
-        )
-
-        // ⭐ 3. 画像処理（リンクの後に処理）
-        .replace(
-          /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
-          '<div class="markdown-image-container" data-src="$2" data-alt="$1" data-title="$3"><div class="markdown-image-loader"><div style="color: #9ca3af;">Loading...</div></div></div>'
-        )
-
-        // ⭐ 4. 括弧内テキストの改行防止
-        .replace(
-          /\(([^)]+)\)/g,
-          '<span style="white-space: nowrap;">($1)</span>'
-        )
-
-        // ⭐ 5. 強調テキスト（流派名の特別処理）
-        .replace(
-          /\*\*([^*]*-ryu[^*]*)\*\*/g,
-          '<strong class="ryu-name">$1</strong>'
-        )
-        .replace(
-          /\*\*([^*]+)\*\*/g,
-          '<strong class="japanese-style-modern-strong">$1</strong>'
-        )
-
-        // ⭐ 6. 斜体（強調の後に処理）
-        .replace(/\*([^*]+)\*/g, '<em class="japanese-style-modern-em">$1</em>')
-
-        // ⭐ 7. 特殊文字のエスケープ解除
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-    );
-  } catch (error) {
-    console.warn("Error processing inline markdown:", error, text);
-    return text; // エラー時は元のテキストを返す
-  }
-};
-
-// ⭐ より堅牢なMarkdownレンダリング関数（テーブル対応追加）
-const renderEnhancedMarkdown = (content: string): string => {
-  if (!content || typeof content !== "string") {
-    console.warn("Invalid content provided to renderEnhancedMarkdown");
-    return '<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">No content available</p></section>';
-  }
-
-  try {
-    let html = '<section class="japanese-style-modern-section">';
-
-    // ⭐ テーブルを先に処理して置換
-    const tableRegex = /(\|[^\n]*\|\n\|[\s\-:|]*\|\n(?:\|[^\n]*\|\n?)*)/g;
-    const contentWithTables = content.replace(tableRegex, (match) => {
-      return `\n\nTABLE_PLACEHOLDER_${btoa(match)}\n\n`;
-    });
-
-    // ⭐ より堅牢な段落分割
-    const paragraphs = contentWithTables
-      .split(/\n\s*\n/)
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
-
-    if (paragraphs.length === 0) {
-      return '<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">No content available</p></section>';
-    }
-
-    for (let i = 0; i < paragraphs.length; i++) {
-      const paragraph = paragraphs[i];
-      if (!paragraph) continue;
-
-      try {
-        // ⭐ テーブルプレースホルダーの処理
-        if (paragraph.startsWith("TABLE_PLACEHOLDER_")) {
-          const encodedTable = paragraph.replace("TABLE_PLACEHOLDER_", "");
-          try {
-            const tableText = atob(encodedTable);
-            html += processTable(tableText);
-          } catch (e) {
-            console.warn("Error decoding table:", e);
-            html += `<p class="japanese-style-modern-p">テーブルの処理中にエラーが発生しました</p>`;
-          }
-        }
-        // ⭐ 見出し1
-        else if (paragraph.match(/^#\s+/)) {
-          const headingText = paragraph.replace(/^#\s+/, "").trim();
-          const id = safeId(headingText);
-          if (i > 0) {
-            html += '</section><section class="japanese-style-modern-section">';
-          }
-          html += `<h1 id="${id}" class="japanese-style-modern-h1">${processInlineMarkdown(
-            headingText
-          )}</h1>`;
-        }
-        // ⭐ 見出し2
-        else if (paragraph.match(/^##\s+/)) {
-          const headingText = paragraph.replace(/^##\s+/, "").trim();
-          const id = safeId(headingText);
-          html += `<h2 id="${id}" class="japanese-style-modern-h2">${processInlineMarkdown(
-            headingText
-          )}</h2>`;
-        }
-        // ⭐ 見出し3
-        else if (paragraph.match(/^###\s+/)) {
-          const headingText = paragraph.replace(/^###\s+/, "").trim();
-          const id = safeId(headingText);
-          html += `<h3 id="${id}" class="japanese-style-modern-h3">${processInlineMarkdown(
-            headingText
-          )}</h3>`;
-        }
-        // ⭐ 引用ブロック
-        else if (paragraph.match(/^>\s/)) {
-          const quoteLines = paragraph
-            .split("\n")
-            .map((line) => line.replace(/^>\s?/, "").trim())
-            .filter((line) => line.length > 0)
-            .join(" ");
-          html += `<blockquote class="japanese-style-modern-blockquote"><p class="japanese-style-modern-p">${processInlineMarkdown(
-            quoteLines
-          )}</p></blockquote>`;
-        }
-        // ⭐ 箇条書きリスト（改良版）
-        else if (paragraph.match(/^\s*-\s/)) {
-          const lines = paragraph.split("\n").filter((line) => line.trim());
-          let listHtml = '<ul class="japanese-style-modern-ul">';
-
-          lines.forEach((line) => {
-            const trimmedLine = line.trim();
-            if (trimmedLine.match(/^-\s+/)) {
-              const content = trimmedLine.replace(/^-\s+/, "");
-              if (content) {
-                listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-                  content
-                )}</li>`;
-              }
-            }
-          });
-
-          listHtml += "</ul>";
-          html += listHtml;
-        }
-        // ⭐ 番号付きリスト（改良版）
-        else if (paragraph.match(/^\s*\d+\.\s/)) {
-          const lines = paragraph.split("\n").filter((line) => line.trim());
-          let listHtml = '<ol class="japanese-style-modern-ol">';
-
-          lines.forEach((line) => {
-            const trimmedLine = line.trim();
-            const match = trimmedLine.match(/^\d+\.\s+(.+)$/);
-            if (match && match[1]) {
-              listHtml += `<li class="japanese-style-modern-li">${processInlineMarkdown(
-                match[1]
-              )}</li>`;
-            }
-          });
-
-          listHtml += "</ol>";
-          html += listHtml;
-        }
-        // ⭐ 水平線
-        else if (paragraph.match(/^(-{3,}|\*{3,}|_{3,})$/)) {
-          html += '<hr class="japanese-style-modern-hr" />';
-        }
-        // ⭐ 通常の段落
-        else {
-          // 複数行の段落を正しく処理
-          const lines = paragraph
-            .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line);
-          if (lines.length > 0) {
-            const content = lines.join(" ");
-            html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
-              content
-            )}</p>`;
-          }
-        }
-      } catch (paragraphError) {
-        console.warn("Error processing paragraph:", paragraphError, paragraph);
-        // エラーが発生した段落は通常のテキストとして表示
-        html += `<p class="japanese-style-modern-p">${processInlineMarkdown(
-          paragraph
-        )}</p>`;
-      }
-    }
-
-    html += "</section>";
-    return html;
-  } catch (error) {
-    console.error("Critical error in renderEnhancedMarkdown:", error);
-    return `<section class="japanese-style-modern-section">
-      <p class="japanese-style-modern-p">Content rendering error. Please check the markdown format.</p>
-      <pre style="background: #1a1a1a; padding: 1rem; border-radius: 4px; color: #f3f3f2; font-size: 0.9rem; white-space: pre-wrap;">${content.slice(
-        0,
-        500
-      )}${content.length > 500 ? "..." : ""}</pre>
-    </section>`;
-  }
-};
-
 const extractHeaders = (content: string): TocItem[] => {
   const headingRegex = /^(#{1,3})\s+(.+)$/gm;
   const headers: TocItem[] = [];
@@ -517,81 +713,56 @@ const extractHeaders = (content: string): TocItem[] => {
   return headers;
 };
 
-export default function ArticleClientPage({ article }: { article: Article }) {
+const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [showMobileToc, setShowMobileToc] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0); // スクロール位置を保存
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
-  const { renderedContent, tableOfContents } = useMemo(() => {
-    const mdPatterns = [
-      /^#\s+.+$/m,
-      /\*\*.+\*\*/,
-      /\*.+\*/,
-      /^\s*-\s+.+$/m,
-      /^\s*\d+\.\s+.+$/m,
-      /\[.+\]\(.+\)/,
-      /!\[.+\]\(.+\)/,
-      /^>.+$/m,
-      /\|[^\n]*\|/, // テーブル検出パターンを追加
-    ];
-
-    const contentIsMarkdown = mdPatterns.some((pattern) =>
-      pattern.test(article.content)
-    );
-
-    if (contentIsMarkdown) {
-      const html = renderEnhancedMarkdown(article.content);
-      const toc = extractHeaders(article.content);
-      return { renderedContent: html, tableOfContents: toc };
-    } else {
-      return {
-        renderedContent: `<section class="japanese-style-modern-section"><p class="japanese-style-modern-p">${article.content}</p></section>`,
-        tableOfContents: [],
-      };
-    }
+  // 目次生成（元のコンテンツから）
+  const tableOfContents = useMemo(() => {
+    return extractHeaders(article.content);
   }, [article.content]);
 
-  // 🚨 改善版：より精密な見出し検出
+  // 🔧 一口メモ付きコンテンツをレンダリング（Hydration安全）
+  const renderedContent = useMemo(() => {
+    const activeTrivia = article.trivia?.filter((t) => t.isActive) || [];
+    return (
+      <ContentWithTrivia content={article.content} triviaList={activeTrivia} />
+    );
+  }, [article.content, article.trivia]);
+
+  // 既存のスクロール処理（変更なし）
   const handleScroll = useCallback(() => {
     if (typeof window === "undefined") return;
 
     setShowScrollTop(window.scrollY > 300);
 
     if (tableOfContents.length > 0) {
-      // 🚨 改善：より精密な見出し検出
       const headings = document.querySelectorAll(
         ".japanese-style-modern-section h1[id], .japanese-style-modern-section h2[id], .japanese-style-modern-section h3[id]"
       );
 
       if (headings.length === 0) return;
 
-      // 現在のスクロール位置
-      const scrollPosition = window.scrollY;
+      const currentScrollY = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
-
-      // 🚨 改善：より正確な判定のための調整値
-      const headerOffset = 120; // ヘッダーの高さ + マージン
-      const viewportCenter = scrollPosition + windowHeight / 3; // ビューポートの上部1/3を基準点に
+      const headerOffset = 120;
+      const viewportCenter = currentScrollY + windowHeight / 3;
 
       let activeId = "";
       let closestDistance = Infinity;
 
-      // 各見出しとの距離を計算して最も近いものを選択
       headings.forEach((heading) => {
         const rect = heading.getBoundingClientRect();
-        const elementTop = rect.top + scrollPosition;
-
-        // 🚨 改善：見出しがビューポートの上部1/3に入った時点でアクティブに
+        const elementTop = rect.top + currentScrollY;
         const distanceFromViewportCenter = Math.abs(
           elementTop - viewportCenter
         );
 
-        // 見出しが画面上部に来た場合、または最も近い見出しの場合
         if (
-          elementTop <= scrollPosition + headerOffset &&
+          elementTop <= currentScrollY + headerOffset &&
           distanceFromViewportCenter < closestDistance
         ) {
           closestDistance = distanceFromViewportCenter;
@@ -599,80 +770,22 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         }
       });
 
-      // 🚨 改善：ページの最下部近くの場合、最後の見出しをアクティブに
-      if (scrollPosition + windowHeight >= documentHeight - 100) {
+      if (currentScrollY + windowHeight >= documentHeight - 100) {
         const lastHeading = headings[headings.length - 1];
         if (lastHeading) {
           activeId = lastHeading.id;
         }
       }
 
-      // 🚨 改善：ページトップ付近の場合、最初の見出しをアクティブに
-      if (scrollPosition < 200 && headings[0]) {
+      if (currentScrollY < 200 && headings[0]) {
         activeId = headings[0].id;
       }
 
-      // アクティブ状態を更新（変更があった場合のみ）
       if (activeId !== activeSection) {
         setActiveSection(activeId);
-
-        // 🚨 デバッグ用ログ（本番では削除）
-        console.log(
-          "Active section changed:",
-          activeId,
-          "Scroll position:",
-          scrollPosition
-        );
       }
     }
   }, [tableOfContents.length, activeSection]);
-
-  // 🚨 改善：Intersection Observer を使ったより高精度な検出（オプション）
-  const useIntersectionObserver = () => {
-    useEffect(() => {
-      if (typeof window === "undefined" || tableOfContents.length === 0) return;
-
-      const headings = document.querySelectorAll(
-        ".japanese-style-modern-section h1[id], .japanese-style-modern-section h2[id], .japanese-style-modern-section h3[id]"
-      );
-
-      if (headings.length === 0) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          // 現在表示されている見出しを収集
-          const visibleHeadings = entries
-            .filter((entry) => entry.isIntersecting)
-            .sort((a, b) => {
-              // Y座標でソート（上から順番）
-              return a.boundingClientRect.top - b.boundingClientRect.top;
-            });
-
-          if (visibleHeadings.length > 0) {
-            // 最も上にある見出しをアクティブに
-            const activeId = visibleHeadings[0].target.id;
-            if (activeId !== activeSection) {
-              setActiveSection(activeId);
-            }
-          }
-        },
-        {
-          rootMargin: "-20% 0px -80% 0px",
-          threshold: 0,
-        }
-      );
-
-      headings.forEach((heading) => observer.observe(heading));
-
-      return () => {
-        headings.forEach((heading) => observer.unobserve(heading));
-        observer.disconnect();
-      };
-    }, [tableOfContents.length, activeSection]);
-  };
-
-  // カスタムフックを使用
-  useIntersectionObserver();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -680,118 +793,15 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     const handleScrollEvent = () => handleScroll();
     window.addEventListener("scroll", handleScrollEvent, { passive: true });
     window.addEventListener("resize", handleScrollEvent);
-    setTimeout(handleScrollEvent, 100);
+
+    const timer = setTimeout(handleScrollEvent, 100);
 
     return () => {
       window.removeEventListener("scroll", handleScrollEvent);
       window.removeEventListener("resize", handleScrollEvent);
+      clearTimeout(timer);
     };
   }, [handleScroll]);
-
-  // ⭐ Markdown内画像の動的管理
-  useEffect(() => {
-    if (!contentRef.current) return;
-
-    const processMarkdownImages = () => {
-      const imageContainers = contentRef.current?.querySelectorAll(
-        ".markdown-image-container"
-      );
-      if (!imageContainers) return;
-
-      imageContainers.forEach((container) => {
-        const existingImg = container.querySelector("img");
-        if (existingImg) return; // 既に処理済み
-
-        const src = container.getAttribute("data-src");
-        const alt = container.getAttribute("data-alt") || "";
-        const loader = container.querySelector(
-          ".markdown-image-loader"
-        ) as HTMLElement;
-
-        if (!src || !loader) return;
-
-        // 画像要素を作成
-        const img = document.createElement("img");
-        img.src = src;
-        img.alt = alt;
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.style.cssText = `
-          max-width: 100%; 
-          height: auto; 
-          border-radius: 8px; 
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
-          display: block; 
-          opacity: 0; 
-          transition: opacity 0.5s ease;
-          margin: 0;
-        `;
-
-        // 読み込み完了時の処理
-        const handleLoad = () => {
-          img.style.opacity = "1";
-          if (loader) {
-            loader.style.display = "none";
-          }
-        };
-
-        // エラー時の処理
-        const handleError = () => {
-          img.style.display = "none";
-          if (loader) {
-            loader.innerHTML = `
-              <div style="text-align: center; color: #9ca3af;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
-                <div>画像を読み込めませんでした</div>
-              </div>
-            `;
-            loader.style.background =
-              "linear-gradient(135deg, #262626, #1a1a1a)";
-            loader.style.animation = "none";
-          }
-        };
-
-        // ⭐ キャッシュされた画像の即座チェック
-        if (img.complete && img.naturalHeight !== 0) {
-          handleLoad();
-        } else {
-          img.addEventListener("load", handleLoad);
-          img.addEventListener("error", handleError);
-        }
-
-        // 画像をコンテナに追加
-        container.appendChild(img);
-      });
-    };
-
-    // DOM更新後に実行
-    const timer = setTimeout(processMarkdownImages, 100);
-
-    // MutationObserverで動的コンテンツの変更を監視
-    const observer = new MutationObserver(() => {
-      processMarkdownImages();
-    });
-
-    observer.observe(contentRef.current, {
-      childList: true,
-      subtree: true,
-    });
-
-    return () => {
-      clearTimeout(timer);
-      observer.disconnect();
-    };
-  }, [renderedContent]); // renderedContentが変更されたときに再実行
-
-  // ⭐ コンポーネントのアンマウント時にbodyクラスをクリーンアップ
-  useEffect(() => {
-    return () => {
-      document.body.classList.remove("toc-open");
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-    };
-  }, []);
 
   const scrollToTop = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -799,92 +809,54 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     }
   }, []);
 
-  // 🚨 完全修正: scrollToHeading 関数（スクロール位置復元を完全排除）
-  // 🚨 最終修正: scrollToHeading 関数（位置計算方法を改善）
-  const scrollToHeading = useCallback(
-    (id: string) => {
-      if (typeof window === "undefined") return;
+  const scrollToHeading = useCallback((id: string) => {
+    if (typeof window === "undefined") return;
 
-      console.log("クリックされた見出しID:", id);
+    const element = document.getElementById(id);
+    if (!element) return;
 
-      const element = document.getElementById(id);
-      if (!element) {
-        console.log("要素が見つかりません:", id);
-        const allHeadings = document.querySelectorAll("h1[id], h2[id], h3[id]");
-        console.log(
-          "利用可能な見出し:",
-          Array.from(allHeadings).map((h) => h.id)
-        );
-        return;
-      }
+    if (window.innerWidth <= 768) {
+      const elementRect = element.getBoundingClientRect();
+      const currentScrollY = window.scrollY;
+      const absoluteElementPosition = elementRect.top + currentScrollY;
 
-      console.log("要素が見つかりました:", element);
+      setShowMobileToc(false);
 
-      // モバイルの場合
-      if (window.innerWidth <= 768) {
-        // 🚨 重要: body固定解除前に要素の絶対位置を計算
-        const elementRect = element.getBoundingClientRect();
-        const currentScrollY = window.scrollY;
-        const absoluteElementPosition = elementRect.top + currentScrollY;
+      document.body.classList.remove("toc-open");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
 
-        console.log("body固定前の要素位置計算:");
-        console.log("- element.getBoundingClientRect().top:", elementRect.top);
-        console.log("- window.scrollY:", currentScrollY);
-        console.log("- 絶対位置:", absoluteElementPosition);
-
-        // 1. 目次を閉じる
-        setShowMobileToc(false);
-
-        // 2. body の固定を解除
-        document.body.classList.remove("toc-open");
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-
-        console.log("モバイル: body固定解除完了");
-
-        // 🚨 重要: 計算済みの絶対位置を使用してスクロール
-        requestAnimationFrame(() => {
-          const offsetPosition = absoluteElementPosition - 100;
-
-          console.log("計算済み位置でスクロール開始:", offsetPosition);
-
-          // 負の値の場合は0に調整
-          const finalPosition = Math.max(0, offsetPosition);
-
-          window.scrollTo({
-            top: finalPosition,
-            behavior: "smooth",
-          });
-
-          setActiveSection(id);
-        });
-      } else {
-        // デスクトップの場合は通常のスクロール
-        const elementPosition =
-          element.getBoundingClientRect().top + window.pageYOffset;
-        const offsetPosition = elementPosition - 100;
-
-        console.log("デスクトップ スクロール開始:", offsetPosition);
+      requestAnimationFrame(() => {
+        const offsetPosition = absoluteElementPosition - 100;
+        const finalPosition = Math.max(0, offsetPosition);
 
         window.scrollTo({
-          top: Math.max(0, offsetPosition), // 負の値を防ぐ
+          top: finalPosition,
           behavior: "smooth",
         });
 
         setActiveSection(id);
-      }
-    },
-    [] // 依存関係を完全に削除
-  );
+      });
+    } else {
+      const elementPosition =
+        element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - 100;
 
-  // 🚨 修正: toggleMobileToc関数（見出しクリック時の処理を分離）
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: "smooth",
+      });
+
+      setActiveSection(id);
+    }
+  }, []);
+
   const toggleMobileToc = useCallback(() => {
     setShowMobileToc((prev) => {
       const newValue = !prev;
 
       if (newValue) {
-        // 目次を開く - 現在のスクロール位置を保存
         const currentScroll = window.scrollY;
         setScrollPosition(currentScroll);
 
@@ -892,21 +864,15 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         document.body.style.position = "fixed";
         document.body.style.top = `-${currentScroll}px`;
         document.body.style.width = "100%";
-
-        console.log("目次を開く: スクロール位置保存:", currentScroll);
       } else {
-        // 🚨 重要: toggleMobileToc経由で閉じる場合のみスクロール位置を復元
-        // （×ボタンやオーバーレイクリック時）
         document.body.classList.remove("toc-open");
         document.body.style.position = "";
         document.body.style.top = "";
         document.body.style.width = "";
 
-        // 少し遅延してからスクロール位置を復元
         setTimeout(() => {
           if (scrollPosition > 0) {
             window.scrollTo(0, scrollPosition);
-            console.log("目次を閉じる: スクロール位置復元:", scrollPosition);
           }
         }, 50);
       }
@@ -915,10 +881,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     });
   }, [scrollPosition]);
 
-  // 🚨 修正: closeMobileToc関数（×ボタン・オーバーレイ専用、必ずスクロール位置復元）
   const closeMobileToc = useCallback(() => {
-    console.log("closeMobileToc呼び出し - スクロール位置復元あり");
-
     setShowMobileToc(false);
 
     document.body.classList.remove("toc-open");
@@ -926,21 +889,26 @@ export default function ArticleClientPage({ article }: { article: Article }) {
     document.body.style.top = "";
     document.body.style.width = "";
 
-    // ×ボタン・オーバーレイクリック時は必ずスクロール位置を復元
     setTimeout(() => {
       if (scrollPosition >= 0) {
-        // 0以上で復元（ページトップでも0は有効）
         window.scrollTo(0, scrollPosition);
-        console.log(
-          "×ボタン/オーバーレイ: スクロール位置復元:",
-          scrollPosition
-        );
       }
     }, 50);
   }, [scrollPosition]);
 
+  useEffect(() => {
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("toc-open");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+      }
+    };
+  }, []);
+
   const featuredImage = useMemo(
-    () => article.images.find((img) => img.isFeatured)?.url ?? "/fallback.jpg",
+    () => article.images?.find((img) => img.isFeatured)?.url ?? "/fallback.jpg",
     [article.images]
   );
 
@@ -979,34 +947,36 @@ export default function ArticleClientPage({ article }: { article: Article }) {
 
           <div className="japanese-style-modern-container">
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* 🚨 修正：右サイドバー - デスクトップ専用 */}
+              {/* 右サイドバー - デスクトップ専用 */}
               <div className="order-1 lg:order-2 lg:w-80 flex-shrink-0">
                 <div className="space-y-6 lg:sticky lg:top-8">
-                  {/* デスクトップ専用目次（タブレット・モバイルでは非表示） */}
-                  <div className="hidden lg:block">
-                    <aside className="japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
-                      <h3 className="japanese-style-modern-sidebar-title">
-                        Contents
-                      </h3>
-                      <nav>
-                        {tableOfContents.map((item) => (
-                          <div
-                            key={item.id}
-                            className={`japanese-style-modern-toc-item ${
-                              activeSection === item.id ? "active" : ""
-                            }`}
-                            data-level={item.level}
-                            onClick={() => scrollToHeading(item.id)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {item.text}
-                          </div>
-                        ))}
-                      </nav>
-                    </aside>
-                  </div>
+                  {/* デスクトップ専用目次 */}
+                  {tableOfContents.length > 0 && (
+                    <div className="hidden lg:block">
+                      <aside className="japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
+                        <h3 className="japanese-style-modern-sidebar-title">
+                          Contents
+                        </h3>
+                        <nav>
+                          {tableOfContents.map((item) => (
+                            <div
+                              key={item.id}
+                              className={`japanese-style-modern-toc-item ${
+                                activeSection === item.id ? "active" : ""
+                              }`}
+                              data-level={item.level}
+                              onClick={() => scrollToHeading(item.id)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {item.text}
+                            </div>
+                          ))}
+                        </nav>
+                      </aside>
+                    </div>
+                  )}
 
-                  {/* 🚨 修正：関連記事 - デスクトップ専用サイドバー */}
+                  {/* 関連記事 - デスクトップ専用サイドバー */}
                   <div className="hidden lg:block">
                     <RelatedArticles
                       currentCategory={article.category}
@@ -1020,7 +990,8 @@ export default function ArticleClientPage({ article }: { article: Article }) {
               <div className="order-2 lg:order-1 flex-1 min-w-0">
                 <div className="flex-1 min-w-0">
                   <div className="japanese-style-modern-content">
-                    <MarkdownRenderer content={article.content} />
+                    {/* 🔧 Hydration安全な一口メモ付きコンテンツをレンダリング */}
+                    {renderedContent}
                   </div>
                 </div>
               </div>
@@ -1034,7 +1005,7 @@ export default function ArticleClientPage({ article }: { article: Article }) {
           />
         </div>
 
-        {/* 🚨 修正：モバイル・タブレット専用関連記事エリア */}
+        {/* モバイル・タブレット専用関連記事エリア */}
         <div className="block lg:hidden mt-8">
           <RelatedArticles
             currentCategory={article.category}
@@ -1082,16 +1053,21 @@ export default function ArticleClientPage({ article }: { article: Article }) {
         <Redbubble />
       </div>
 
-      {/* 🚨 重要修正：モバイル・タブレット専用目次 */}
-      <div className="lg:hidden">
-        <TableOfContents
-          tableOfContents={tableOfContents}
-          activeSection={activeSection}
-          scrollToHeading={scrollToHeading}
-          showMobileToc={showMobileToc}
-          closeMobileToc={closeMobileToc}
-        />
-      </div>
+      {/* モバイル・タブレット専用目次 */}
+      {tableOfContents.length > 0 && (
+        <div className="lg:hidden">
+          <TableOfContents
+            tableOfContents={tableOfContents}
+            activeSection={activeSection}
+            scrollToHeading={scrollToHeading}
+            showMobileToc={showMobileToc}
+            closeMobileToc={closeMobileToc}
+          />
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default ArticleClientPage;
+export type { ArticleTrivia };

@@ -1,4 +1,4 @@
-// utils/simpleMarkdownRenderer.tsx - 一口メモ対応版（修正版）
+// utils/simpleMarkdownRenderer.tsx - 包括的修正版
 "use client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -60,7 +60,7 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
           <div className="relative p-6 sm:p-8">
             {/* 番号 */}
             <div className="absolute top-4 left-4">
-              <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <span
                   className="text-xs font-bold text-gray-300 tracking-wider"
                   style={{
@@ -261,61 +261,48 @@ const processInlineTriviaPlaceholders = (
   });
 };
 
-// 🔧 デバッグ用のコンテンツ前処理関数
-const preprocessContent = (content: string): string => {
-  console.log("Original content length:", content.length);
+// 🔧 コンテンツの正規化とデバッグ
+const normalizeAndDebugContent = (content: string): string => {
+  // すべての太字パターンを検索してログ出力
+  const allStars = content.match(/\*+/g);
+  console.log("All star patterns found:", allStars?.slice(0, 10) || "none");
 
-  // **Noh**を特別に検索
-  const nohMatches = content.match(/\*\*Noh\*\*/g);
-  if (nohMatches) {
-    console.log("Found **Noh** patterns:", nohMatches);
-  } else {
-    console.log("**Noh** not found, searching for similar patterns...");
-
-    // Nohを含む任意のパターンを検索
-    const nohVariants = content.match(/\*\*[^*]*Noh[^*]*\*\*/gi);
-    console.log("Noh variants found:", nohVariants);
-
-    // Nohという単語を検索
-    const nohWord = content.match(/Noh/g);
-    console.log("Noh word found:", nohWord);
-
-    // **で始まるパターンを検索
-    const anyBold = content.match(/\*\*[^*]+\*\*/g);
-    console.log(
-      "Any bold patterns found:",
-      anyBold ? anyBold.slice(0, 5) : "none"
-    );
-  }
-
-  // 特定の行を検索
+  // Nohを含む行を特別に検索
   const lines = content.split("\n");
-  const nohLine = lines.find((line) => line.includes("Noh"));
-  if (nohLine) {
-    console.log("Line containing Noh:", nohLine);
-    // 文字コードを確認
-    console.log(
-      "Character codes:",
-      nohLine.split("").map((char) => char.charCodeAt(0))
-    );
-  }
+  const nohLines = lines.filter((line) => line.toLowerCase().includes("noh"));
+  console.log('Lines containing "noh":', nohLines);
 
-  return content;
+  // 特殊文字のアスタリスクを通常のアスタリスクに正規化
+  let normalizedContent = content
+    .replace(/＊/g, "*") // 全角アスタリスク
+    .replace(/✱/g, "*") // 八角形のアスタリスク
+    .replace(/✳/g, "*") // 八芒星
+    .replace(/∗/g, "*"); // 数学的アスタリスク
+
+  // 不可視文字を削除
+  normalizedContent = normalizedContent
+    .replace(/[\u200B-\u200D\uFEFF]/g, "") // ゼロ幅文字
+    .replace(/[\u00A0]/g, " "); // ノーブレークスペース
+
+  console.log(
+    "Content after normalization - first 500 chars:",
+    normalizedContent.substring(0, 500)
+  );
+
+  return normalizedContent;
 };
 
 export function MarkdownRenderer({
   content,
   triviaList,
 }: MarkdownRendererProps) {
-  // 🔧 デバッグ用のコンテンツ前処理
-  const debugContent = preprocessContent(content);
+  // 🔧 コンテンツを正規化
+  const normalizedContent = normalizeAndDebugContent(content);
 
   // 🆕 一口メモのプレースホルダー処理
   const processedContent = triviaList
-    ? processInlineTriviaPlaceholders(debugContent, triviaList)
-    : debugContent;
-
-  console.log("Processed content:", processedContent);
+    ? processInlineTriviaPlaceholders(normalizedContent, triviaList)
+    : normalizedContent;
 
   return (
     <div className="japanese-style-modern-container">
@@ -477,26 +464,28 @@ export function MarkdownRenderer({
               );
             },
 
-            // 🔧 修正：strongコンポーネントのデバッグと修正
+            // 🔧 修正：strongコンポーネント（確実に動作する版）
             strong(props) {
-              console.log("Strong component received:", props.children);
-
               const text = Array.isArray(props.children)
                 ? props.children.join("")
                 : String(props.children || "");
 
-              console.log("Strong text:", text);
+              // デバッグログ（本番では削除可能）
+              if (text.toLowerCase().includes("noh")) {
+                console.log("🎯 NOH DETECTED in strong component:", text);
+              }
 
               // 流派名の特別処理
               if (text.includes("-ryu")) {
-                console.log("Ryu name detected:", text);
                 return <strong className="ryu-name">{props.children}</strong>;
               }
 
-              // 通常の太字処理
-              console.log("Regular strong applied to:", text);
+              // 通常の太字処理（スタイルを確実に適用）
               return (
-                <strong className="japanese-style-modern-strong">
+                <strong
+                  className="japanese-style-modern-strong"
+                  style={{ fontWeight: "bold" }}
+                >
                   {props.children}
                 </strong>
               );
@@ -540,7 +529,7 @@ export function MarkdownRenderer({
               );
             },
 
-            // テーブル関連（デバッグログ削除）
+            // テーブル関連
             table(props) {
               return (
                 <div className="japanese-style-modern-table-container">
