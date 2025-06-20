@@ -1,19 +1,22 @@
-// app/articles/[slug]/page.tsx - 一口メモ対応版
+// app/articles/[slug]/page.tsx - UUID対応 & エラー修正版
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ArticleClientPage from "../../../components/articleClientPage/ArticleClientPage";
 import Script from "next/script";
 import { unstable_cache } from "next/cache";
+import { TriviaCategoryType, TriviaColorThemeType } from "@/types/types";
 
 type Props = {
   params: { slug: string };
 };
 
-// ⭐ 本番環境用（適度なキャッシュ）- 一口メモ対応
-const getArticleBySlugProd = unstable_cache(
-  async (slug: string) => {
-    return await prisma.article.findFirst({
+// 安全なデータ取得関数（エラーハンドリング強化）
+const getArticleData = async (slug: string) => {
+  try {
+    console.log("記事取得開始:", slug);
+
+    const article = await prisma.article.findFirst({
       where: { slug },
       include: {
         images: {
@@ -26,7 +29,6 @@ const getArticleBySlugProd = unstable_cache(
             articleId: true,
           },
         },
-        // 🆕 一口メモも含める
         trivia: {
           where: { isActive: true },
           orderBy: { displayOrder: "asc" },
@@ -47,202 +49,252 @@ const getArticleBySlugProd = unstable_cache(
         },
       },
     });
-  },
+
+    if (!article) {
+      console.log("記事が見つかりません:", slug);
+      return null;
+    }
+
+    console.log("記事取得成功:", {
+      id: article.id,
+      title: article.title,
+      triviaCount: article.trivia?.length || 0,
+    });
+
+    // 🔧 安全なデータ変換
+    const formattedArticle = {
+      id: article.id,
+      title: article.title || "",
+      slug: article.slug || "",
+      summary: article.summary || null,
+      content: article.content || "",
+      category: article.category || "",
+      published: Boolean(article.published),
+      description: article.description || null,
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+      images: (article.images || []).map((img) => ({
+        id: img.id || "",
+        url: img.url || "",
+        altText: img.altText || null,
+        isFeatured: Boolean(img.isFeatured),
+        createdAt: img.createdAt,
+        articleId: img.articleId || "",
+      })),
+      trivia: (article.trivia || []).map((t) => ({
+        id: t.id || "",
+        title: t.title || "",
+        content: t.content || "",
+        contentEn: t.contentEn || null,
+        category: (t.category || "default") as TriviaCategoryType,
+        tags: Array.isArray(t.tags) ? t.tags : [],
+        iconEmoji: t.iconEmoji || null,
+        colorTheme: (t.colorTheme || null) as TriviaColorThemeType | null,
+        displayOrder: Number(t.displayOrder) || 0,
+        isActive: Boolean(t.isActive),
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+        articleId: article.id,
+      })),
+    };
+
+    return formattedArticle;
+  } catch (error) {
+    console.error("記事取得エラー詳細:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      slug,
+    });
+    return null;
+  }
+};
+
+// 本番環境用（キャッシュあり）
+const getArticleBySlugProd = unstable_cache(
+  getArticleData,
   ["article-by-slug"],
   {
-    revalidate: 300, // 本番では5分キャッシュ
-    tags: ["article", "trivia"], // 🆕 trivia タグも追加
+    revalidate: 300,
+    tags: ["article", "trivia"],
   }
 );
 
-// ⭐ 開発環境用（キャッシュなし）- 一口メモ対応
-const getArticleBySlugDev = async (slug: string) => {
-  return await prisma.article.findFirst({
-    where: { slug },
-    include: {
-      images: {
-        select: {
-          id: true,
-          url: true,
-          altText: true,
-          isFeatured: true,
-          createdAt: true,
-          articleId: true,
-        },
-      },
-      // 🆕 一口メモも含める
-      trivia: {
-        where: { isActive: true },
-        orderBy: { displayOrder: "asc" },
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          contentEn: true,
-          category: true,
-          tags: true,
-          iconEmoji: true,
-          colorTheme: true,
-          displayOrder: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      },
-    },
-  });
-};
+// 開発環境用（キャッシュなし）
+const getArticleBySlugDev = getArticleData;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const slug = decodeURIComponent(params.slug);
+  try {
+    const slug = decodeURIComponent(params.slug);
+    console.log("メタデータ生成開始:", slug);
 
-  // ⭐ 開発環境では毎回新しいデータを取得
-  const article =
-    process.env.NODE_ENV === "development"
-      ? await getArticleBySlugDev(slug)
-      : await getArticleBySlugProd(slug);
+    const article =
+      process.env.NODE_ENV === "development"
+        ? await getArticleBySlugDev(slug)
+        : await getArticleBySlugProd(slug);
 
-  if (!article) {
+    if (!article) {
+      console.log("メタデータ生成: 記事が見つかりません");
+      return {
+        title: "Article not found | Your Secret Japan",
+        description: "The article you're looking for does not exist.",
+      };
+    }
+
+    const featuredImage = article.images?.find((img) => img.isFeatured);
+    const imageUrl = featuredImage?.url || "/ogp-image.png";
+
+    const triviaCount = article.trivia?.length || 0;
+    const baseDescription = article.summary || "Discover the spirit of Japan.";
+    const enhancedDescription =
+      triviaCount > 0
+        ? `${baseDescription} ${triviaCount}つの豆知識も含まれています。`
+        : baseDescription;
+
+    console.log("メタデータ生成成功:", article.title);
+
     return {
-      title: "Article not found | Your Secret Japan",
-      description: "The article you're looking for does not exist.",
+      title: `${article.title} | Your Secret Japan`,
+      description: enhancedDescription,
+      openGraph: {
+        title: `${article.title} | Your Secret Japan`,
+        description: enhancedDescription,
+        url: `https://www.yoursecretjapan.com/articles/${article.slug}`,
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: article.title,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${article.title} | Your Secret Japan`,
+        description: enhancedDescription,
+        images: [imageUrl],
+      },
+      keywords:
+        article.trivia?.flatMap((t) => t.tags || []).join(", ") || undefined,
+    };
+  } catch (error) {
+    console.error("メタデータ生成エラー:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return {
+      title: "Error | Your Secret Japan",
+      description: "An error occurred while loading this article.",
     };
   }
-
-  const featuredImage = article.images.find((img) => img.isFeatured);
-  const imageUrl = featuredImage?.url || "/ogp-image.png";
-
-  // 🆕 一口メモの情報をメタデータに含める（オプション）
-  const triviaCount = article.trivia?.length || 0;
-  const baseDescription = article.summary || "Discover the spirit of Japan.";
-  const enhancedDescription =
-    triviaCount > 0
-      ? `${baseDescription} ${triviaCount}つの豆知識も含まれています。`
-      : baseDescription;
-
-  return {
-    title: `${article.title} | Your Secret Japan`,
-    description: enhancedDescription,
-    openGraph: {
-      title: `${article.title} | Your Secret Japan`,
-      description: enhancedDescription,
-      url: `https://www.yoursecretjapan.com/articles/${article.slug}`,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: article.title,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${article.title} | Your Secret Japan`,
-      description: enhancedDescription,
-      images: [imageUrl],
-    },
-    // 🆕 一口メモ関連のキーワードをメタデータに追加
-    keywords: article.trivia?.flatMap((t) => t.tags).join(", ") || undefined,
-  };
 }
 
 export default async function Page({ params }: Props) {
-  const slug = decodeURIComponent(params.slug);
+  try {
+    const slug = decodeURIComponent(params.slug);
+    console.log("ページレンダリング開始:", slug);
 
-  // ⭐ 開発環境では毎回新しいデータを取得
-  const article =
-    process.env.NODE_ENV === "development"
-      ? await getArticleBySlugDev(slug)
-      : await getArticleBySlugProd(slug);
+    const article =
+      process.env.NODE_ENV === "development"
+        ? await getArticleBySlugDev(slug)
+        : await getArticleBySlugProd(slug);
 
-  if (!article) return notFound();
+    if (!article) {
+      console.log(
+        "ページレンダリング: 記事が見つからないためnotFound()を呼び出し"
+      );
+      return notFound();
+    }
 
-  const featuredImage = article.images.find((img) => img.isFeatured);
-  const imageUrl = featuredImage?.url || "/ogp-image.png";
+    const featuredImage = article.images?.find((img) => img.isFeatured);
+    const imageUrl = featuredImage?.url || "/ogp-image.png";
 
-  // 🆕 一口メモの情報も含めたStructured Data
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
-    description: article.summary || "",
-    image: imageUrl.startsWith("http")
-      ? imageUrl
-      : `https://www.yoursecretjapan.com${imageUrl}`,
-    author: {
-      "@type": "Person",
-      name: "Your Secret Japan",
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "Your Secret Japan",
-      logo: {
-        "@type": "ImageObject",
-        url: "https://www.yoursecretjapan.com/logo.png",
+    // 🔧 安全な構造化データ生成
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: article.title,
+      description: article.summary || "",
+      image: imageUrl.startsWith("http")
+        ? imageUrl
+        : `https://www.yoursecretjapan.com${imageUrl}`,
+      author: {
+        "@type": "Person",
+        name: "Your Secret Japan",
       },
-    },
-    datePublished: new Date(article.createdAt).toISOString(),
-    dateModified: new Date(article.updatedAt).toISOString(),
-    // 🆕 一口メモがある場合、追加的な構造化データ
-    ...(article.trivia &&
-      article.trivia.length > 0 && {
-        mainEntity: {
-          "@type": "FAQPage",
-          mainEntity: article.trivia.map((trivia) => ({
-            "@type": "Question",
-            name: trivia.title,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: trivia.content.replace(/\*\*|__/g, "").substring(0, 200), // Markdownを除去して200文字まで
-            },
-          })),
+      publisher: {
+        "@type": "Organization",
+        name: "Your Secret Japan",
+        logo: {
+          "@type": "ImageObject",
+          url: "https://www.yoursecretjapan.com/logo.png",
         },
-      }),
-    // 🆕 カテゴリー情報
-    about: [
-      {
-        "@type": "Thing",
-        name: article.category,
       },
-      // 一口メモのカテゴリーも追加
-      ...(article.trivia?.map((trivia) => ({
-        "@type": "Thing",
-        name: trivia.category,
-      })) || []),
-    ],
-    // 🆕 タグ情報
-    keywords: [
-      article.category,
-      ...(article.trivia?.flatMap((t) => t.tags) || []),
-    ]
-      .filter(Boolean)
-      .join(", "),
-  };
+      datePublished: article.createdAt,
+      dateModified: article.updatedAt,
+      ...(article.trivia &&
+        article.trivia.length > 0 && {
+          mainEntity: {
+            "@type": "FAQPage",
+            mainEntity: article.trivia.slice(0, 5).map((trivia) => ({
+              "@type": "Question",
+              name: trivia.title || "Trivia",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: (trivia.content || "")
+                  .replace(/\*\*|__/g, "")
+                  .substring(0, 200),
+              },
+            })),
+          },
+        }),
+      about: [
+        {
+          "@type": "Thing",
+          name: article.category,
+        },
+        ...(article.trivia?.slice(0, 3).map((trivia) => ({
+          "@type": "Thing",
+          name: trivia.category || "Culture",
+        })) || []),
+      ],
+      keywords: [
+        article.category,
+        ...(article.trivia?.flatMap((t) => t.tags || []).slice(0, 10) || []),
+      ]
+        .filter(Boolean)
+        .filter((keyword, index, array) => array.indexOf(keyword) === index) // 重複削除
+        .join(", "),
+    };
 
-  // Date型をstring型に変換
-  const formattedArticle = {
-    ...article,
-    trivia: article.trivia?.map((t) => ({
-      ...t,
-      createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt.toISOString(),
-    })),
-  };
+    console.log("ページレンダリング成功:", {
+      title: article.title,
+      triviaCount: article.trivia?.length || 0,
+    });
 
-  return (
-    <>
-      <Script
-        id="json-ld-article"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        strategy="afterInteractive"
-      />
-      <ArticleClientPage article={formattedArticle} />
-    </>
-  );
+    return (
+      <>
+        <Script
+          id="json-ld-article"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          strategy="afterInteractive"
+        />
+        <ArticleClientPage article={article} />
+      </>
+    );
+  } catch (error) {
+    console.error("ページレンダリングエラー:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      params,
+    });
+
+    // エラーが発生した場合はnotFound()を呼び出す
+    return notFound();
+  }
 }
 
-// ⭐ 静的設定（開発環境での即座反映のため）
+// 開発環境での動的レンダリング
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

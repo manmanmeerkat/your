@@ -7,6 +7,32 @@ export type linksType = {
     label: string;
 };
 
+// 🆕 Article型（ArticleClientPage用）
+export type Article = {
+    id: string;
+    title: string;
+    slug: string;
+    content: string;
+    summary?: string | null;
+    category: string;
+    published: boolean;
+    description?: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    images?: ArticleImage[];
+    trivia?: ArticleTrivia[];
+};
+
+// 🆕 ArticleImage型（ArticleClientPage用）
+export type ArticleImage = {
+    id: string;
+    url: string;
+    altText?: string | null;
+    isFeatured: boolean;
+    createdAt: Date;
+    articleId: string;
+};
+
 // 🔧 記事型を一口メモ対応に拡張
 export type articleType = {
     id: string;

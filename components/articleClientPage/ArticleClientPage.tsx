@@ -1,4 +1,4 @@
-// components/articleClientPage/ArticleClientPage.tsx - Hydrationエラー修正版
+// components/articleClientPage/ArticleClientPage.tsx - 型修正版
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -14,63 +14,29 @@ import RelatedArticles from "@/components/sidebar/RelatedArticles";
 import Redbubble from "../redBubble/RedBubble";
 import { MarkdownRenderer } from "@/app/utils/simpleMarkdownRenderer";
 
+// 🔧 共通型定義から直接インポート
+import type { Article, ArticleTrivia, ArticleImage } from "@/types/types";
+
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
 
-// 型定義（既存と同じ）
+// 既存の型定義（目次用）
 export type TocItem = {
   id: string;
   text: string;
   level: number;
 };
 
-type ArticleTrivia = {
-  id: string;
-  title: string;
-  content: string;
-  contentEn?: string | null;
-  category: string;
-  tags: string[];
-  iconEmoji?: string | null;
-  colorTheme?: string | null;
-  displayOrder: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
-
-type ArticleImage = {
-  id: string;
-  url: string;
-  altText: string | null;
-  isFeatured: boolean;
-  createdAt: Date;
-  articleId: string;
-};
-
-type Article = {
-  id: string;
-  title: string;
-  slug: string;
-  summary: string | null;
-  content: string;
-  category: string;
-  published: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  images: ArticleImage[];
-  trivia?: ArticleTrivia[];
-};
-
+// 🔧 インターフェースの型をインポートした型に変更
 interface ArticleClientPageProps {
-  article: Article;
+  article: Article; // 既にstring型のcreatedAt, updatedAtを持つ型
 }
 
-// 🔧 プラグインを事前にインポート
+// プラグインを事前にインポート
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
-// 🔧 ReactMarkdownを動的インポートでHydrationエラー回避
+// ReactMarkdownを動的インポートでHydrationエラー回避
 const DynamicMarkdown = dynamic(() => import("react-markdown"), {
   ssr: false,
   loading: () => (
@@ -81,7 +47,7 @@ const DynamicMarkdown = dynamic(() => import("react-markdown"), {
   ),
 });
 
-// 🔧 Hydration安全な一口メモマークダウンレンダラー
+// Hydration安全な一口メモマークダウンレンダラー
 const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
   const [isMounted, setIsMounted] = useState(false);
 
@@ -283,7 +249,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
-// 🔧 Hydration安全な一口メモコンポーネント
+// Hydration安全な一口メモコンポーネント
 const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   trivia,
   index,
@@ -375,7 +341,7 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
                 <span className="text-gray-400 text-sm font-serif">※</span>
               </div>
 
-              {/* 🔧 マークダウンコンテンツをレンダリング（Hydration安全） */}
+              {/* マークダウンコンテンツをレンダリング（Hydration安全） */}
               <div className="trivia-markdown-content">
                 <TriviaMarkdown content={displayContent} />
               </div>
@@ -415,7 +381,7 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
           {/* タグ表示（クライアントサイドのみ） */}
           {trivia.tags && trivia.tags.length > 0 && isClient && (
             <div className="mt-4 flex flex-wrap gap-1 justify-center">
-              {trivia.tags.slice(0, 3).map((tag, tagIndex) => (
+              {trivia.tags.slice(0, 3).map((tag: string, tagIndex: number) => (
                 <span
                   key={tagIndex}
                   className="text-xs bg-gray-700/50 text-gray-400 px-2 py-1 rounded-full border border-gray-600"
@@ -438,7 +404,7 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   );
 };
 
-// 🔧 プレースホルダーコンポーネント（SSR用）
+// プレースホルダーコンポーネント（SSR用）
 const TriviaPlaceholder: React.FC<{ index: number }> = ({ index }) => {
   const kanjiNumbers = [
     "一",
@@ -503,7 +469,7 @@ const TriviaPlaceholder: React.FC<{ index: number }> = ({ index }) => {
   );
 };
 
-// 🔧 Hydration安全なコンテンツレンダリング - コンポーネント化
+// Hydration安全なコンテンツレンダリング - コンポーネント化
 const ContentWithTrivia: React.FC<{
   content: string;
   triviaList?: ArticleTrivia[];
@@ -724,9 +690,10 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     return extractHeaders(article.content);
   }, [article.content]);
 
-  // 🔧 一口メモ付きコンテンツをレンダリング（Hydration安全）
+  // 一口メモ付きコンテンツをレンダリング（Hydration安全）
   const renderedContent = useMemo(() => {
-    const activeTrivia = article.trivia?.filter((t) => t.isActive) || [];
+    const activeTrivia =
+      article.trivia?.filter((t: ArticleTrivia) => t.isActive) || [];
     return (
       <ContentWithTrivia content={article.content} triviaList={activeTrivia} />
     );
@@ -908,11 +875,33 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
   }, []);
 
   const featuredImage = useMemo(
-    () => article.images?.find((img) => img.isFeatured)?.url ?? "/fallback.jpg",
+    () =>
+      article.images?.find((img: ArticleImage) => img.isFeatured)?.url ??
+      "/fallback.jpg",
     [article.images]
   );
 
-  const hasFeaturedImage = article.images?.some((img) => img.isFeatured);
+  const hasFeaturedImage = article.images?.some(
+    (img: ArticleImage) => img.isFeatured
+  );
+
+  // 🔧 Date型を安全に文字列に変換
+  const formatDisplayDate = (date: Date): string => {
+    try {
+      return date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.warn("日付表示エラー:", error);
+      return new Date().toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen article-page-container">
@@ -937,11 +926,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
           <div className="japanese-style-modern-header">
             <h1 className="japanese-style-modern-title">{article.title}</h1>
             <div className="japanese-style-modern-date">
-              {new Date(article.updatedAt).toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {formatDisplayDate(article.updatedAt)}
             </div>
           </div>
 
@@ -990,7 +975,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
               <div className="order-2 lg:order-1 flex-1 min-w-0">
                 <div className="flex-1 min-w-0">
                   <div className="japanese-style-modern-content">
-                    {/* 🔧 Hydration安全な一口メモ付きコンテンツをレンダリング */}
+                    {/* Hydration安全な一口メモ付きコンテンツをレンダリング */}
                     {renderedContent}
                   </div>
                 </div>
