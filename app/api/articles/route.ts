@@ -1,11 +1,12 @@
-// app/api/articles/route.ts - パフォーマンス最適化版
+// app/api/articles/route.ts - 一口メモ対応修正版
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
-import { Prisma, Article, Image } from '@prisma/client';
+import { Prisma, Article, Image, ArticleTrivia } from '@prisma/client';
 
-// 記事と画像を含む型を定義
-type ArticleWithImages = Article & {
+// 🆕 一口メモを含む記事型を定義
+type ArticleWithImagesAndTrivia = Article & {
   images: Image[];
+  trivia?: ArticleTrivia[];
 };
 
 // 🚀 接続プール最適化: 単一接続を再利用
@@ -48,13 +49,21 @@ async function executeWithRetry<T>(
   throw lastError;
 }
 
-// 🎯 並列クエリ実行でパフォーマンス改善
+// 🎯 並列クエリ実行でパフォーマンス改善（一口メモ対応）
 async function getArticlesWithPagination(
   where: Prisma.ArticleWhereInput,
   page: number,
-  pageSize: number
-): Promise<{ articles: ArticleWithImages[]; totalCount: number }> {
+  pageSize: number,
+  includeTrivia: boolean = false,
+  includeTriviaDetails: boolean = false
+): Promise<{ articles: ArticleWithImagesAndTrivia[]; totalCount: number }> {
   const skip = (page - 1) * pageSize;
+  
+  // 🆕 一口メモのinclude条件を動的に設定
+  const triviaInclude = includeTrivia ? {
+    where: includeTriviaDetails ? {} : { isActive: true },
+    orderBy: { displayOrder: 'asc' } as const
+  } : false;
   
   // 📈 重要: countとfindManyを並列実行
   const [articles, totalCount] = await Promise.all([
@@ -64,10 +73,14 @@ async function getArticlesWithPagination(
         orderBy: { createdAt: 'desc' },
         include: {
           images: {
-            // 🚀 最適化: フィーチャー画像のみ取得（パフォーマンス向上）
-            where: { isFeatured: true },
-            take: 1,
+            // 🚀 最適化: フィーチャー画像優先、全画像取得も可能
+            orderBy: [
+              { isFeatured: 'desc' },
+              { createdAt: 'asc' }
+            ],
           },
+          // 🆕 一口メモを含める
+          trivia: triviaInclude,
         },
         skip,
         take: pageSize,
@@ -95,6 +108,17 @@ export async function GET(request: NextRequest) {
     const categoryParam = searchParams.get('category');
     const searchQuery = searchParams.get('search');
     const searchType = searchParams.get('searchType') || 'title';
+    
+    // 🆕 一口メモ関連のパラメータ
+    const includeImages = searchParams.get('includeImages') === 'true';
+    const includeTrivia = searchParams.get('includeTrivia') === 'true';
+    const includeTriviaDetails = searchParams.get('includeTriviaDetails') === 'true';
+    
+    console.log('🆕 一口メモパラメータ:', {
+      includeImages,
+      includeTrivia,
+      includeTriviaDetails
+    });
     
     // ページネーション用パラメータ（境界値チェック強化）
     const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
@@ -162,8 +186,33 @@ export async function GET(request: NextRequest) {
     
     console.log('🎯 検索条件:', where);
     
-    // 📊 メインクエリ実行
-    const { articles, totalCount } = await getArticlesWithPagination(where, page, pageSize);
+    // 📊 メインクエリ実行（一口メモ対応）
+    const { articles, totalCount } = await getArticlesWithPagination(
+      where, 
+      page, 
+      pageSize, 
+      includeTrivia, 
+      includeTriviaDetails
+    );
+    
+    // 🆕 一口メモ統計情報をログ出力
+    if (includeTrivia) {
+      console.log('📝 一口メモ統計:');
+      articles.forEach((article, index) => {
+        const triviaCount = article.trivia?.length || 0;
+        const activeTriviaCount = article.trivia?.filter(t => t.isActive).length || 0;
+        
+        if (triviaCount > 0) {
+          console.log(`  記事 ${index + 1}: "${article.title}" - 一口メモ ${triviaCount}件 (アクティブ: ${activeTriviaCount}件)`);
+        }
+      });
+      
+      const totalTrivia = articles.reduce((sum, article) => sum + (article.trivia?.length || 0), 0);
+      const totalActiveTrivia = articles.reduce((sum, article) => 
+        sum + (article.trivia?.filter(t => t.isActive).length || 0), 0);
+      
+      console.log(`📊 全体統計: 一口メモ総数 ${totalTrivia}件, アクティブ ${totalActiveTrivia}件`);
+    }
     
     const pageCount = Math.ceil(totalCount / pageSize) || 1;
     const processingTime = Date.now() - startTime;
@@ -171,7 +220,8 @@ export async function GET(request: NextRequest) {
     console.log('✅ 処理完了:', {
       記事数: articles.length,
       総件数: totalCount,
-      処理時間: `${processingTime}ms`
+      処理時間: `${processingTime}ms`,
+      一口メモ含む: includeTrivia
     });
     
     // 🚀 レスポンス最適化
@@ -188,18 +238,25 @@ export async function GET(request: NextRequest) {
         debug: {
           processingTime,
           queryParams: params,
-          articlesFound: articles.length
+          articlesFound: articles.length,
+          triviaIncluded: includeTrivia,
+          totalTriviaCount: includeTrivia ? 
+            articles.reduce((sum, article) => sum + (article.trivia?.length || 0), 0) : 0
         }
       })
     });
     
-    // 📈 キャッシュヘッダーの最適化
-    response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600');
+    // 📈 キャッシュヘッダーの最適化（一口メモ含む場合は短時間キャッシュ）
+    if (includeTrivia) {
+      response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    } else {
+      response.headers.set('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600');
+    }
     response.headers.set('CDN-Cache-Control', 'public, s-maxage=3600');
     response.headers.set('Vary', 'Accept-Encoding');
     
     // 📊 ETag対応（データに基づく）
-    const etag = `"${totalCount}-${page}-${pageSize}-${articles[0]?.updatedAt?.getTime() || 0}"`;
+    const etag = `"${totalCount}-${page}-${pageSize}-${articles[0]?.updatedAt?.getTime() || 0}-${includeTrivia ? 'trivia' : 'no-trivia'}"`;
     response.headers.set('ETag', etag);
     
     return response;
@@ -235,9 +292,9 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-  // 📝 Note: $disconnect は明示的に呼ばない（接続プール再利用のため）
 }
 
+// 🆕 POST method（一口メモ対応を追加）
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   
@@ -258,6 +315,17 @@ export async function POST(request: NextRequest) {
         altText?: string;
         isFeatured?: boolean;
       }>;
+      // 🆕 一口メモ初期データ（オプション）
+      trivia?: Array<{
+        title: string;
+        content: string;
+        contentEn?: string;
+        category?: string;
+        tags?: string[];
+        iconEmoji?: string;
+        colorTheme?: string;
+        isActive?: boolean;
+      }>;
     };
     
     try {
@@ -274,7 +342,8 @@ export async function POST(request: NextRequest) {
       title: requestBody.title,
       slug: requestBody.slug,
       category: requestBody.category,
-      imagesCount: requestBody.images?.length || 0
+      imagesCount: requestBody.images?.length || 0,
+      triviaCount: requestBody.trivia?.length || 0
     });
     
     // 📊 バリデーション強化
@@ -329,7 +398,7 @@ export async function POST(request: NextRequest) {
       published: articleData.published
     });
     
-    // 🚀 トランザクション使用で整合性保証
+    // 🚀 トランザクション使用で整合性保証（一口メモ対応）
     const result = await executeWithRetry(async () => {
       return await prisma.$transaction(async (tx) => {
         // 記事を作成
@@ -363,11 +432,42 @@ export async function POST(request: NextRequest) {
           }
         }
         
-        // 作成した記事を画像付きで取得
+        // 🆕 一口メモの一括処理
+        if (requestBody.trivia && Array.isArray(requestBody.trivia) && requestBody.trivia.length > 0) {
+          console.log('📝 一口メモ処理開始:', requestBody.trivia.length, '個の一口メモ');
+          
+          const validTrivia = requestBody.trivia
+            .filter((trivia) => trivia?.title?.trim() && trivia?.content?.trim())
+            .map((trivia, index: number) => ({
+              articleId: article.id,
+              title: trivia.title.trim(),
+              content: trivia.content.trim(),
+              contentEn: trivia.contentEn?.trim() || null,
+              category: trivia.category?.trim() || 'default',
+              tags: trivia.tags || [],
+              iconEmoji: trivia.iconEmoji?.trim() || null,
+              colorTheme: trivia.colorTheme?.trim() || null,
+              displayOrder: index + 1,
+              isActive: trivia.isActive ?? true,
+            }));
+          
+          if (validTrivia.length > 0) {
+            await tx.articleTrivia.createMany({
+              data: validTrivia,
+              skipDuplicates: true,
+            });
+            console.log(`✅ 一口メモ処理完了: ${validTrivia.length}個の一口メモを保存`);
+          }
+        }
+        
+        // 作成した記事を画像・一口メモ付きで取得
         return await tx.article.findUnique({
           where: { id: article.id },
           include: { 
-            images: true
+            images: true,
+            trivia: {
+              orderBy: { displayOrder: 'asc' }
+            }
           },
         });
       });
@@ -384,7 +484,8 @@ export async function POST(request: NextRequest) {
         ...(process.env.NODE_ENV === 'development' && {
           debug: {
             processingTime,
-            imagesCount: result?.images?.length || 0
+            imagesCount: result?.images?.length || 0,
+            triviaCount: result?.trivia?.length || 0
           }
         })
       },
@@ -427,13 +528,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 🚀 UPDATE method（新機能追加）
+// 🚀 UPDATE method（一口メモ対応）
 export async function PATCH(request: NextRequest) {
   const startTime = Date.now();
   
   try {
     const { searchParams } = new URL(request.url);
     const articleId = searchParams.get('id');
+    const includeTrivia = searchParams.get('includeTrivia') === 'true';
     
     if (!articleId) {
       return NextResponse.json(
@@ -488,13 +590,16 @@ export async function PATCH(request: NextRequest) {
     if (description !== undefined) updateData.description = description?.trim() || '';
     if (published !== undefined) updateData.published = Boolean(published);
     
-    // 🚀 記事更新
+    // 🚀 記事更新（一口メモ含む）
     const updatedArticle = await executeWithRetry(() =>
       prisma.article.update({
         where: { id: articleId },
         data: updateData,
         include: {
-          images: true
+          images: true,
+          trivia: includeTrivia ? {
+            orderBy: { displayOrder: 'asc' }
+          } : false
         },
       })
     );
@@ -506,7 +611,11 @@ export async function PATCH(request: NextRequest) {
       message: '記事を更新しました',
       article: updatedArticle,
       ...(process.env.NODE_ENV === 'development' && {
-        debug: { processingTime }
+        debug: { 
+          processingTime,
+          triviaIncluded: includeTrivia,
+          triviaCount: updatedArticle.trivia?.length || 0
+        }
       })
     });
     
@@ -532,7 +641,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// 🗑️ DELETE method（新機能追加）
+// 🗑️ DELETE method（一口メモ対応）
 export async function DELETE(request: NextRequest) {
   const startTime = Date.now();
   
@@ -547,11 +656,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
     
-    // 🚀 トランザクションで関連データも削除
+    // 🚀 トランザクションで関連データも削除（一口メモ含む）
     await executeWithRetry(async () => {
       return await prisma.$transaction(async (tx) => {
         // 関連画像を先に削除
         await tx.image.deleteMany({
+          where: { articleId }
+        });
+        
+        // 🆕 関連一口メモを削除
+        await tx.articleTrivia.deleteMany({
           where: { articleId }
         });
         
@@ -566,7 +680,7 @@ export async function DELETE(request: NextRequest) {
     console.log('✅ 記事削除完了:', `${processingTime}ms`);
     
     const response = NextResponse.json({
-      message: '記事を削除しました',
+      message: '記事と関連データ（画像・一口メモ）を削除しました',
       articleId,
       ...(process.env.NODE_ENV === 'development' && {
         debug: { processingTime }
