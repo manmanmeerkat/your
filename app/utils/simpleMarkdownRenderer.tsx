@@ -1,4 +1,4 @@
-// utils/simpleMarkdownRenderer.tsx - 包括的修正版
+// utils/simpleMarkdownRenderer.tsx - Markdown処理回避版
 "use client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -9,7 +9,7 @@ interface MarkdownRendererProps {
   triviaList?: ArticleTrivia[];
 }
 
-// 🆕 一口メモの型定義
+// 一口メモの型定義
 type ArticleTrivia = {
   id: string;
   title: string;
@@ -25,7 +25,7 @@ type ArticleTrivia = {
   updatedAt: string;
 };
 
-// 🆕 インライン一口メモコンポーネント
+// 🔧 完全独立版インライン一口メモコンポーネント
 const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   trivia,
   index,
@@ -44,131 +44,289 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   ];
 
   return (
-    <div className="inline-trivia-container my-8 relative">
-      <div className="group relative">
-        <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
-          {/* 上部装飾ライン */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+    <div
+      style={{
+        // 🚨 親コンテナから完全に脱出
+        width: "100vw",
+        marginLeft: "calc(-50vw + 50%)",
+        marginRight: "calc(-50vw + 50%)",
+        marginTop: "3rem",
+        marginBottom: "3rem",
+        padding: "0",
+        position: "relative",
+        zIndex: 100,
+        // 🚨 すべてのCSS継承をリセット
+        all: "revert",
+        boxSizing: "border-box",
+        display: "block",
+      }}
+      // 🚨 クラス名を完全に避ける
+    >
+      <div
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "0 1rem",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            background:
+              "linear-gradient(135deg, #111827 0%, #1f2937 30%, #111827 70%, #232323 100%)",
+            border: "1px solid #374151",
+            borderRadius: "1rem",
+            padding: "2rem",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            position: "relative",
+            overflow: "hidden",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* 上部装飾 */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "1px",
+              background:
+                "linear-gradient(90deg, transparent 0%, #374151 50%, transparent 100%)",
+            }}
+          />
 
-          {/* 四隅の角飾り */}
-          <div className="absolute top-3 left-3 w-2 h-2 border-l border-t border-gray-600 opacity-50"></div>
-          <div className="absolute top-3 right-3 w-2 h-2 border-r border-t border-gray-600 opacity-50"></div>
-          <div className="absolute bottom-3 left-3 w-2 h-2 border-l border-b border-gray-600 opacity-50"></div>
-          <div className="absolute bottom-3 right-3 w-2 h-2 border-r border-b border-gray-600 opacity-50"></div>
-
-          {/* 内容 */}
-          <div className="relative p-6 sm:p-8">
-            {/* 番号 */}
-            <div className="absolute top-4 left-4">
-              <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <span
-                  className="text-xs font-bold text-gray-300 tracking-wider"
-                  style={{
-                    fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
-                  }}
-                >
-                  {kanjiNumbers[index] || index + 1}
-                </span>
-              </div>
+          {/* ヘッダー */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "2rem",
+              width: "100%",
+            }}
+          >
+            <div
+              style={{
+                width: "3rem",
+                height: "3rem",
+                borderRadius: "50%",
+                background: "#1f2937",
+                border: "1px solid #374151",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1rem",
+                fontWeight: "bold",
+                color: "#d1d5db",
+                fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
+                flexShrink: 0,
+              }}
+            >
+              {kanjiNumbers[index] || index + 1}
             </div>
 
-            {/* カスタムアイコン */}
             {trivia.iconEmoji && (
-              <div className="absolute top-4 right-4">
-                <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 p-2 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                  <img
-                    src={trivia.iconEmoji}
-                    alt=""
-                    className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                </div>
+              <div
+                style={{
+                  width: "3.5rem",
+                  height: "3.5rem",
+                  borderRadius: "0.75rem",
+                  background: "#1f2937",
+                  border: "1px solid #374151",
+                  padding: "0.5rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <img
+                  src={trivia.iconEmoji}
+                  alt=""
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    opacity: 0.8,
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
               </div>
             )}
-
-            {/* メインテキスト */}
-            <div className="mt-4 pr-12 relative">
-              <div
-                className="absolute -left-3 -top-1 text-3xl text-gray-600 leading-none select-none opacity-50"
-                style={{
-                  fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
-                }}
-              >
-                「
-              </div>
-
-              <div className="relative z-10 pr-4 space-y-3">
-                {/* タイトルを小見出し風に */}
-                <div className="flex items-center justify-center gap-1 py-1 px-3 rounded-md bg-gradient-to-r from-gray-50 via-white to-gray-50 border border-gray-200 mb-3">
-                  <span className="text-gray-400 text-sm font-serif">※</span>
-                  <span
-                    className="text-sm font-medium text-gray-700 font-serif"
-                    style={{ letterSpacing: "0.1em" }}
-                  >
-                    Trivia
-                  </span>
-                  <span className="text-gray-400 text-sm font-serif">※</span>
-                </div>
-
-                {(trivia.contentEn || trivia.content)
-                  .split(/\n+/)
-                  .map((paragraph, pIndex) => (
-                    <p
-                      key={pIndex}
-                      className="text-gray-200 leading-relaxed text-sm sm:text-base font-normal"
-                      style={{
-                        fontFamily:
-                          '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
-                        letterSpacing: "0.025em",
-                        lineHeight: "1.7",
-                      }}
-                    >
-                      {paragraph
-                        .split(/(重要|ポイント|特に|注目)/g)
-                        .map((part, i) =>
-                          /^(重要|ポイント|特に|注目)$/.test(part) ? (
-                            <strong
-                              key={i}
-                              className="text-yellow-400 font-bold"
-                            >
-                              {part}
-                            </strong>
-                          ) : (
-                            part
-                          )
-                        )}
-                    </p>
-                  ))}
-              </div>
-
-              <div
-                className="absolute -right-1 -bottom-3 text-3xl text-gray-600 leading-none select-none opacity-50"
-                style={{
-                  fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
-                }}
-              >
-                」
-              </div>
-            </div>
-
-            {/* 下部飾り */}
-            <div className="mt-6 flex justify-center">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-1 rounded-full bg-gray-500"></div>
-                <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600"></div>
-                <div className="w-1 h-1 rounded-full bg-gray-500"></div>
-              </div>
-            </div>
           </div>
 
-          {/* 側面装飾 */}
-          <div className="absolute left-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-50"></div>
-          <div className="absolute right-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-30"></div>
+          {/* タイトル */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 1rem",
+              borderRadius: "0.5rem",
+              background:
+                "linear-gradient(90deg, #f9fafb 0%, #ffffff 30%, #f9fafb 100%)",
+              border: "1px solid #e5e7eb",
+              marginBottom: "2rem",
+              width: "fit-content",
+              margin: "0 auto 2rem auto",
+              fontSize: "1rem",
+              fontWeight: "500",
+              fontFamily: "serif",
+              letterSpacing: "0.1em",
+              textAlign: "center",
+            }}
+          >
+            <span style={{ color: "#9ca3af", fontSize: "0.875rem" }}>※</span>
+            <span
+              style={{
+                color: "#374151",
+                fontSize: "1rem",
+                fontWeight: "500",
+                textAlign: "center",
+                display: "inline-block",
+              }}
+            >
+              {trivia.title || "Trivia"}
+            </span>
+            <span style={{ color: "#9ca3af", fontSize: "0.875rem" }}>※</span>
+          </div>
 
-          {/* ホバー光沢 */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+          {/* 装飾文字 */}
+          <div
+            style={{
+              position: "absolute",
+              left: "1rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "4rem",
+              color: "#374151",
+              opacity: 0.3,
+              fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            「
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              right: "1rem",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "4rem",
+              color: "#374151",
+              opacity: 0.3,
+              fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            」
+          </div>
+
+          {/* コンテンツ */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 10,
+              padding: "0 2rem",
+            }}
+          >
+            {(trivia.contentEn || trivia.content)
+              .split(/\n+/)
+              .filter((paragraph) => paragraph.trim())
+              .map((paragraph, pIndex) => {
+                const isTitle = pIndex === 0;
+                return (
+                  <p
+                    key={pIndex}
+                    style={{
+                      color: isTitle ? "#fbbf24" : "#f3f4f6",
+                      fontSize: isTitle ? "1.2rem" : "1.1rem",
+                      lineHeight: "1.7",
+                      fontFamily: isTitle
+                        ? '"Noto Serif JP", "Yu Mincho", serif'
+                        : '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+                      letterSpacing: "0.025em",
+                      textAlign: isTitle ? "center" : "left",
+                      fontWeight: isTitle ? "bold" : "normal",
+                      wordWrap: "break-word",
+                      overflowWrap: "break-word",
+                      wordBreak: "break-word",
+                      whiteSpace: "normal",
+                      margin: isTitle ? "0 auto 2rem auto" : "0 0 1rem 0",
+                      padding: "0",
+                      width: "100%",
+                      maxWidth: "none",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    {paragraph
+                      .split(/(重要|ポイント|特に|注目)/g)
+                      .map((part, i) =>
+                        /^(重要|ポイント|特に|注目)$/.test(part) ? (
+                          <strong
+                            key={i}
+                            style={{
+                              color: "#fbbf24",
+                              fontWeight: "bold",
+                              backgroundColor: "rgba(251, 191, 36, 0.2)",
+                              padding: "0.25rem 0.5rem",
+                              borderRadius: "0.25rem",
+                            }}
+                          >
+                            {part}
+                          </strong>
+                        ) : (
+                          part
+                        )
+                      )}
+                  </p>
+                );
+              })}
+          </div>
+
+          {/* 下部装飾 */}
+          <div
+            style={{
+              marginTop: "2rem",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "0.5rem",
+            }}
+          >
+            <div
+              style={{
+                width: "0.25rem",
+                height: "0.25rem",
+                borderRadius: "50%",
+                backgroundColor: "#6b7280",
+              }}
+            />
+            <div
+              style={{
+                width: "3rem",
+                height: "1px",
+                background:
+                  "linear-gradient(90deg, #6b7280 0%, #9ca3af 50%, #6b7280 100%)",
+              }}
+            />
+            <div
+              style={{
+                width: "0.25rem",
+                height: "0.25rem",
+                borderRadius: "50%",
+                backgroundColor: "#6b7280",
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -228,385 +386,377 @@ function OptimizedImage({
   );
 }
 
-// 🆕 一口メモ処理用の関数
-const processInlineTriviaPlaceholders = (
+// 🔧 一口メモをMarkdown処理から分離する関数
+const separateTriviaFromMarkdown = (
   content: string,
   triviaList: ArticleTrivia[]
-): string => {
-  if (!triviaList || triviaList.length === 0) return content;
+): { markdownContent: string; triviaElements: React.ReactNode[] } => {
+  if (!triviaList || triviaList.length === 0) {
+    return { markdownContent: content, triviaElements: [] };
+  }
 
-  // `:::trivia[id]` または `:::trivia[index]` の形式を処理
-  return content.replace(/:::trivia\[([^\]]+)\]/g, (match, identifier) => {
-    let trivia: ArticleTrivia | undefined;
-    let index = 0;
+  const triviaElements: React.ReactNode[] = [];
+  const triviaPlaceholders: string[] = [];
 
-    // IDまたはインデックスで一口メモを検索
-    if (isNaN(Number(identifier))) {
-      // ID検索
-      trivia = triviaList.find((t) => t.id === identifier);
-      index = triviaList.findIndex((t) => t.id === identifier);
-    } else {
-      // インデックス検索
-      const triviaIndex = parseInt(identifier);
-      trivia = triviaList[triviaIndex];
-      index = triviaIndex;
+  // 一口メモ記法を一意のプレースホルダーに置き換え
+  const processedContent = content.replace(
+    /:::trivia\[([^\]]+)\]/g,
+    (match, identifier) => {
+      let trivia: ArticleTrivia | undefined;
+      let index = 0;
+
+      // IDまたはインデックスで一口メモを検索
+      if (isNaN(Number(identifier))) {
+        trivia = triviaList.find((t) => t.id === identifier);
+        index = triviaList.findIndex((t) => t.id === identifier);
+      } else {
+        const triviaIndex = parseInt(identifier);
+        trivia = triviaList[triviaIndex];
+        index = triviaIndex;
+      }
+
+      if (!trivia) {
+        return `[一口メモ "${identifier}" が見つかりません]`;
+      }
+
+      // プレースホルダーを生成
+      const placeholderId = `TRIVIA_SPLIT_${triviaElements.length}`;
+      triviaPlaceholders.push(placeholderId);
+
+      // 一口メモ要素を作成
+      triviaElements.push(
+        <InlineTrivia
+          key={`trivia-${trivia.id}`}
+          trivia={trivia}
+          index={index}
+        />
+      );
+
+      return `\n\n${placeholderId}\n\n`;
     }
-
-    if (!trivia) {
-      return `**[一口メモ "${identifier}" が見つかりません]**`;
-    }
-
-    // プレースホルダーとして一意のIDを生成
-    return `TRIVIA_PLACEHOLDER_${btoa(JSON.stringify({ trivia, index }))}`;
-  });
-};
-
-// 🔧 コンテンツの正規化とデバッグ
-const normalizeAndDebugContent = (content: string): string => {
-  // すべての太字パターンを検索してログ出力
-  const allStars = content.match(/\*+/g);
-  console.log("All star patterns found:", allStars?.slice(0, 10) || "none");
-
-  // Nohを含む行を特別に検索
-  const lines = content.split("\n");
-  const nohLines = lines.filter((line) => line.toLowerCase().includes("noh"));
-  console.log('Lines containing "noh":', nohLines);
-
-  // 特殊文字のアスタリスクを通常のアスタリスクに正規化
-  let normalizedContent = content
-    .replace(/＊/g, "*") // 全角アスタリスク
-    .replace(/✱/g, "*") // 八角形のアスタリスク
-    .replace(/✳/g, "*") // 八芒星
-    .replace(/∗/g, "*"); // 数学的アスタリスク
-
-  // 不可視文字を削除
-  normalizedContent = normalizedContent
-    .replace(/[\u200B-\u200D\uFEFF]/g, "") // ゼロ幅文字
-    .replace(/[\u00A0]/g, " "); // ノーブレークスペース
-
-  console.log(
-    "Content after normalization - first 500 chars:",
-    normalizedContent.substring(0, 500)
   );
 
-  return normalizedContent;
+  return { markdownContent: processedContent, triviaElements };
 };
 
-export function MarkdownRenderer({
-  content,
-  triviaList,
-}: MarkdownRendererProps) {
-  // 🔧 コンテンツを正規化
-  const normalizedContent = normalizeAndDebugContent(content);
+// 🔧 マークダウンコンテンツを分割してレンダリング
+const renderSeparatedContent = (
+  markdownContent: string,
+  triviaElements: React.ReactNode[]
+): React.ReactNode[] => {
+  const elements: React.ReactNode[] = [];
+  const parts = markdownContent.split(/TRIVIA_SPLIT_\d+/);
 
-  // 🆕 一口メモのプレースホルダー処理
-  const processedContent = triviaList
-    ? processInlineTriviaPlaceholders(normalizedContent, triviaList)
-    : normalizedContent;
+  parts.forEach((part, index) => {
+    // マークダウン部分をレンダリング
+    if (part.trim()) {
+      elements.push(
+        <div
+          key={`markdown-${index}`}
+          className="japanese-style-modern-container"
+        >
+          <div className="japanese-style-modern-content">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                img(props) {
+                  const { src, alt, title } = props;
 
-  return (
-    <div className="japanese-style-modern-container">
-      <div className="japanese-style-modern-content">
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          components={{
-            // 🆕 一口メモプレースホルダーの処理
-            p(props) {
-              const { children } = props;
+                  if (!src) {
+                    return null;
+                  }
 
-              // 文字列の場合、一口メモプレースホルダーをチェック
-              if (
-                typeof children === "string" &&
-                children.startsWith("TRIVIA_PLACEHOLDER_")
-              ) {
-                const encodedData = children.replace("TRIVIA_PLACEHOLDER_", "");
-                try {
-                  const { trivia, index } = JSON.parse(atob(encodedData));
-                  return <InlineTrivia trivia={trivia} index={index} />;
-                } catch (e) {
-                  console.warn("Error decoding trivia:", e);
+                  const altText = alt || "";
+                  const captionMatch = altText.match(/\{caption: (.*?)\}/);
+                  const caption = captionMatch ? captionMatch[1] : null;
+                  const cleanAlt = altText
+                    .replace(/\{caption: (.*?)\}/, "")
+                    .trim();
+                  const isPriority = altText
+                    .toLowerCase()
+                    .includes("{priority}");
+
+                  if (caption) {
+                    return (
+                      <figure className="markdown-figure">
+                        <OptimizedImage
+                          src={src}
+                          alt={cleanAlt}
+                          title={title}
+                          isPriority={isPriority}
+                        />
+                        <figcaption className="markdown-caption">
+                          {caption}
+                        </figcaption>
+                      </figure>
+                    );
+                  }
+
                   return (
-                    <div className="text-red-500">
-                      一口メモの処理中にエラーが発生しました
-                    </div>
-                  );
-                }
-              }
-
-              // 画像のみの段落の処理
-              if (children && Array.isArray(children)) {
-                const hasOnlyImages = children.every(
-                  (child) =>
-                    typeof child === "object" &&
-                    child !== null &&
-                    "type" in child &&
-                    child.type === "img"
-                );
-
-                if (hasOnlyImages) {
-                  return <>{children}</>;
-                }
-              }
-
-              if (
-                children &&
-                typeof children === "object" &&
-                "type" in children &&
-                children.type === "img"
-              ) {
-                return <>{children}</>;
-              }
-
-              return <p className="japanese-style-modern-p">{children}</p>;
-            },
-
-            img(props) {
-              const { src, alt, title } = props;
-
-              if (!src) {
-                return null;
-              }
-
-              const altText = alt || "";
-              const captionMatch = altText.match(/\{caption: (.*?)\}/);
-              const caption = captionMatch ? captionMatch[1] : null;
-              const cleanAlt = altText.replace(/\{caption: (.*?)\}/, "").trim();
-              const isPriority = altText.toLowerCase().includes("{priority}");
-
-              if (caption) {
-                return (
-                  <figure className="markdown-figure">
                     <OptimizedImage
                       src={src}
                       alt={cleanAlt}
                       title={title}
                       isPriority={isPriority}
                     />
-                    <figcaption className="markdown-caption">
-                      {caption}
-                    </figcaption>
-                  </figure>
-                );
-              }
+                  );
+                },
 
-              return (
-                <OptimizedImage
-                  src={src}
-                  alt={cleanAlt}
-                  title={title}
-                  isPriority={isPriority}
-                />
-              );
-            },
+                h1(props) {
+                  const text = Array.isArray(props.children)
+                    ? props.children.join("")
+                    : String(props.children || "");
+                  const id = text
+                    .toLowerCase()
+                    .replace(
+                      /[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g,
+                      "-"
+                    )
+                    .replace(/^-+|-+$/g, "");
 
-            h1(props) {
-              // IDを生成
-              const text = Array.isArray(props.children)
-                ? props.children.join("")
-                : String(props.children || "");
-              const id = text
-                .toLowerCase()
-                .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-")
-                .replace(/^-+|-+$/g, "");
+                  return (
+                    <section className="japanese-style-modern-section">
+                      <h1 id={id} className="japanese-style-modern-h1">
+                        {props.children}
+                      </h1>
+                    </section>
+                  );
+                },
 
-              return (
-                <section className="japanese-style-modern-section">
-                  <h1 id={id} className="japanese-style-modern-h1">
-                    {props.children}
-                  </h1>
-                </section>
-              );
-            },
+                h2(props) {
+                  const text = Array.isArray(props.children)
+                    ? props.children.join("")
+                    : String(props.children || "");
+                  const id = text
+                    .toLowerCase()
+                    .replace(
+                      /[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g,
+                      "-"
+                    )
+                    .replace(/^-+|-+$/g, "");
 
-            h2(props) {
-              const text = Array.isArray(props.children)
-                ? props.children.join("")
-                : String(props.children || "");
-              const id = text
-                .toLowerCase()
-                .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-")
-                .replace(/^-+|-+$/g, "");
+                  return (
+                    <h2 id={id} className="japanese-style-modern-h2">
+                      {props.children}
+                    </h2>
+                  );
+                },
 
-              return (
-                <h2 id={id} className="japanese-style-modern-h2">
-                  {props.children}
-                </h2>
-              );
-            },
+                h3(props) {
+                  const text = Array.isArray(props.children)
+                    ? props.children.join("")
+                    : String(props.children || "");
+                  const id = text
+                    .toLowerCase()
+                    .replace(
+                      /[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g,
+                      "-"
+                    )
+                    .replace(/^-+|-+$/g, "");
 
-            h3(props) {
-              const text = Array.isArray(props.children)
-                ? props.children.join("")
-                : String(props.children || "");
-              const id = text
-                .toLowerCase()
-                .replace(/[^\w\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+/g, "-")
-                .replace(/^-+|-+$/g, "");
+                  return (
+                    <h3 id={id} className="japanese-style-modern-h3">
+                      {props.children}
+                    </h3>
+                  );
+                },
 
-              return (
-                <h3 id={id} className="japanese-style-modern-h3">
-                  {props.children}
-                </h3>
-              );
-            },
+                h4(props) {
+                  return (
+                    <h4 className="japanese-style-modern-h4">
+                      {props.children}
+                    </h4>
+                  );
+                },
 
-            h4(props) {
-              return (
-                <h4 className="japanese-style-modern-h4">{props.children}</h4>
-              );
-            },
+                blockquote(props) {
+                  return (
+                    <blockquote className="japanese-style-modern-blockquote">
+                      {props.children}
+                    </blockquote>
+                  );
+                },
 
-            blockquote(props) {
-              return (
-                <blockquote className="japanese-style-modern-blockquote">
-                  {props.children}
-                </blockquote>
-              );
-            },
+                strong(props) {
+                  const text = Array.isArray(props.children)
+                    ? props.children.join("")
+                    : String(props.children || "");
 
-            // 🔧 修正：strongコンポーネント（確実に動作する版）
-            strong(props) {
-              const text = Array.isArray(props.children)
-                ? props.children.join("")
-                : String(props.children || "");
+                  if (text.includes("-ryu")) {
+                    return (
+                      <strong className="ryu-name">{props.children}</strong>
+                    );
+                  }
 
-              // デバッグログ（本番では削除可能）
-              if (text.toLowerCase().includes("noh")) {
-                console.log("🎯 NOH DETECTED in strong component:", text);
-              }
+                  return (
+                    <strong
+                      className="japanese-style-modern-strong"
+                      style={{ fontWeight: "bold" }}
+                    >
+                      {props.children}
+                    </strong>
+                  );
+                },
 
-              // 流派名の特別処理
-              if (text.includes("-ryu")) {
-                return <strong className="ryu-name">{props.children}</strong>;
-              }
+                em(props) {
+                  return (
+                    <em className="japanese-style-modern-em">
+                      {props.children}
+                    </em>
+                  );
+                },
 
-              // 通常の太字処理（スタイルを確実に適用）
-              return (
-                <strong
-                  className="japanese-style-modern-strong"
-                  style={{ fontWeight: "bold" }}
-                >
-                  {props.children}
-                </strong>
-              );
-            },
+                a(props) {
+                  const { href, title, children, ...rest } = props;
+                  return (
+                    <a
+                      {...rest}
+                      href={href}
+                      className="japanese-style-modern-a"
+                      title={title}
+                    >
+                      {children}
+                    </a>
+                  );
+                },
 
-            em(props) {
-              return (
-                <em className="japanese-style-modern-em">{props.children}</em>
-              );
-            },
+                ul(props) {
+                  return (
+                    <ul className="japanese-style-modern-ul">
+                      {props.children}
+                    </ul>
+                  );
+                },
 
-            a(props) {
-              const { href, title, children, ...rest } = props;
-              return (
-                <a
-                  {...rest}
-                  href={href}
-                  className="japanese-style-modern-a"
-                  title={title}
-                >
-                  {children}
-                </a>
-              );
-            },
+                ol(props) {
+                  return (
+                    <ol className="japanese-style-modern-ol">
+                      {props.children}
+                    </ol>
+                  );
+                },
 
-            ul(props) {
-              return (
-                <ul className="japanese-style-modern-ul">{props.children}</ul>
-              );
-            },
+                li(props) {
+                  return (
+                    <li className="japanese-style-modern-li">
+                      {props.children}
+                    </li>
+                  );
+                },
 
-            ol(props) {
-              return (
-                <ol className="japanese-style-modern-ol">{props.children}</ol>
-              );
-            },
+                table(props) {
+                  return (
+                    <div className="japanese-style-modern-table-container">
+                      <table className="japanese-style-modern-table">
+                        {props.children}
+                      </table>
+                    </div>
+                  );
+                },
 
-            li(props) {
-              return (
-                <li className="japanese-style-modern-li">{props.children}</li>
-              );
-            },
+                thead(props) {
+                  return (
+                    <thead className="japanese-style-modern-thead">
+                      {props.children}
+                    </thead>
+                  );
+                },
 
-            // テーブル関連
-            table(props) {
-              return (
-                <div className="japanese-style-modern-table-container">
-                  <table className="japanese-style-modern-table">
-                    {props.children}
-                  </table>
-                </div>
-              );
-            },
+                tbody(props) {
+                  return (
+                    <tbody className="japanese-style-modern-tbody">
+                      {props.children}
+                    </tbody>
+                  );
+                },
 
-            thead(props) {
-              return (
-                <thead className="japanese-style-modern-thead">
-                  {props.children}
-                </thead>
-              );
-            },
+                tr(props) {
+                  return (
+                    <tr className="japanese-style-modern-tr">
+                      {props.children}
+                    </tr>
+                  );
+                },
 
-            tbody(props) {
-              return (
-                <tbody className="japanese-style-modern-tbody">
-                  {props.children}
-                </tbody>
-              );
-            },
+                th(props) {
+                  return (
+                    <th className="japanese-style-modern-th">
+                      {props.children}
+                    </th>
+                  );
+                },
 
-            tr(props) {
-              return (
-                <tr className="japanese-style-modern-tr">{props.children}</tr>
-              );
-            },
+                td(props) {
+                  return (
+                    <td className="japanese-style-modern-td">
+                      {props.children}
+                    </td>
+                  );
+                },
 
-            th(props) {
-              return (
-                <th className="japanese-style-modern-th">{props.children}</th>
-              );
-            },
+                hr() {
+                  return <hr className="japanese-style-modern-hr" />;
+                },
 
-            td(props) {
-              return (
-                <td className="japanese-style-modern-td">{props.children}</td>
-              );
-            },
+                // @ts-expect-error - ReactMarkdownの型定義との互換性の問題を回避
+                code(props: { inline?: boolean; children: React.ReactNode }) {
+                  const { inline, children } = props;
+                  if (inline) {
+                    return (
+                      <code className="japanese-style-modern-code">
+                        {children}
+                      </code>
+                    );
+                  }
+                  return (
+                    <code className="japanese-style-modern-code-block">
+                      {children}
+                    </code>
+                  );
+                },
 
-            hr() {
-              return <hr className="japanese-style-modern-hr" />;
-            },
+                pre(props) {
+                  return (
+                    <pre className="japanese-style-modern-pre">
+                      {props.children}
+                    </pre>
+                  );
+                },
+              }}
+            >
+              {part.trim()}
+            </ReactMarkdown>
+          </div>
+        </div>
+      );
+    }
 
-            // @ts-expect-error - ReactMarkdownの型定義との互換性の問題を回避
-            code(props: { inline?: boolean; children: React.ReactNode }) {
-              const { inline, children } = props;
-              if (inline) {
-                return (
-                  <code className="japanese-style-modern-code">{children}</code>
-                );
-              }
-              return (
-                <code className="japanese-style-modern-code-block">
-                  {children}
-                </code>
-              );
-            },
+    // 対応する一口メモ要素を追加
+    if (index < triviaElements.length) {
+      elements.push(triviaElements[index]);
+    }
+  });
 
-            pre(props) {
-              return (
-                <pre className="japanese-style-modern-pre">
-                  {props.children}
-                </pre>
-              );
-            },
-          }}
-        >
-          {processedContent}
-        </ReactMarkdown>
-      </div>
-    </div>
+  return elements;
+};
+
+export function MarkdownRenderer({
+  content,
+  triviaList,
+}: MarkdownRendererProps) {
+  // 🔧 一口メモをMarkdown処理から分離
+  const { markdownContent, triviaElements } = separateTriviaFromMarkdown(
+    content,
+    triviaList || []
   );
+
+  // 🔧 分離されたコンテンツをレンダリング
+  const renderedElements = renderSeparatedContent(
+    markdownContent,
+    triviaElements
+  );
+
+  return <>{renderedElements}</>;
 }
 
 export function configureMarkedRenderer() {

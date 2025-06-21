@@ -77,7 +77,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
         // 段落
         p: ({ children, ...props }) => (
           <p
-            className="text-gray-200 leading-relaxed text-sm sm:text-base font-normal mb-3 last:mb-0"
+            className="text-gray-200 leading-relaxed text-sm sm:text-base font-normal mb-3 last:mb-0 text-left"
             style={{
               fontFamily:
                 '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
@@ -175,7 +175,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
         // リスト
         ul: ({ children, ...props }) => (
           <ul
-            className="list-disc list-inside text-gray-200 space-y-1 my-2 pl-2"
+            className="list-disc list-inside text-gray-200 space-y-1 my-2 pl-2 text-left"
             {...props}
           >
             {children}
@@ -184,7 +184,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
 
         ol: ({ children, ...props }) => (
           <ol
-            className="list-decimal list-inside text-gray-200 space-y-1 my-2 pl-2"
+            className="list-decimal list-inside text-gray-200 space-y-1 my-2 pl-2 text-left"
             {...props}
           >
             {children}
@@ -192,7 +192,10 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
         ),
 
         li: ({ children, ...props }) => (
-          <li className="text-gray-200 leading-relaxed text-sm" {...props}>
+          <li
+            className="text-gray-200 leading-relaxed text-sm text-left"
+            {...props}
+          >
             {children}
           </li>
         ),
@@ -200,7 +203,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
         // 引用
         blockquote: ({ children, ...props }) => (
           <blockquote
-            className="border-l-4 border-yellow-400 bg-gray-800/50 pl-3 py-2 my-3 italic text-gray-300 text-sm"
+            className="border-l-4 border-yellow-400 bg-gray-800/50 pl-3 py-2 my-3 italic text-gray-300 text-sm text-left"
             {...props}
           >
             {children}
@@ -210,7 +213,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
         // 見出し（一口メモ内では小さめに）
         h1: ({ children, ...props }) => (
           <h1
-            className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0"
+            className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0 text-left"
             {...props}
           >
             {children}
@@ -219,7 +222,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
 
         h2: ({ children, ...props }) => (
           <h2
-            className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0"
+            className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0 text-left"
             {...props}
           >
             {children}
@@ -228,7 +231,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
 
         h3: ({ children, ...props }) => (
           <h3
-            className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0"
+            className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0 text-left"
             {...props}
           >
             {children}
@@ -242,6 +245,23 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
 
         // 改行をそのまま反映
         br: ({ ...props }) => <br {...props} />,
+
+        // 動画埋め込み（iframe）を中央揃え
+        iframe: ({ ...props }) => (
+          <div className="flex justify-center my-4">
+            <iframe className="rounded-lg shadow-lg" {...props} />
+          </div>
+        ),
+
+        // 画像も中央揃え
+        img: ({ ...props }) => (
+          <div className="flex justify-center my-4">
+            <img
+              className="rounded-lg shadow-lg max-w-full h-auto"
+              {...props}
+            />
+          </div>
+        ),
       }}
     >
       {content}
@@ -277,8 +297,8 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   const displayContent = trivia.contentEn || trivia.content;
 
   return (
-    <div className="my-8 mx-auto max-w-4xl">
-      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group">
+    <div className="my-8 mx-auto max-w-4xl flex justify-center">
+      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group w-full max-w-2xl">
         {/* 上部装飾ライン */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
 
@@ -289,7 +309,7 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
         <div className="absolute bottom-3 right-3 w-2 h-2 border-r border-b border-gray-600 opacity-50"></div>
 
         {/* 内容 */}
-        <div className="relative p-6 sm:p-8">
+        <div className="relative p-6 sm:p-8 text-center">
           {/* 番号 */}
           <div className="absolute top-4 left-4">
             <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
@@ -320,7 +340,7 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
           )}
 
           {/* メインテキスト */}
-          <div className="mt-4 pr-12 relative">
+          <div className="mt-4 relative text-center">
             <div
               className="absolute -left-3 -top-1 text-3xl text-gray-600 leading-none select-none opacity-50"
               style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
@@ -328,9 +348,9 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
               「
             </div>
 
-            <div className="relative z-10 pr-4">
+            <div className="relative z-10 text-center">
               {/* タイトル */}
-              <div className="flex items-center justify-center gap-1 py-1 px-3 rounded-md bg-gradient-to-r from-gray-50 via-white to-gray-50 border border-gray-200 mb-3">
+              <div className="flex items-center justify-center gap-1 py-1 px-3 rounded-md bg-gradient-to-r from-gray-50 via-white to-gray-50 border border-gray-200 mb-3 mx-auto w-fit">
                 <span className="text-gray-400 text-sm font-serif">※</span>
                 <span
                   className="text-sm font-medium text-gray-700 font-serif"
@@ -342,7 +362,7 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
               </div>
 
               {/* マークダウンコンテンツをレンダリング（Hydration安全） */}
-              <div className="trivia-markdown-content">
+              <div className="trivia-markdown-content text-center">
                 <TriviaMarkdown content={displayContent} />
               </div>
 
@@ -350,11 +370,11 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
               {trivia.contentEn &&
                 trivia.content !== trivia.contentEn &&
                 isClient && (
-                  <details className="mt-3 border-t border-gray-600 pt-3">
+                  <details className="mt-3 border-t border-gray-600 pt-3 text-center">
                     <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-300">
                       日本語版を表示
                     </summary>
-                    <div className="mt-2 text-xs text-gray-400 border-l-2 border-gray-600 pl-3">
+                    <div className="mt-2 text-xs text-gray-400 border-l-2 border-gray-600 pl-3 text-center">
                       <TriviaMarkdown content={trivia.content} />
                     </div>
                   </details>
