@@ -1,4 +1,4 @@
-// components/sidebar/RelatedArticles.tsx - 修正版
+// components/sidebar/RelatedArticles.tsx - 完全修正版
 "use client";
 
 import { useEffect, useState } from "react";
@@ -74,14 +74,11 @@ export default function RelatedArticles({
           </h3>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse flex gap-4 p-3 rounded-lg"
-              >
-                <div className=" w-20 h-20 rounded-lg flex-shrink-0"></div>
+              <div key={i} className="animate-pulse flex gap-4 p-3 rounded-lg">
+                <div className="bg-slate-600 w-20 h-20 rounded-lg flex-shrink-0"></div>
                 <div className="flex-1 space-y-3 py-2">
-                  <div className=" h-4 rounded w-3/4"></div>
-                  <div className=" h-3 rounded w-1/2"></div>
+                  <div className="bg-slate-600 h-4 rounded w-3/4"></div>
+                  <div className="bg-slate-600 h-3 rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -126,7 +123,7 @@ export default function RelatedArticles({
           >
             View All{" "}
             {CATEGORY_LABELS[currentCategory as keyof typeof CATEGORY_LABELS]}
-             <span className="text-lg">≫</span>
+            <span className="text-lg">≫</span>
           </Link>
         </div>
       </div>
@@ -144,116 +141,67 @@ function RelatedArticleCard({ article }: { article: articleType }) {
     imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== "";
 
   return (
-    <Link 
-      href={`/articles/${article.slug}`} 
-      className="group flex gap-4 rounded-lg bg-[#2c2929] hover:bg-[#bbc8e6] transition-all duration-300 border border-slate-600/50 hover:border-[#bbc8e6] hover:shadow-lg"
-      style={{ padding: 0, margin: 0 }} // 🚨 padding除去
+    <Link
+      href={`/articles/${article.slug}`}
+      className="group flex gap-4 p-3 rounded-lg bg-[#2c2929] hover:bg-[#bbc8e6] transition-all duration-300 border border-slate-600/50 hover:border-[#bbc8e6] hover:shadow-lg"
     >
-        {/* 🚨 画像エリア - 完全修正 */}
-        <div 
-          className="flex-shrink-0 rounded-lg overflow-hidden relative border border-slate-500"
-          style={{ 
-            width: '80px', 
-            height: '80px', 
-            position: 'relative', 
-            margin: 0, 
-            padding: 0 
-          }}
-        >
-          {hasValidImage ? (
-            <>
-              {!imageLoaded && !imageError && (
-                <div 
-                  className="absolute inset-0 animate-pulse flex items-center justify-center"
-                  style={{ 
-                    position: 'absolute', 
-                    top: 0, 
-                    left: 0, 
-                    width: '100%', 
-                    height: '100%',
-                    zIndex: 2 
-                  }}
-                >
-                  <div className="w-4 h-4 border-2 rounded-full animate-spin"></div>
-                </div>
-              )}
+      {/* 修正済み画像エリア */}
+      <div className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden relative border border-slate-500 bg-slate-700">
+        {hasValidImage ? (
+          <>
+            {!imageLoaded && !imageError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
 
-              {imageError && (
-                <div 
-                  className="w-full h-full flex items-center justify-center"
-                  style={{ 
-                    position: 'absolute', 
-                    top: 0, 
-                    left: 0, 
-                    width: '100%', 
-                    height: '100%',
-                    zIndex: 2 
-                  }}
-                >
-                  <div className="text-slate-400 text-sm">🖼️</div>
-                </div>
-              )}
+            {imageError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-slate-400 text-lg">🖼️</span>
+              </div>
+            )}
 
-              {!imageError && (
-                <Image
-                  src={imageUrl}
-                  alt={imageAlt}
-                  width={80}
-                  height={80}
-                  className={`transition-all duration-300 group-hover:scale-110 ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                  }`}
-                  style={{ 
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    margin: 0, 
-                    padding: 0,
-                    zIndex: 1
-                  }}
-                  onLoad={() => setImageLoaded(true)}
-                  onError={() => setImageError(true)}
-                  unoptimized
-                />
-              )}
-            </>
-          ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center"
-              style={{ 
-                position: 'absolute', 
-                top: 0, 
-                left: 0, 
-                width: '100%', 
-                height: '100%' 
-              }}
-            >
-              <div className="text-slate-400 text-sm">🖼️</div>
-            </div>
-          )}
-        </div>
-
-        {/* コンテンツエリア */}
-        <div className="flex-1 min-w-0 flex flex-col justify-between py-3 px-3">
-          <h4 className="font-semibold text-[#f3f3f2] group-hover:text-[#1b1b1b] transition-colors duration-200 leading-tight mb-3 line-clamp-2">
-            {article.title}
-          </h4>
-                      
-          <div className="inline-flex items-center gap-2 text-sm font-medium text-[#df7163] group-hover:text-orange-300 transition-all duration-200">
-            <Button
-              size="sm"
-              className="w-[160px] font-normal
-                border border-[#df7163] bg-[#df7163] text-[#f3f3f2] rounded-full
-                hover:bg-[#f3f3f2]  hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
-                shadow hover:shadow-lg"
-            >
-              Read more ≫
-            </Button>
+            {!imageError && (
+              <Image
+                src={imageUrl}
+                alt={imageAlt}
+                width={80}
+                height={80}
+                className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-110 ${
+                  imageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                style={{ margin: 0, padding: 0, display: "block" }}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+                unoptimized
+              />
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-slate-400 text-lg">🖼️</span>
           </div>
+        )}
+      </div>
+
+      {/* コンテンツエリア */}
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        <h4 className="font-semibold text-[#f3f3f2] group-hover:text-[#1b1b1b] transition-colors duration-200 leading-tight mb-3 line-clamp-2">
+          {article.title}
+        </h4>
+
+        <div className="inline-flex items-center gap-2 text-sm font-medium text-[#df7163] group-hover:text-orange-300 transition-all duration-200">
+          <Button
+            size="sm"
+            className="w-[160px] font-normal
+              border border-[#df7163] bg-[#df7163] text-[#f3f3f2] rounded-full
+              hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
+              shadow hover:shadow-lg"
+          >
+            Read more ≫
+          </Button>
         </div>
+      </div>
     </Link>
   );
 }
