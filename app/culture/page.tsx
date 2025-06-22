@@ -7,6 +7,9 @@ import { CULTURE_CATEGORIES } from "@/constants/constants";
 import RedBubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import PaginationWrapper from "@/components/pagination-wrapper";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
+import Script from "next/script";
 
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
@@ -153,8 +156,24 @@ export default async function CulturePage({
     searchParams?.page ? parseInt(searchParams.page) : 1
   );
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Culture", href: "/culture", isCurrentPage: true },
+  ];
+
+  // SEO: パンくずリスト用の構造化データ
+  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
+
   return (
     <div>
+      <Script
+        id="breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <div className="container mx-auto px-4">
+        <Breadcrumb customItems={breadcrumbItems} />
+      </div>
       {/* ヘッダー */}
       <section className="relative bg-slate-900 pb-8">
         <div className="absolute inset-0 z-0 opacity-40">

@@ -1,7 +1,7 @@
-//app/layout.tsx
+// app/layout.tsx - 修正版
 import "./globals.css";
 import "./styles/japanese-style-modern.css";
-import "highlight.js/styles/github-dark.css"; // or any highlight.js theme
+import "highlight.js/styles/github-dark.css";
 import type { Metadata } from "next";
 import { Noto_Serif_JP } from "next/font/google";
 import { Toaster } from "sonner";
@@ -60,7 +60,6 @@ export const metadata: Metadata = {
   },
 };
 
-// themeColorをviewportに移動（Next.js 14の新しい方式）
 export const viewport = {
   themeColor: "#020617",
 };
@@ -94,7 +93,7 @@ export default function RootLayout({
         </noscript>
         <div className="flex flex-col min-h-screen bg-[#2b1e1c] text-[#f3f3f2]">
           <Header />
-          <main className="flex-grow pt-18">{children}</main>
+          <main className="flex-grow pt-20">{children}</main>
           <BackToTopButton />
           <Footer />
         </div>
