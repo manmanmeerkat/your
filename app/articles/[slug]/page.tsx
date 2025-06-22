@@ -118,6 +118,33 @@ const getArticleData = async (slug: string) => {
   }
 };
 
+export async function generateStaticParams() {
+  try {
+    const articles = await prisma.article.findMany({
+      where: { published: true },
+      select: { slug: true },
+    });
+
+    if (!articles || articles.length === 0) {
+      console.log("静的パス生成: 公開済みの記事が見つかりません。");
+      return [];
+    }
+
+    const paths = articles.map((article) => ({
+      slug: article.slug,
+    }));
+
+    console.log(`静的パス生成: ${paths.length}件の記事パスを生成します。`);
+    // console.log(paths); // デバッグ用にパス一覧を出力
+
+    return paths;
+  } catch (error) {
+    console.error("静的パス生成中にエラーが発生しました:", error);
+    // エラーが発生した場合は空の配列を返し、ビルドを続行させる
+    return [];
+  }
+}
+
 // 本番環境用（キャッシュあり）
 const getArticleBySlugProd = unstable_cache(
   getArticleData,
@@ -337,7 +364,3 @@ export default async function Page({ params }: Props) {
     return notFound();
   }
 }
-
-// 開発環境での動的レンダリング
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
