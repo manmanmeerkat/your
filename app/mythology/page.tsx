@@ -9,6 +9,9 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import GodsGallery from "@/components/gods/GodsGallery";
 import ScrollHandler from "@/components/scroll/ScrollHandler"; // 新しいコンポーネント
+import { Breadcrumb } from "@/components/breadcrumb";
+import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
+import Script from "next/script";
 
 const ARTICLES_PER_PAGE = 6;
 
@@ -279,6 +282,7 @@ async function GodsGalleryWrapper({
   }
 }
 
+// 🎯 メインページコンポーネント
 export default async function MythologyPage({
   searchParams,
 }: {
@@ -288,16 +292,29 @@ export default async function MythologyPage({
     1,
     searchParams?.page ? parseInt(searchParams.page) : 1
   );
-
   const godsSlugMapPromise = getGodsSlugMap();
+
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Mythology", href: "/mythology", isCurrentPage: true },
+  ];
+
+  // SEO: パンくずリスト用の構造化データ
+  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
 
   return (
     <div>
-      {/* 🎯 スクロール制御コンポーネントを追加 */}
+      <Script
+        id="breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <div className="container mx-auto px-4">
+        <Breadcrumb customItems={breadcrumbItems} />
+      </div>
       <ScrollHandler />
-
       {/* ヘッダー */}
-      <section className="relative bg-slate-950">
+      <section className="relative bg-slate-900 pt-16 pb-16">
         <div className="absolute inset-0 z-0 opacity-40">
           <Image
             src="/images/category-top/mythology.jpg"
@@ -324,7 +341,7 @@ export default async function MythologyPage({
         </div>
       </section>
 
-      {/* Suspense による記事読み込み */}
+      {/* 📱 Suspense による非同期読み込み最適化 */}
       <Suspense fallback={<MythologyArticlesSkeleton />}>
         <MythologyArticlesSection currentPage={currentPage} />
       </Suspense>

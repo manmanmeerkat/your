@@ -6,6 +6,11 @@ import ArticleClientPage from "../../../components/articleClientPage/ArticleClie
 import Script from "next/script";
 import { unstable_cache } from "next/cache";
 import { TriviaCategoryType, TriviaColorThemeType } from "@/types/types";
+import { Breadcrumb } from "@/components/breadcrumb";
+import {
+  BREADCRUMB_CONFIG,
+  generateBreadcrumbStructuredData,
+} from "@/components/breadcrumb/config";
 
 type Props = {
   params: { slug: string };
@@ -206,6 +211,25 @@ export default async function Page({ params }: Props) {
       return notFound();
     }
 
+    // 動的なパンくずリストのアイテムを生成
+    const categoryLabel =
+      BREADCRUMB_CONFIG.categories[
+        article.category as keyof typeof BREADCRUMB_CONFIG.categories
+      ] || article.category;
+    const truncatedTitle =
+      article.title.length > 20
+        ? `${article.title.substring(0, 20)}...`
+        : article.title;
+    const breadcrumbItems = [
+      { label: "Home", href: "/" },
+      { label: categoryLabel, href: `/${article.category}` },
+      {
+        label: truncatedTitle,
+        href: `/articles/${article.slug}`,
+        isCurrentPage: true,
+      },
+    ];
+
     const featuredImage = article.images?.find((img) => img.isFeatured);
     const imageUrl = featuredImage?.url || "/ogp-image.png";
 
@@ -267,6 +291,9 @@ export default async function Page({ params }: Props) {
         .join(", "),
     };
 
+    // SEO: パンくずリスト用の構造化データ
+    const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
+
     console.log("ページレンダリング成功:", {
       title: article.title,
       triviaCount: article.trivia?.length || 0,
@@ -275,11 +302,18 @@ export default async function Page({ params }: Props) {
     return (
       <>
         <Script
-          id="json-ld-article"
+          id="article-structured-data"
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-          strategy="afterInteractive"
         />
+        <Script
+          id="breadcrumb-structured-data"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
+        <div className="container mx-auto px-4">
+          <Breadcrumb customItems={breadcrumbItems} />
+        </div>
         <ArticleClientPage article={article} />
       </>
     );
@@ -287,10 +321,7 @@ export default async function Page({ params }: Props) {
     console.error("ページレンダリングエラー:", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
-      params,
     });
-
-    // エラーが発生した場合はnotFound()を呼び出す
     return notFound();
   }
 }

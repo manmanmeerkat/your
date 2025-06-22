@@ -265,6 +265,8 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
                       width: "100%",
                       maxWidth: "none",
                       boxSizing: "border-box",
+                      display: isTitle ? "block" : "block",
+                      textAlignLast: isTitle ? "center" : "left",
                     }}
                   >
                     {paragraph

@@ -8,6 +8,9 @@ import { THREE_BIG_FESTIVALS } from "@/constants/constants";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import RedBubble from "@/components/redBubble/RedBubble";
 import PaginationWrapper from "@/components/pagination-wrapper";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
+import Script from "next/script";
 
 const ARTICLES_PER_PAGE = 6;
 
@@ -141,6 +144,7 @@ async function FestivalArticlesSection({
   );
 }
 
+// 🎯 メインページコンポーネント
 export default async function FestivalsPage({
   searchParams,
 }: {
@@ -151,10 +155,26 @@ export default async function FestivalsPage({
     searchParams?.page ? parseInt(searchParams.page) : 1
   );
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Festivals", href: "/festivals", isCurrentPage: true },
+  ];
+
+  // SEO: パンくずリスト用の構造化データ
+  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
+
   return (
     <div>
+      <Script
+        id="breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <div className="container mx-auto px-4">
+        <Breadcrumb customItems={breadcrumbItems} />
+      </div>
       {/* ヘッダー */}
-      <section className="relative bg-slate-900 pt-16 pb-16">
+      <section className="relative bg-slate-900 pb-8">
         <div className="absolute inset-0 z-0 opacity-40">
           <Image
             src="/images/category-top/festival.jpg"
@@ -165,27 +185,27 @@ export default async function FestivalsPage({
             sizes="100vw"
           />
         </div>
-        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
+        <div className="container mx-auto px-6 py-32 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Festivals
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
-            Japan&apos;s festivals reflect the beauty of the changing seasons
-            and the spirit of each region. We will explore the vibrant world of
-            Japanese festivals through traditional celebrations, local customs,
-            and cultural events.
+            Japanese festivals (matsuri) are vibrant celebrations that connect
+            communities with their traditions and seasonal rhythms. From the
+            famous Gion Matsuri to local shrine festivals, these events bring
+            people together to honor deities and celebrate life.
           </p>
         </div>
       </section>
 
-      {/* 📱 Suspense による記事読み込み */}
+      {/* 📱 Suspense による非同期読み込み最適化 */}
       <Suspense fallback={<FestivalArticlesSkeleton />}>
         <FestivalArticlesSection currentPage={currentPage} />
       </Suspense>
 
       <WhiteLine />
 
-      {/* 四季の祭り */}
+      {/* 祭りカテゴリー */}
       <section className="py-16">
         <div className="container mx-auto px-6">
           <h2 className="text-3xl font-bold mb-16 text-center bg-[#180614] py-2">

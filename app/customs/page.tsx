@@ -7,6 +7,9 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { WAY_OF_LIFE } from "@/constants/constants";
 import Redbubble from "@/components/redBubble/RedBubble";
 import PaginationWrapper from "@/components/pagination-wrapper";
+import { Breadcrumb } from "@/components/breadcrumb";
+import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
+import Script from "next/script";
 
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
@@ -141,6 +144,7 @@ async function CustomsArticlesSection({
   );
 }
 
+// 🎯 メインページコンポーネント
 export default async function CustomsPage({
   searchParams,
 }: {
@@ -151,11 +155,27 @@ export default async function CustomsPage({
     searchParams?.page ? parseInt(searchParams.page) : 1
   );
 
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Customs", href: "/customs", isCurrentPage: true },
+  ];
+
+  // SEO: パンくずリスト用の構造化データ
+  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
+
   return (
     <div>
+      <Script
+        id="breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <div className="container mx-auto px-4">
+        <Breadcrumb customItems={breadcrumbItems} />
+      </div>
       {/* ヘッダー */}
-      <section className="relative bg-slate-950 pt-16 pb-16">
-        <div className="absolute inset-0 z-0 opacity-30">
+      <section className="relative bg-slate-900 pb-8">
+        <div className="absolute inset-0 z-0 opacity-40">
           <Image
             src="/images/category-top/custom.jpg"
             alt="Japanese Customs"
@@ -165,16 +185,15 @@ export default async function CustomsPage({
             sizes="100vw"
           />
         </div>
-        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
+        <div className="container mx-auto px-6 py-32 relative z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Japanese Customs
           </h1>
           <p className="text-lg md:text-xl max-w-2xl mx-auto text-left">
-            Japanese customs offer a glimpse into the country&apos;s unique
-            sense of harmony, respect, and seasonal awareness. We will explore
-            everyday traditions such as bowing, removing shoes, and celebrating
-            seasonal events that reflect the values and rhythms of Japanese
-            life.
+            Japanese customs and manners reflect the deep respect for others and
+            harmony in society. From bowing to gift-giving, these traditions
+            embody the spirit of Japanese culture and help maintain social
+            harmony.
           </p>
         </div>
       </section>
