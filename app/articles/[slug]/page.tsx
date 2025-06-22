@@ -22,7 +22,10 @@ const getArticleData = async (slug: string) => {
     console.log("記事取得開始:", slug);
 
     const article = await prisma.article.findFirst({
-      where: { slug },
+      where: {
+        slug,
+        published: true, // 公開済みの記事のみを取得
+      },
       include: {
         images: {
           select: {
@@ -56,13 +59,14 @@ const getArticleData = async (slug: string) => {
     });
 
     if (!article) {
-      console.log("記事が見つかりません:", slug);
+      console.log("記事が見つかりません（または未公開）:", slug);
       return null;
     }
 
     console.log("記事取得成功:", {
       id: article.id,
       title: article.title,
+      published: article.published,
       triviaCount: article.trivia?.length || 0,
     });
 
@@ -138,10 +142,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : await getArticleBySlugProd(slug);
 
     if (!article) {
-      console.log("メタデータ生成: 記事が見つかりません");
+      console.log("メタデータ生成: 記事が見つかりません（または未公開）");
       return {
         title: "Article not found | Your Secret Japan",
-        description: "The article you're looking for does not exist.",
+        description:
+          "The article you're looking for does not exist or is not published.",
       };
     }
 
@@ -208,6 +213,12 @@ export default async function Page({ params }: Props) {
       console.log(
         "ページレンダリング: 記事が見つからないためnotFound()を呼び出し"
       );
+      return notFound();
+    }
+
+    // 公開済みチェック（念のため）
+    if (!article.published) {
+      console.log("ページレンダリング: 記事が未公開のためnotFound()を呼び出し");
       return notFound();
     }
 
@@ -296,6 +307,7 @@ export default async function Page({ params }: Props) {
 
     console.log("ページレンダリング成功:", {
       title: article.title,
+      published: article.published,
       triviaCount: article.trivia?.length || 0,
     });
 
