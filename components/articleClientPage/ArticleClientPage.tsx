@@ -941,7 +941,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="japanese-style-modern">
           <div className="japanese-style-modern-header">
             <h1 className="japanese-style-modern-title">{article.title}</h1>
@@ -951,13 +951,24 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
           </div>
 
           <div className="japanese-style-modern-container">
-            <div className="flex flex-col lg:flex-row gap-8">
-              {/* 右サイドバー - デスクトップ専用 */}
-              <div className="order-1 lg:order-2 lg:w-80 flex-shrink-0">
-                <div className="space-y-6 lg:sticky lg:top-8">
+            {/* タブレット・デスクトップ用レイアウト修正 */}
+            <div className="flex flex-col xl:flex-row gap-8">
+              {/* メインコンテンツ */}
+              <div className="order-2 xl:order-1 flex-1 min-w-0">
+                <div className="japanese-style-modern-content max-w-none">
+                  {/* Hydration安全な一口メモ付きコンテンツをレンダリング */}
+                  <div className="prose prose-lg prose-invert max-w-none overflow-hidden">
+                    {renderedContent}
+                  </div>
+                </div>
+              </div>
+
+              {/* 右サイドバー - xl以上でのみ表示 */}
+              <div className="order-1 xl:order-2 xl:w-80 flex-shrink-0">
+                <div className="space-y-6 xl:sticky xl:top-8">
                   {/* デスクトップ専用目次 */}
                   {tableOfContents.length > 0 && (
-                    <div className="hidden lg:block">
+                    <div className="hidden xl:block">
                       <aside className="japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
                         <h3 className="japanese-style-modern-sidebar-title">
                           Contents
@@ -982,21 +993,11 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                   )}
 
                   {/* 関連記事 - デスクトップ専用サイドバー */}
-                  <div className="hidden lg:block">
+                  <div className="hidden xl:block">
                     <RelatedArticles
                       currentCategory={article.category}
                       currentArticleId={article.id}
                     />
-                  </div>
-                </div>
-              </div>
-
-              {/* メインコンテンツ */}
-              <div className="order-2 lg:order-1 flex-1 min-w-0">
-                <div className="flex-1 min-w-0">
-                  <div className="japanese-style-modern-content">
-                    {/* Hydration安全な一口メモ付きコンテンツをレンダリング */}
-                    {renderedContent}
                   </div>
                 </div>
               </div>
@@ -1011,7 +1012,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
         </div>
 
         {/* モバイル・タブレット専用関連記事エリア */}
-        <div className="block lg:hidden mt-8">
+        <div className="block xl:hidden mt-8">
           <RelatedArticles
             currentCategory={article.category}
             currentArticleId={article.id}
@@ -1060,7 +1061,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
 
       {/* モバイル・タブレット専用目次 */}
       {tableOfContents.length > 0 && (
-        <div className="lg:hidden">
+        <div className="xl:hidden">
           <TableOfContents
             tableOfContents={tableOfContents}
             activeSection={activeSection}
