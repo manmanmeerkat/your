@@ -288,73 +288,72 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* モバイルメニュー */}
+        {/* モバイルメニュー - 最終修正版 */}
         {isVisible && (
-          <nav
-            className="fixed inset-0 z-50 bg-[#2b1e1c] bg-opacity-95"
-            role="navigation"
-            aria-label="Mobile navigation"
-            style={{
-              willChange: "opacity, transform",
-              backfaceVisibility: "hidden",
-            }}
-          >
-            {/* オーバーレイ */}
+          <div className="mobile-menu-overlay">
+            {/* 背景クリック用 */}
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 w-full h-full"
               onClick={closeMenu}
               aria-hidden="true"
+              style={{ backgroundColor: "#2d211b" }}
             />
 
-            <div
-              className={`relative flex flex-col h-full transition-all duration-200 ease-out
-                ${
-                  animateIn
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 -translate-y-2"
-                }`}
-              style={{
-                willChange: "opacity, transform",
-                backfaceVisibility: "hidden",
-              }}
+            <nav
+              className="mobile-menu-content"
+              role="navigation"
+              aria-label="Mobile navigation"
             >
-              {/* メニューヘッダー */}
-              <div className="container mx-auto w-full px-6 md:px-16 flex justify-between pt-6">
-                <p className="text-2xl font-bold text-[#f3f3f2]">Menu</p>
-                <button
-                  type="button"
-                  onClick={closeMenu}
-                  className="group z-50 p-2 rounded hover:bg-white transition-all duration-150 active:scale-95"
-                  aria-label="Close menu"
-                  style={{ willChange: "transform, background-color" }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="transition-colors duration-150 group-hover:stroke-black"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* ナビリンク */}
-              <ul
-                className="flex-grow flex flex-col items-center justify-center space-y-6 text-lg"
-                role="list"
+              <div
+                className={`flex flex-col h-full transition-all duration-200 ease-out
+                  ${
+                    animateIn
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 -translate-y-2"
+                  }`}
+                style={{
+                  willChange: "opacity, transform",
+                  backfaceVisibility: "hidden",
+                }}
               >
-                {mobileNavLinks}
-              </ul>
-            </div>
-          </nav>
+                {/* メニューヘッダー */}
+                <div className="container mx-auto w-full px-6 md:px-16 flex justify-between pt-6">
+                  <p className="text-2xl font-bold text-[#f3f3f2]">Menu</p>
+                  <button
+                    type="button"
+                    onClick={closeMenu}
+                    className="group z-50 p-2 rounded hover:bg-white transition-all duration-150 active:scale-95"
+                    aria-label="Close menu"
+                    style={{ willChange: "transform, background-color" }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="transition-colors duration-150 group-hover:stroke-black"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* ナビリンク */}
+                <ul
+                  className="flex-grow flex flex-col items-center justify-center space-y-6 text-lg"
+                  role="list"
+                >
+                  {mobileNavLinks}
+                </ul>
+              </div>
+            </nav>
+          </div>
         )}
       </div>
     </header>
