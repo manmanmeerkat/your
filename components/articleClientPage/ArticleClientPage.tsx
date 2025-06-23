@@ -796,48 +796,50 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     }
   }, []);
 
-  const scrollToHeading = useCallback((id: string) => {
-    if (typeof window === "undefined") return;
+  const scrollToHeading = useCallback(
+    (id: string) => {
+      if (typeof window === "undefined") return;
 
-    const element = document.getElementById(id);
-    if (!element) return;
+      const element = document.getElementById(id);
+      if (!element) return;
 
-    if (window.innerWidth <= 768) {
-      const elementRect = element.getBoundingClientRect();
-      const currentScrollY = window.scrollY;
-      const absoluteElementPosition = elementRect.top + currentScrollY;
+      // モバイル・タブレット用の処理
+      if (window.innerWidth < 1280) {
+        // xl未満
+        const elementRect = element.getBoundingClientRect();
+        // `scrollPosition`（TOCを開いた時のスクロール位置）を基準にターゲット位置を計算
+        const targetScrollY = elementRect.top + scrollPosition - 100; // ヘッダー分のオフセット
 
-      setShowMobileToc(false);
+        // 先にTOCを閉じる
+        setShowMobileToc(false);
+        document.body.classList.remove("toc-open");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
 
-      document.body.classList.remove("toc-open");
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-
-      requestAnimationFrame(() => {
-        const offsetPosition = absoluteElementPosition - 100;
-        const finalPosition = Math.max(0, offsetPosition);
+        // スタイルが適用された後にスクロールを実行
+        requestAnimationFrame(() => {
+          window.scrollTo({
+            top: Math.max(0, targetScrollY),
+            behavior: "smooth",
+          });
+        });
+      } else {
+        // デスクトップ用の処理 (xl以上)
+        const elementPosition =
+          element.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - 100;
 
         window.scrollTo({
-          top: finalPosition,
+          top: Math.max(0, offsetPosition),
           behavior: "smooth",
         });
-
-        setActiveSection(id);
-      });
-    } else {
-      const elementPosition =
-        element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - 100;
-
-      window.scrollTo({
-        top: Math.max(0, offsetPosition),
-        behavior: "smooth",
-      });
+      }
 
       setActiveSection(id);
-    }
-  }, []);
+    },
+    [scrollPosition]
+  );
 
   const toggleMobileToc = useCallback(() => {
     setShowMobileToc((prev) => {
