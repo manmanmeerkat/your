@@ -93,7 +93,7 @@ export default function RelatedArticles({
   }
 
   return (
-    <div className="w-full bg-[#1b1b1b] rounded-xl border border-[#2b2b2b] overflow-hidden shadow-xl">
+    <div className="w-full bg-[#1b1b1b] rounded-xl border border-[#5e4740] overflow-hidden shadow-xl">
       <div className="p-6">
         <h3 className="japanese-style-modern-sidebar-title">
           More Japanese{" "}
