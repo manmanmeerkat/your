@@ -406,7 +406,7 @@
 }
 
 .japanese-style-modern-a {
-  color: #bbbcde;
+  color: #c0a2c7;
   text-decoration: none;
   transition: all 0.2s ease;
   padding: 0 4px 1px;
@@ -414,7 +414,7 @@
 }
 
 .japanese-style-modern-a:hover {
-  border-bottom: 1px solid #bbc8e6;
+  border-bottom: 1px solid #884898;
   background: rgba(245, 158, 11, 0.1);
   color: var(--japanese-text-primary);
 }

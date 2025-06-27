@@ -213,7 +213,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
         // 見出し（一口メモ内では小さめに）
         h1: ({ children, ...props }) => (
           <h1
-            className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0 text-left"
+            className="text-lg font-bold text-[#c0a2c7] mb-2 mt-3 first:mt-0 text-left"
             {...props}
           >
             {children}
@@ -222,7 +222,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
 
         h2: ({ children, ...props }) => (
           <h2
-            className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0 text-left"
+            className="text-base font-semibold text-[#c0a2c7] mb-2 mt-2 first:mt-0 text-left"
             {...props}
           >
             {children}
@@ -231,7 +231,7 @@ const TriviaMarkdown: React.FC<{ content: string }> = ({ content }) => {
 
         h3: ({ children, ...props }) => (
           <h3
-            className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0 text-left"
+            className="text-sm font-semibold text-[#c0a2c7] mb-1 mt-2 first:mt-0 text-left"
             {...props}
           >
             {children}
@@ -280,89 +280,54 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
     setIsClient(true);
   }, []);
 
-  const kanjiNumbers = [
-    "一",
-    "二",
-    "三",
-    "四",
-    "五",
-    "六",
-    "七",
-    "八",
-    "九",
-    "十",
-  ];
+  // const kanjiNumbers = [
+  //   "一",
+  //   "二",
+  //   "三",
+  //   "四",
+  //   "五",
+  //   "六",
+  //   "七",
+  //   "八",
+  //   "九",
+  //   "十",
+  // ];
 
   // 表示するコンテンツを決定（英語版があれば英語版、なければ日本語版）
   const displayContent = trivia.contentEn || trivia.content;
 
   return (
-    <div className="my-8 mx-auto max-w-4xl flex justify-center">
-      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group w-full max-w-2xl">
-        {/* 上部装飾ライン */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent"></div>
+    <div className="my-2 mx-auto max-w-4xl flex justify-center">
+      <div className="relative bg-gradient-to-br from-[#000b00] via-[#302833] to-[#000b00] border border-[#a59aca] rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group w-full max-w-2xl">
 
         {/* 四隅の角飾り */}
-        <div className="absolute top-3 left-3 w-2 h-2 border-l border-t border-gray-600 opacity-50"></div>
-        <div className="absolute top-3 right-3 w-2 h-2 border-r border-t border-gray-600 opacity-50"></div>
-        <div className="absolute bottom-3 left-3 w-2 h-2 border-l border-b border-gray-600 opacity-50"></div>
-        <div className="absolute bottom-3 right-3 w-2 h-2 border-r border-b border-gray-600 opacity-50"></div>
+        <div className="absolute top-3 left-3 w-2 h-2 border-l border-t border-[#f1bf99] rounded-sm opacity-70"></div>
+        <div className="absolute top-3 right-3 w-2 h-2 border-r border-t border-[#f1bf99] rounded-sm opacity-70"></div>
+        <div className="absolute bottom-3 left-3 w-2 h-2 border-l border-b border-[#f1bf99] rounded-sm opacity-70"></div>
+        <div className="absolute bottom-3 right-3 w-2 h-2 border-r border-b border-[#f1bf99] rounded-sm opacity-70"></div>
 
         {/* 内容 */}
         <div className="relative p-6 sm:p-8 text-center">
-          {/* 番号 */}
-          <div className="absolute top-4 left-4">
-            <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-              <span
-                className="text-xs font-bold text-gray-300 tracking-wider"
-                style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
-              >
-                {kanjiNumbers[index] || (index + 1).toString()}
-              </span>
+          {/* メインテキスト */}
+          <div className="mt-4 relative text-center">
+            <div className="relative z-10 text-center">
+              {/* タイトル */}
+              <h4 className="flex items-center justify-center gap-1 py-2 px-10 bg-[#302833] mx-auto w-fit border-l-4 border-[#a59aca]">
+                <span className="text-2xl font-bold text-[#f3f3f2] font-serif tracking-widest">
+                  Trivia
+                </span>
+              </h4>
+          {/* 上部飾り */}
+          <div className="mt-6 flex justify-center">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-[#f1bf99]"></div>
+              <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-[#f19072] to-gray-600"></div>
+              <div className="w-1 h-1 rounded-full bg-[#f1bf99]"></div>
             </div>
           </div>
 
-          {/* カスタムアイコン */}
-          {trivia.iconEmoji && isClient && (
-            <div className="absolute top-4 right-4">
-              <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 p-2 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <img
-                  src={trivia.iconEmoji}
-                  alt=""
-                  className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* メインテキスト */}
-          <div className="mt-4 relative text-center">
-            <div
-              className="absolute -left-3 -top-1 text-3xl text-gray-600 leading-none select-none opacity-50"
-              style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
-            >
-              「
-            </div>
-
-            <div className="relative z-10 text-center">
-              {/* タイトル */}
-              <div className="flex items-center justify-center gap-1 py-1 px-3 rounded-md bg-gradient-to-r from-gray-50 via-white to-gray-50 border border-gray-200 mb-3 mx-auto w-fit">
-                <span className="text-gray-400 text-sm font-serif">※</span>
-                <span
-                  className="text-sm font-medium text-gray-700 font-serif"
-                  style={{ letterSpacing: "0.1em" }}
-                >
-                  Trivia
-                </span>
-                <span className="text-gray-400 text-sm font-serif">※</span>
-              </div>
-
               {/* マークダウンコンテンツをレンダリング（Hydration安全） */}
-              <div className="trivia-markdown-content text-center">
+              <div className="trivia-markdown-content text-center py-6 mt-4">
                 <TriviaMarkdown content={displayContent} />
               </div>
 
@@ -380,21 +345,14 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
                   </details>
                 )}
             </div>
-
-            <div
-              className="absolute -right-1 -bottom-3 text-3xl text-gray-600 leading-none select-none opacity-50"
-              style={{ fontFamily: '"Noto Serif JP", "Yu Mincho", serif' }}
-            >
-              」
-            </div>
           </div>
 
           {/* 下部飾り */}
           <div className="mt-6 flex justify-center">
             <div className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
-              <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-gray-500 to-gray-600"></div>
-              <div className="w-1 h-1 rounded-full bg-gray-500"></div>
+              <div className="w-1 h-1 rounded-full bg-[#f1bf99]"></div>
+              <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-[#f19072] to-gray-600"></div>
+              <div className="w-1 h-1 rounded-full bg-[#f1bf99]"></div>
             </div>
           </div>
 
@@ -413,12 +371,12 @@ const TriviaCard: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
           )}
         </div>
 
-        {/* 側面装飾 */}
+        {/* 側面装飾
         <div className="absolute left-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-50"></div>
-        <div className="absolute right-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-30"></div>
+        <div className="absolute right-1 top-8 bottom-8 w-px bg-gradient-to-b from-transparent via-gray-700 to-transparent opacity-30"></div> */}
 
         {/* ホバー光沢 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+        {/* <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div> */}
       </div>
     </div>
   );
