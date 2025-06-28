@@ -468,6 +468,7 @@
 .japanese-style-modern-ul {
   margin: 1.25rem 0;
   padding-left: 0.5rem;
+  list-style: none;
 }
 
 .japanese-style-modern-ol {
