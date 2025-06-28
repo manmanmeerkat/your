@@ -470,6 +470,7 @@
   margin: 1.25rem 0;
   padding-left: 1rem;
   counter-reset: item;
+  list-style: none;
 }
 
 .japanese-style-modern-li {
