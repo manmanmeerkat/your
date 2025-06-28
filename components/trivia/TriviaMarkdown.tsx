@@ -26,7 +26,7 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
       components={{
         p: ({ children, ...props }) => (
           <p
-            className="text-gray-200 leading-relaxed text-base font-normal px-10 mb-8 last:mb-0 text-left"
+            className="text-gray-200 leading-relaxed text-base font-normal mb-0 text-left"
             style={{
               fontFamily:
                 '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
@@ -143,14 +143,14 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
           </h3>
         ),
         div: ({ children, ...props }) => (
-          <div className="text-base font-bold text-[#a59aca] text-center mb-8 mt-2 first:mt-0 text-left" {...props}>
+          <div className="text-lg font-bold text-[#a59aca] text-center mb-8 mt-2 first:mt-0 text-left" {...props}>
             {children}
           </div>
         ),
         hr: (props) => <hr className="border-gray-600 my-3" {...props} />,
         br: (props) => <br {...props} />,
         iframe: (props) => (
-          <div className="px-4 sm:px-10 my-6 flex justify-center">
+          <div className="px-4 mt-0 my-6 flex justify-center">
             <div className="w-full max-w-2xl aspect-video">
               <iframe
                 className="w-full h-full rounded-lg shadow-lg"
