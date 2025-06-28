@@ -48,7 +48,7 @@ const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
           </div>
 
           {/* Markdown コンテンツ */}
-          <div className="trivia-markdown-content text-center py-6 mt-4 pb-2">
+          <div className="trivia-markdown-content text-center py-6 mt-4 pb-2 px-8">
             <TriviaMarkdown content={displayContent} />
           </div>
 
