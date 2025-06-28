@@ -356,7 +356,7 @@ function OptimizedImage({
   return (
     <>
       {!isLoaded && (
-        <span className="image-loading-text">画像を読み込み中...</span>
+        <span className="image-loading-text">loading images...</span>
       )}
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
