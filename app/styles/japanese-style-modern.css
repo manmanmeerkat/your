@@ -479,10 +479,10 @@
 }
 
 .japanese-style-modern-li {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0;
   position: relative;
   padding-left: 1.25rem;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 .japanese-style-modern-ul .japanese-style-modern-li::before {
