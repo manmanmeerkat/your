@@ -143,7 +143,7 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
           </h3>
         ),
         div: ({ children, ...props }) => (
-          <div className="text-xl font-bold text-[#a59aca] text-center mb-8 mt-2 first:mt-0 text-left" {...props}>
+          <div className="text-base font-bold text-[#a59aca] text-center mb-8 mt-2 first:mt-0 text-left" {...props}>
             {children}
           </div>
         ),
