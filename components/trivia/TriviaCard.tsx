@@ -9,7 +9,7 @@ interface TriviaCardProps {
   index: number;
 }
 
-export const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
+const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
         <div className="absolute bottom-3 left-3 w-2 h-2 border-l border-b border-[#f1bf99] rounded-sm opacity-70" />
         <div className="absolute bottom-3 right-3 w-2 h-2 border-r border-b border-[#f1bf99] rounded-sm opacity-70" />
 
-        <div className="relative p-6 sm:p-8 text-center">
+        <div className="relative py-6 pt-6 pb-12 text-center">
           {/* タイトル */}
           <div className="relative z-10 text-center">
             <h4 className="flex items-center justify-center gap-1 py-2 px-10 bg-[#302833] mx-auto w-fit border-l-4 border-[#a59aca]">
@@ -39,7 +39,7 @@ export const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
           </div>
 
           {/* 上部飾り */}
-          <div className="mt-6 flex justify-center">
+          <div className="mt-10 flex justify-center">
             <div className="flex items-center gap-2">
               <div className="w-1 h-1 rounded-full bg-[#f1bf99]" />
               <div className="w-8 h-px bg-gradient-to-r from-gray-600 via-[#f19072] to-gray-600" />
@@ -48,7 +48,7 @@ export const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
           </div>
 
           {/* Markdown コンテンツ */}
-          <div className="trivia-markdown-content text-center py-6 mt-4">
+          <div className="trivia-markdown-content text-center py-6 mt-4 pb-2">
             <TriviaMarkdown content={displayContent} />
           </div>
 
@@ -93,3 +93,5 @@ export const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
     </div>
   );
 };
+
+export default TriviaCard;

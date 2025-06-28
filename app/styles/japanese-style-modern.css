@@ -6,8 +6,8 @@
   --japanese-black-secondary: #1b1b1b;
   --japanese-black-tertiary: #0a0a0a;
   --japanese-orange-primary: #f19072;
-  --japanese-orange-light: #eb9b6f;
-  --japanese-orange-strong: #f1bf99;
+  --japanese-orange-light: #f7b977;
+   --japanese-orange-strong: #f0cfa0;
   --japanese-orange-accent: #ee836f;
   --japanese-text-primary: #f3f3f2;
   --japanese-text-secondary: #e2e8f0;
@@ -39,7 +39,7 @@
 }
 
 .japanese-style-modern-container {
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 1rem;
   position: relative;
   z-index: 2;
   display: flex;
@@ -88,9 +88,6 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 2;
   letter-spacing: 0.05em;
-  /* margin: 0 auto;
-  max-width: 90%;
-  width: auto; */
 }
 
 .japanese-style-modern-title::after {
@@ -102,7 +99,6 @@
   width: 100%;
   transform: translateX(-48%);
   height: 1px;
-  /* background: rgba(217, 119, 6, 0.5); */
   background: linear-gradient(90deg, rgba(241, 144, 114, 0.8), transparent);
 }
 
@@ -389,32 +385,39 @@
 }
 
 .japanese-style-modern-blockquote {
-  margin: 2rem 0;
-  padding: 1.5rem 1.5rem 1.5rem 2rem;
+  margin: 1rem 0;
+  padding: 1rem 1.5rem;
   background: #171717;
   border-radius: 0.25rem;
-  border-left: 3px solid #59b9c6;
+  border-left: 3px solid #c0a2c7;
   position: relative;
   font-style: italic;
 }
 
 .japanese-style-modern blockquote p,
 .japanese-style-modern-blockquote p {
-  color: #59b9c6;
-  margin-bottom: 0;
+  color: #c0a2c7;
+  margin: 0 auto;
   font-weight: 500;
+  line-height: 2;
+}
+
+.japanese-style-modern blockquote p em {
+  font-style: italic;
+  color: #c0a2c7;
+  font-weight: 600;
 }
 
 .japanese-style-modern-a {
-  color: #c0a2c7;
+  color: #83ccd2;
   text-decoration: none;
   transition: all 0.2s ease;
   padding: 0 4px 1px;
-  border-bottom: 1px solid #bbc8e6;
+  border-bottom: 1px solid #84b9cb;
 }
 
 .japanese-style-modern-a:hover {
-  border-bottom: 1px solid #884898;
+  border-bottom: 1px solid #a0d8ef;
   background: rgba(245, 158, 11, 0.1);
   color: var(--japanese-text-primary);
 }
@@ -426,7 +429,8 @@
 
 .japanese-style-modern-em {
   font-style: italic;
-  color: #59b9c6;
+  /* color: #59b9c6; */
+  color: #db8449;
   font-weight: 600;
 }
 
@@ -1259,93 +1263,4 @@ body.toc-open {
 .japanese-style-modern *::-moz-selection {
   background: rgba(241, 144, 114, 0.3);
   color: var(--japanese-text-primary);
-}
-/* 🚨 引用ブロック専用修正 - 横スクロール完全防止 */
-
-/* .japanese-style-modern-blockquote {
-  margin: 2rem 0;
-  padding: 1.5rem 1.5rem 1.5rem 2remnt;
-  background: #171717;
-  border-radius: 0.25rem;
-  border-left: 3px solid #59b9c6;
-  position: relative;
-  font-style: italic;
-  overflow-x: hidden;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.japanese-style-modern-blockquote p,
-.japanese-style-modern blockquote p {
-  color: #59b9c6;
-  margin-bottom: 0;
-  font-weight: 500;
-  overflow-wrap: break-word;
-  word-wrap: break-word;
-  word-break: break-word;
-  hyphens: auto;
-  white-space: normal;
-  max-width: 100%;
-  line-height: 1.6;
-} */
-
-/* 🚨 引用ブロック内のすべての要素に適用
-.japanese-style-modern-blockquote *,
-.japanese-style-modern blockquote * {
-  overflow-wrap: break-word !important;
-  word-wrap: break-word !important;
-  word-break: break-word !important;
-  hyphens: auto !important;
-  max-width: 100% !important;
-  white-space: normal !important;
-}
-
-/* 🚨 引用ブロック内の長い英語テキスト専用 */
-/* .japanese-style-modern-blockquote p[style*="color: #59b9c6"],
-.japanese-style-modern blockquote p[style*="color: #59b9c6"] {
-  word-break: break-all !important;
-  overflow-wrap: anywhere !important;
-  line-break: anywhere !important;
-  -webkit-hyphens: auto !important;
-  -moz-hyphens: auto !important;
-  -ms-hyphens: auto !important;
-  hyphens: auto !important;
-}
-
-@media (max-width: 1023px) {
-  .japanese-style-modern-blockquote {
-    margin: 1rem 0 !important;
-    padding: 1rem 1rem 1rem 1.5rem !important;
-    max-width: calc(100vw - 3rem) !important;
-    overflow-x: hidden !important;
-  }
-
-  .japanese-style-modern-blockquote p,
-  .japanese-style-modern blockquote p {
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
-    max-width: calc(100vw - 5rem) !important;
-    font-size: 0.9rem !important;
-    line-height: 1.5 !important;
-  }
-}  */
-
-/* 🚨 極小画面用 */
-@media (max-width: 480px) {
-  .japanese-style-modern-blockquote {
-    padding: 0.75rem 0.75rem 0.75rem 1rem;
-    margin: 0.75rem 0;
-    max-width: calc(100vw - 2rem);
-  }
-
-  .japanese-style-modern-blockquote p,
-  .japanese-style-modern blockquote p {
-    font-size: 0.85rem;
-    line-height: 1.4;
-    max-width: calc(100vw - 3rem);
-  }
 }
