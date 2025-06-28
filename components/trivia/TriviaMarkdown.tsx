@@ -26,7 +26,7 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
       components={{
         p: ({ children, ...props }) => (
           <p
-            className="text-gray-200 leading-relaxed text-base font-normal mb-0 text-left"
+            className="text-gray-200 leading-relaxed text-base font-normal mb-4 text-left"
             style={{
               fontFamily:
                 '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
