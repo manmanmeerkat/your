@@ -27,6 +27,7 @@ import {
   Save,
   X,
 } from "lucide-react";
+import { ArticleImageManager } from "@/components/admin/ArticleImageManager";
 
 // 🆕 一口メモ関連の型定義
 export interface ArticleTrivia {
@@ -234,6 +235,9 @@ export default function AdminDashboardContent() {
     [key: string]: TriviaFormData;
   }>({});
   const [triviaLoading, setTriviaLoading] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [expandedImageManager, setExpandedImageManager] = useState<{
     [key: string]: boolean;
   }>({});
 
@@ -1986,7 +1990,9 @@ export default function AdminDashboardContent() {
     );
   };
 
-  // 🔧 記事カードコンポーネントの修正版（一口メモ表示問題を解決）
+  // AdminDashboardContent.tsx - レイアウト修正版の重要部分
+
+  // 🔧 記事カードコンポーネントの修正版
   const ArticleCard = ({
     article,
     searchQuery,
@@ -2016,144 +2022,170 @@ export default function AdminDashboardContent() {
       searchQuery && (searchType === "content" || searchType === "both");
 
     return (
-      <div
-        key={article.id}
-        className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
-      >
-        <div className="flex p-4">
-          <div className="flex-shrink-0 w-32 h-32 relative mr-4">
-            {featuredImage ? (
-              <Image
-                src={featuredImage.url}
-                alt={featuredImage.altText || article.title}
-                fill
-                className="object-cover rounded-md"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
-                <p className="text-gray-500 text-sm">画像なし</p>
+      <div className="space-y-4">
+        {/* 記事情報カード */}
+        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+          <div className="flex p-4">
+            <div className="flex-shrink-0 w-32 h-32 relative mr-4">
+              {featuredImage ? (
+                <Image
+                  src={featuredImage.url}
+                  alt={featuredImage.altText || article.title}
+                  fill
+                  className="object-cover rounded-md"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
+                  <p className="text-gray-500 text-sm">画像なし</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex-grow">
+              <h3 className="font-bold text-lg mb-1 text-gray-900">
+                {article.title}
+              </h3>
+              <div className="text-sm text-gray-600 mb-2">
+                {formatDate(article.createdAt)}
               </div>
-            )}
-          </div>
 
-          <div className="flex-grow">
-            <h3 className="font-bold text-lg mb-1 text-gray-900">
-              {article.title}
-            </h3>
-            <div className="text-sm text-gray-600 mb-2">
-              {formatDate(article.createdAt)}
-            </div>
+              <div className="text-sm text-gray-700 mb-3 line-clamp-3">
+                {article.summary || excerptContent}
+              </div>
 
-            <div className="text-sm text-gray-700 mb-3 line-clamp-3">
-              {article.summary || excerptContent}
-            </div>
-
-            <div className="flex justify-between items-center mb-2">
-              <div className="text-sm">
-                {article.category && (
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                    {article.category}
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-sm">
+                  {article.category && (
+                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                      {article.category}
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      article.published
+                        ? "bg-green-100 text-green-800"
+                        : "bg-amber-100 text-amber-800"
+                    }`}
+                  >
+                    {article.published ? "公開中" : "下書き"}
                   </span>
-                )}
+                </div>
               </div>
-              <div className="text-sm">
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    article.published
-                      ? "bg-green-100 text-green-800"
-                      : "bg-amber-100 text-amber-800"
-                  }`}
-                >
-                  {article.published ? "公開中" : "下書き"}
-                </span>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-2 mb-3">
-              <Link href={getEditLink(article.slug)}>
+              <div className="flex items-center gap-2 mb-3">
+                <Link href={getEditLink(article.slug)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-sm py-1 hover:bg-blue-50"
+                  >
+                    記事を編集
+                  </Button>
+                </Link>
+
+                {/* 画像管理ボタン */}
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-sm py-1 hover:bg-blue-50"
+                  onClick={() => {
+                    setExpandedImageManager((prev) => ({
+                      ...prev,
+                      [article.id]: !prev[article.id],
+                    }));
+                  }}
+                  className="text-sm py-1 hover:bg-green-50"
                 >
-                  記事を編集
+                  🖼️ 画像管理
                 </Button>
-              </Link>
 
-              {hasContentSearch && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => toggleContentMatches(article.id)}
-                  className="text-sm py-1"
-                >
-                  {showContentMatches[article.id]
-                    ? "マッチを隠す"
-                    : "マッチを表示"}
-                </Button>
-              )}
+                {hasContentSearch && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleContentMatches(article.id)}
+                    className="text-sm py-1"
+                  >
+                    {showContentMatches[article.id]
+                      ? "マッチを隠す"
+                      : "マッチを表示"}
+                  </Button>
+                )}
+              </div>
 
-              {/* デバッグ情報 */}
-              {/* {debugMode && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDebugMode(!debugMode)}
-                  className="text-xs py-1 text-yellow-600"
-                >
-                  🐛 Debug
-                </Button>
-              )} */}
-            </div>
-
-            {showContentMatches[article.id] &&
-              contentSearchResults[article.id] && (
-                <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                  <h4 className="font-medium text-sm mb-2">
-                    検索キーワード &quot;{searchQuery}&quot; のマッチ:
-                  </h4>
-                  {contentSearchResults[article.id].length > 0 ? (
-                    contentSearchResults[article.id].map(
-                      (match: ContentMatch, index: number) => (
-                        <div
-                          key={index}
-                          className="text-sm mb-2 p-2 bg-white rounded border"
-                        >
+              {/* コンテンツマッチ表示 */}
+              {showContentMatches[article.id] &&
+                contentSearchResults[article.id] && (
+                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <h4 className="font-medium text-sm mb-2">
+                      検索キーワード &quot;{searchQuery}&quot; のマッチ:
+                    </h4>
+                    {contentSearchResults[article.id].length > 0 ? (
+                      contentSearchResults[article.id].map(
+                        (match: ContentMatch, index: number) => (
                           <div
-                            dangerouslySetInnerHTML={{
-                              __html: match.highlighted,
-                            }}
-                            className="[&_mark]:bg-yellow-300 [&_mark]:font-bold [&_mark]:px-1"
-                          />
-                        </div>
+                            key={index}
+                            className="text-sm mb-2 p-2 bg-white rounded border"
+                          >
+                            <div
+                              dangerouslySetInnerHTML={{
+                                __html: match.highlighted,
+                              }}
+                              className="[&_mark]:bg-yellow-300 [&_mark]:font-bold [&_mark]:px-1"
+                            />
+                          </div>
+                        )
                       )
-                    )
-                  ) : (
-                    <p className="text-sm text-gray-600">
-                      マッチするコンテンツが見つかりませんでした。
-                    </p>
-                  )}
-                </div>
-              )}
+                    ) : (
+                      <p className="text-sm text-gray-600">
+                        マッチするコンテンツが見つかりませんでした。
+                      </p>
+                    )}
+                  </div>
+                )}
 
-            {/* 🆕 改善された一口メモセクション */}
-            <TriviaSection
-              article={article}
-              expandedTrivia={expandedTrivia}
-              editingTrivia={editingTrivia}
-              triviaLoading={triviaLoading}
-              toggleTriviaSection={toggleTriviaSection}
-              startCreatingTrivia={startCreatingTrivia}
-            />
-
-            {/* デバッグ情報 */}
-            {/* <DebugInfo article={article} /> */}
+              {/* 一口メモセクション */}
+              <TriviaSection
+                article={article}
+                expandedTrivia={expandedTrivia}
+                editingTrivia={editingTrivia}
+                triviaLoading={triviaLoading}
+                toggleTriviaSection={toggleTriviaSection}
+                startCreatingTrivia={startCreatingTrivia}
+              />
+            </div>
           </div>
         </div>
+
+        {/* 画像管理セクション - カードの外に独立して表示 */}
+        {expandedImageManager[article.id] && (
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div className="mb-4 flex items-center gap-2">
+              <span className="text-green-600 font-medium">🖼️ 画像管理</span>
+              <span className="text-gray-500 text-sm">- {article.title}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setExpandedImageManager((prev) => ({
+                    ...prev,
+                    [article.id]: false,
+                  }));
+                }}
+                className="ml-auto text-gray-400 hover:text-gray-600"
+              >
+                ✕ 閉じる
+              </Button>
+            </div>
+            <ArticleImageManager articleId={article.id} />
+          </div>
+        )}
       </div>
     );
   };
-  // メインレンダリング
+
+  // 🔧 メインレンダリング部分の修正
   return (
     <div className="space-y-6">
       {/* デバッグコントロール */}
@@ -2269,14 +2301,14 @@ export default function AdminDashboardContent() {
             <Button>新規記事作成</Button>
           </Link>
           {/* {process.env.NODE_ENV === "development" && (
-            <Button
-              variant="outline"
-              onClick={() => setDebugMode(!debugMode)}
-              className="flex items-center gap-1 text-yellow-600 border-yellow-300 hover:bg-yellow-50"
-            >
-              🐛 Debug
-            </Button>
-          )} */}
+          <Button
+            variant="outline"
+            onClick={() => setDebugMode(!debugMode)}
+            className="flex items-center gap-1 text-yellow-600 border-yellow-300 hover:bg-yellow-50"
+          >
+            🐛 Debug
+          </Button>
+        )} */}
         </div>
       </div>
 
@@ -2435,6 +2467,7 @@ export default function AdminDashboardContent() {
           ))}
         </div>
       </div>
+
       {/* 検索セクション */}
       <div className="bg-gray-50 p-4 rounded shadow">
         <div className="space-y-3">
@@ -2570,8 +2603,8 @@ export default function AdminDashboardContent() {
             </div>
           )}
 
-          {/* 記事グリッド */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 記事一覧 - シングルカラムレイアウトに変更 */}
+          <div className="max-w-4xl mx-auto space-y-6">
             {articles && articles.length > 0 ? (
               articles.map((article: Article) => (
                 <ArticleCard
@@ -2585,7 +2618,7 @@ export default function AdminDashboardContent() {
                 />
               ))
             ) : (
-              <p className="col-span-full text-center py-12 text-base">
+              <div className="text-center py-12 text-base">
                 {selectedCategory || searchQuery
                   ? `条件に一致する記事がありません。${
                       selectedCategory
@@ -2597,17 +2630,19 @@ export default function AdminDashboardContent() {
                         : ""
                     }`
                   : "記事がありません。新しい記事を作成してください。"}
-              </p>
+              </div>
             )}
           </div>
 
           {/* ページネーション */}
           {pagination.pageCount > 1 && (
-            <ImprovedPagination
-              currentPage={pagination.page}
-              totalPages={pagination.pageCount}
-              onPageChange={changePage}
-            />
+            <div className="max-w-4xl mx-auto">
+              <ImprovedPagination
+                currentPage={pagination.page}
+                totalPages={pagination.pageCount}
+                onPageChange={changePage}
+              />
+            </div>
           )}
         </>
       )}
