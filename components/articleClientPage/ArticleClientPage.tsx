@@ -290,7 +290,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="container mx-auto px-4 pb-8 max-w-7xl">
         <div className="japanese-style-modern">
           <div className="japanese-style-modern-header">
             <h1 className="japanese-style-modern-title">{article.title}</h1>
@@ -298,7 +298,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
           </div>
 
           <div className="japanese-style-modern-container">
-            <div className="flex flex-col xl:flex-row gap-8">
+            <div className="flex flex-col xl:flex-row gap-4">
               <div className="order-2 xl:order-1 flex-1 min-w-0">
                 <div className="japanese-style-modern-content max-w-none">
                   <div className="prose prose-lg prose-invert max-w-none overflow-hidden">{renderedContent}</div>
