@@ -1,8 +1,8 @@
-// utils/simpleMarkdownRenderer.tsx - Markdown処理回避版
+// utils/simpleMarkdownRenderer.tsx - 完全修正版
 "use client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface MarkdownRendererProps {
   content: string;
@@ -25,11 +25,31 @@ type ArticleTrivia = {
   updatedAt: string;
 };
 
-// 🔧 完全独立版インライン一口メモコンポーネント
+// 🔧 画像記法の前処理関数（追加）
+function preprocessImageSyntax(content: string): string {
+  const imageWithOptionsRegex = /!\[([^\]]*?)\]\(([^)]+?)\)\{([^}]+?)\}/g;
+
+  return content.replace(imageWithOptionsRegex, (match, alt, url, options) => {
+    if (alt.includes("{") && alt.includes("}")) {
+      return match;
+    }
+
+    const newAlt = alt.trim() ? `${alt.trim()}{${options}}` : `{${options}}`;
+    return `![${newAlt}](${url})`;
+  });
+}
+
+// 🔧 完全独立版インライン一口メモコンポーネント（Hydration対応）
 const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   trivia,
   index,
 }) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const kanjiNumbers = [
     "一",
     "二",
@@ -43,24 +63,39 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
     "十",
   ];
 
+  // サーバーサイドでは最小限のプレースホルダー
+  if (!isClient) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          height: "200px",
+          backgroundColor: "#f3f4f6",
+          borderRadius: "1rem",
+          margin: "2rem 0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#6b7280",
+        }}
+      >
+        読み込み中...
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
-        // 🚨 親コンテナから完全に脱出
-        width: "100vw",
-        marginLeft: "calc(-50vw + 50%)",
-        marginRight: "calc(-50vw + 50%)",
+        width: "100%",
         marginTop: "3rem",
         marginBottom: "3rem",
         padding: "0",
         position: "relative",
         zIndex: 100,
-        // 🚨 すべてのCSS継承をリセット
-        all: "revert",
         boxSizing: "border-box",
         display: "block",
       }}
-      // 🚨 クラス名を完全に避ける
     >
       <div
         style={{
@@ -265,8 +300,7 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
                       width: "100%",
                       maxWidth: "none",
                       boxSizing: "border-box",
-                      display: isTitle ? "block" : "block",
-                      textAlignLast: isTitle ? "center" : "left",
+                      display: "block",
                     }}
                   >
                     {paragraph
@@ -335,56 +369,213 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   );
 };
 
-function OptimizedImage({
+// 🔧 画像コンポーネント（読み込み問題修正版）
+function SimpleImage({
   src,
   alt,
   title,
-  isPriority,
+  width,
+  height,
 }: {
   src?: string;
   alt?: string;
   title?: string;
-  isPriority?: boolean;
+  width?: number;
+  height?: number;
 }) {
-  const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   if (!src || hasError) {
-    return null;
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          textAlign: "center",
+          backgroundColor: "#f3f4f6",
+          borderRadius: "0.5rem",
+          padding: "1rem",
+          margin: "0.25rem",
+          width: width ? `min(${width}px, 100%)` : "100px",
+          height: height ? `${height}px` : "60px",
+          boxSizing: "border-box",
+          verticalAlign: "middle",
+          lineHeight: height ? `${height}px` : "60px",
+          fontSize: "0.75rem",
+          color: "#6b7280",
+        }}
+      >
+        画像エラー
+      </span>
+    );
   }
 
-  return (
-    <>
-      {!isLoaded && (
-        <span className="image-loading-text">loading images...</span>
-      )}
-
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt || ""}
-        title={title}
-        className={`japanese-style-modern-img ${
-          isPriority ? "priority-image" : ""
-        } ${isLoaded ? "loaded" : "loading"}`}
-        loading={isPriority ? "eager" : "lazy"}
-        decoding="async"
-        onLoad={() => {
-          setIsLoaded(true);
-          setHasError(false);
-        }}
-        onError={() => {
-          setHasError(true);
-          setIsLoaded(false);
-        }}
+  // サーバーサイドまたは読み込み中の表示
+  if (!isClient || !isLoaded) {
+    return (
+      <span
         style={{
+          display: "inline-block",
+          position: "relative",
           width: "100%",
-          height: "auto",
-          maxWidth: "100%",
-          display: hasError ? "none" : "block",
+          height: height ? `${height}px` : "200px",
+          backgroundColor: "#f9fafb",
+          border: "1px dashed #d1d5db",
+          borderRadius: "0.5rem",
+          boxSizing: "border-box",
+          verticalAlign: "top",
         }}
-      />
-    </>
+      >
+        {/* ローディングアイコン */}
+        <span
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          {/* スピナーアイコン */}
+          <span
+            style={{
+              width: "24px",
+              height: "24px",
+              border: "3px solid #e5e7eb",
+              borderTop: "3px solid #6b7280",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              display: "inline-block",
+            }}
+          />
+          <span
+            style={{
+              color: "#6b7280",
+              fontSize: "0.75rem",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {isClient ? "読み込み中..." : "初期化中..."}
+          </span>
+        </span>
+
+        {/* 実際の画像（クライアントサイドでのみ読み込み） */}
+        {isClient && (
+          <img
+            src={src}
+            alt={alt || ""}
+            title={title}
+            loading="lazy"
+            decoding="async"
+            onLoad={() => {
+              console.log("画像読み込み完了:", src);
+              setIsLoaded(true);
+              setHasError(false);
+            }}
+            onError={(e) => {
+              console.error("画像読み込みエラー:", src, e);
+              setHasError(true);
+              setIsLoaded(false);
+            }}
+            style={{
+              position: "absolute",
+              top: "-9999px",
+              left: "-9999px",
+              width: "1px",
+              height: "1px",
+              opacity: 0,
+              visibility: "hidden",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+
+        {/* CSSアニメーション */}
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </span>
+    );
+  }
+
+  // 読み込み完了後の画像表示
+  const getImageStyle = (): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      borderRadius: "0.5rem",
+      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      display: "inline-block",
+      verticalAlign: "top",
+      width: "100%",
+    };
+
+    // サイズ制御
+    if (width && height) {
+      return {
+        ...baseStyle,
+        maxWidth: width ? `${width}px` : "none",
+        height: `${height}px`,
+        objectFit: "cover",
+      };
+    } else if (width && !height) {
+      return {
+        ...baseStyle,
+        maxWidth: width ? `${width}px` : "none",
+        height: "auto",
+        objectFit: "contain",
+      };
+    } else if (!width && height) {
+      return {
+        ...baseStyle,
+        height: `${height}px`,
+        width: "auto",
+        maxWidth: "100%",
+        objectFit: "contain",
+      };
+    } else {
+      return {
+        ...baseStyle,
+        height: "auto",
+        objectFit: "contain",
+      };
+    }
+  };
+
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: "100%",
+        verticalAlign: "top",
+      }}
+    >
+      <img src={src} alt={alt || ""} title={title} style={getImageStyle()} />
+      {title && (
+        <em
+          style={{
+            display: "block",
+            textAlign: "center",
+            fontSize: "0.875rem",
+            color: "#6b7280",
+            marginTop: "0.5rem",
+            fontStyle: "italic",
+          }}
+        >
+          {title}
+        </em>
+      )}
+    </span>
   );
 }
 
@@ -398,7 +589,6 @@ const separateTriviaFromMarkdown = (
   }
 
   const triviaElements: React.ReactNode[] = [];
-  const triviaPlaceholders: string[] = [];
 
   // 一口メモ記法を一意のプレースホルダーに置き換え
   const processedContent = content.replace(
@@ -423,12 +613,11 @@ const separateTriviaFromMarkdown = (
 
       // プレースホルダーを生成
       const placeholderId = `TRIVIA_SPLIT_${triviaElements.length}`;
-      triviaPlaceholders.push(placeholderId);
 
       // 一口メモ要素を作成
       triviaElements.push(
         <InlineTrivia
-          key={`trivia-${trivia.id}`}
+          key={`trivia-${trivia.id}-${index}`}
           trivia={trivia}
           index={index}
         />
@@ -441,7 +630,7 @@ const separateTriviaFromMarkdown = (
   return { markdownContent: processedContent, triviaElements };
 };
 
-// 🔧 マークダウンコンテンツを分割してレンダリング
+// 🔧 マークダウンコンテンツを分割してレンダリング（Hydration対応）
 const renderSeparatedContent = (
   markdownContent: string,
   triviaElements: React.ReactNode[]
@@ -461,6 +650,29 @@ const renderSeparatedContent = (
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
+                // 🔧 段落コンポーネント（Hydrationエラー修正）
+                p({ node, children }) {
+                  // 子要素に画像やブロック要素があるかチェック
+                  const hasBlockElements = node?.children?.some(
+                    (child: { type?: string; tagName?: string }) =>
+                      child.tagName === "img" ||
+                      (child.type === "element" &&
+                        child.tagName &&
+                        ["div", "figure", "blockquote"].includes(child.tagName))
+                  );
+
+                  if (hasBlockElements) {
+                    // ブロック要素がある場合はdivを使用
+                    return (
+                      <div className="japanese-style-modern-p">{children}</div>
+                    );
+                  }
+
+                  // 通常の段落
+                  return <p className="japanese-style-modern-p">{children}</p>;
+                },
+
+                // 🔧 画像コンポーネント（完全修正版）
                 img(props) {
                   const { src, alt, title } = props;
 
@@ -469,37 +681,78 @@ const renderSeparatedContent = (
                   }
 
                   const altText = alt || "";
-                  const captionMatch = altText.match(/\{caption: (.*?)\}/);
-                  const caption = captionMatch ? captionMatch[1] : null;
-                  const cleanAlt = altText
-                    .replace(/\{caption: (.*?)\}/, "")
-                    .trim();
-                  const isPriority = altText
-                    .toLowerCase()
-                    .includes("{priority}");
 
+                  // 🔧 各種パラメータの解析
+                  const captionMatch = altText.match(/\{caption:\s*([^}]+)\}/);
+                  const caption = captionMatch ? captionMatch[1].trim() : null;
+
+                  const sizeMatch = altText.match(/\{size:\s*(\d+)x(\d+)\}/);
+                  const widthMatch = altText.match(/\{width:\s*(\d+)\}/);
+                  const heightMatch = altText.match(/\{height:\s*(\d+)\}/);
+
+                  const width = sizeMatch
+                    ? parseInt(sizeMatch[1])
+                    : widthMatch
+                    ? parseInt(widthMatch[1])
+                    : undefined;
+                  const height = sizeMatch
+                    ? parseInt(sizeMatch[2])
+                    : heightMatch
+                    ? parseInt(heightMatch[1])
+                    : undefined;
+
+                  // 🔧 代替テキストから設定を除去
+                  const cleanAlt = altText
+                    .replace(/\{caption:\s*[^}]+\}/, "")
+                    .replace(/\{size:\s*\d+x\d+\}/, "")
+                    .replace(/\{width:\s*\d+\}/, "")
+                    .replace(/\{height:\s*\d+\}/, "")
+                    .replace(/\{priority\}/, "")
+                    .trim();
+
+                  // HTMLのwidth/height属性も確認
+                  const htmlWidth = props.width
+                    ? parseInt(props.width.toString())
+                    : width;
+                  const htmlHeight = props.height
+                    ? parseInt(props.height.toString())
+                    : height;
+
+                  // 🔧 キャプション付き画像
                   if (caption) {
                     return (
-                      <figure className="markdown-figure">
-                        <OptimizedImage
+                      <>
+                        <SimpleImage
                           src={src}
                           alt={cleanAlt}
                           title={title}
-                          isPriority={isPriority}
+                          width={htmlWidth}
+                          height={htmlHeight}
                         />
-                        <figcaption className="markdown-caption">
+                        <em
+                          style={{
+                            display: "block",
+                            textAlign: "center",
+                            fontSize: "0.875rem",
+                            color: "#6b7280",
+                            marginTop: "0.5rem",
+                            fontStyle: "italic",
+                          }}
+                        >
                           {caption}
-                        </figcaption>
-                      </figure>
+                        </em>
+                      </>
                     );
                   }
 
+                  // 🔧 通常の画像
                   return (
-                    <OptimizedImage
+                    <SimpleImage
                       src={src}
                       alt={cleanAlt}
                       title={title}
-                      isPriority={isPriority}
+                      width={htmlWidth}
+                      height={htmlHeight}
                     />
                   );
                 },
@@ -746,9 +999,12 @@ export function MarkdownRenderer({
   content,
   triviaList,
 }: MarkdownRendererProps) {
+  // 🔧 画像記法の前処理を実行
+  const preprocessedContent = preprocessImageSyntax(content);
+
   // 🔧 一口メモをMarkdown処理から分離
   const { markdownContent, triviaElements } = separateTriviaFromMarkdown(
-    content,
+    preprocessedContent,
     triviaList || []
   );
 
