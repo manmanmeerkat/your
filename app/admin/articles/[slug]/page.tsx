@@ -1,3 +1,5 @@
+// 修正版 EditArticlePage - 画像管理システム連携対応
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -36,6 +38,9 @@ export default function EditArticlePage({
   const [preview, setPreview] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [autoUpdateSummary, setAutoUpdateSummary] = useState(true);
+
+  // 🆕 記事IDの状態を追加
+  const [articleId, setArticleId] = useState<string>("");
 
   // 新しく追加: URL関連の状態
   const [urlCopied, setUrlCopied] = useState(false);
@@ -210,6 +215,7 @@ export default function EditArticlePage({
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
+          setArticleId(localData.articleId || ""); // 🆕 記事IDを設定
 
           if (localData.image) {
             setImage(localData.image);
@@ -243,6 +249,7 @@ export default function EditArticlePage({
         setContent(article.content);
         setCategory(article.category);
         setPublished(article.published);
+        setArticleId(article.id); // 🆕 記事IDを設定
 
         // 画像は最初の1枚だけを使用
         const featuredImage =
@@ -263,6 +270,7 @@ export default function EditArticlePage({
           content: article.content,
           category: article.category,
           published: article.published,
+          articleId: article.id, // 🆕 記事IDも保存
           image: featuredImage,
           timestamp: Date.now(),
         });
@@ -282,6 +290,7 @@ export default function EditArticlePage({
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
+          setArticleId(localData.articleId || ""); // 🆕 記事IDを設定
 
           if (localData.image) {
             setImage(localData.image);
@@ -327,38 +336,28 @@ export default function EditArticlePage({
     }
   };
 
+  // 🔧 画像アップロード関数を画像管理システム対応に修正
   const uploadImage = async () => {
-    if (!file) return null;
+    if (!file || !articleId) return null;
 
     setUploading(true);
-    console.log("Uploading image:", file.name);
+    console.log("Uploading image to image management system:", file.name);
 
     try {
-      // ファイル名を安全な形式に変換
-      const safeFileName = file.name
-        .replace(/[^a-zA-Z0-9.-]/g, "_")
-        .replace(/_+/g, "_")
-        .toLowerCase();
-
-      // 新しいファイル名でファイルを作成
-      const newFile = new File([file], safeFileName, {
-        type: file.type,
-        lastModified: file.lastModified,
-      });
-
-      // フォームデータの作成
+      // 🆕 画像管理システムのAPIを使用
       const formData = new FormData();
-      formData.append("file", newFile);
+      formData.append("image", file);
+      formData.append("altText", altText || file.name.replace(/\.[^/.]+$/, ""));
 
-      // 通常のfetchを使用
-      const response = await fetch("/api/upload", {
+      const response = await fetch(`/api/articles/${articleId}/images`, {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       if (!isMountedRef.current) return null;
 
-      console.log("Upload response status:", response.status);
+      console.log("Image management upload response status:", response.status);
       const data = await response.json();
 
       if (!response.ok) {
@@ -367,18 +366,74 @@ export default function EditArticlePage({
         );
       }
 
-      console.log("Image uploaded successfully:", data.url);
-      return data.url;
+      console.log("Image uploaded successfully to management system:", data);
+
+      // 🆕 画像管理システムから返された画像情報を返す
+      return {
+        id: data.image.id,
+        url: data.image.url,
+        altText: data.image.altText,
+        isFeatured: data.image.isFeatured,
+      };
     } catch (error: unknown) {
-      console.error("Image upload error:", error);
-      if (isMountedRef.current) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "画像のアップロードに失敗しました"
-        );
+      console.error("Image management upload error:", error);
+
+      // 🔧 フォールバック: 従来のアップロード方式
+      console.log("Falling back to legacy upload method");
+
+      try {
+        // ファイル名を安全な形式に変換
+        const safeFileName = file.name
+          .replace(/[^a-zA-Z0-9.-]/g, "_")
+          .replace(/_+/g, "_")
+          .toLowerCase();
+
+        // 新しいファイル名でファイルを作成
+        const newFile = new File([file], safeFileName, {
+          type: file.type,
+          lastModified: file.lastModified,
+        });
+
+        // フォームデータの作成
+        const formData = new FormData();
+        formData.append("file", newFile);
+
+        // 通常のfetchを使用
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!isMountedRef.current) return null;
+
+        console.log("Legacy upload response status:", response.status);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.error || data.details || "画像のアップロードに失敗しました"
+          );
+        }
+
+        console.log("Image uploaded successfully via legacy method:", data.url);
+
+        // 🆕 従来形式の場合は新しいIDを生成
+        return {
+          url: data.url,
+          altText: altText || file.name.replace(/\.[^/.]+$/, ""),
+          isFeatured: true,
+        };
+      } catch (legacyError: unknown) {
+        console.error("Legacy upload also failed:", legacyError);
+        if (isMountedRef.current) {
+          setError(
+            legacyError instanceof Error
+              ? legacyError.message
+              : "画像のアップロードに失敗しました"
+          );
+        }
+        return null;
       }
-      return null;
     } finally {
       if (isMountedRef.current) {
         setUploading(false);
@@ -491,13 +546,13 @@ export default function EditArticlePage({
         throw new Error("タイトル、スラッグ、コンテンツ、カテゴリーは必須です");
       }
 
-      // 新しい画像のアップロード（存在する場合）
-      let uploadedImageUrl = null;
+      // 🔧 新しい画像のアップロード処理（画像管理システム連携）
+      let uploadedImageData = null;
       if (file) {
         console.log("Starting image upload process...");
-        uploadedImageUrl = await uploadImage();
+        uploadedImageData = await uploadImage();
 
-        if (!uploadedImageUrl) {
+        if (!uploadedImageData) {
           throw new Error("画像のアップロードに失敗しました");
         }
       }
@@ -528,32 +583,44 @@ export default function EditArticlePage({
         content,
         category,
         published,
-        updateImages: true,
+        updateImages: false, // 🔧 画像管理システムの画像を保持するため false に変更
       };
 
-      // 画像の更新処理
-      if (uploadedImageUrl) {
-        // 新しい画像がある場合
+      // 🔧 画像の更新処理（画像管理システムの画像を保持）
+      if (uploadedImageData) {
+        // 新しい画像がある場合のみ、フィーチャー画像として設定
+        updateData.updateImages = true;
         updateData.images = [
           {
-            url: uploadedImageUrl,
-            altText: altText,
+            id: uploadedImageData.id,
+            url: uploadedImageData.url,
+            altText: uploadedImageData.altText,
             isFeatured: true,
           },
         ];
-      } else if (image) {
-        // 既存の画像を維持する場合
-        updateData.images = [
-          {
-            id: image.id,
-            url: image.url,
-            altText: altText,
-            isFeatured: true,
-          },
-        ];
+        console.log("🆕 新しい画像をフィーチャー画像として設定");
+      } else if (image && image.id) {
+        // 既存のフィーチャー画像の代替テキストのみ更新
+        if (altText !== (image.altText || "")) {
+          updateData.updateImages = true;
+          updateData.images = [
+            {
+              id: image.id,
+              url: image.url,
+              altText: altText,
+              isFeatured: true,
+            },
+          ];
+          console.log("🔧 既存フィーチャー画像の代替テキストを更新");
+        } else {
+          console.log("📷 既存の画像設定を維持（変更なし）");
+        }
       } else {
-        // 画像を削除する場合
-        updateData.images = [];
+        // フィーチャー画像を削除する場合（画像管理システムの他の画像は保持）
+        console.log(
+          "🗑️ フィーチャー画像のみ削除（画像管理システムの画像は保持）"
+        );
+        // updateImages を false のままにして、既存の画像管理システムの画像を保持
       }
 
       console.log("Updating article with data:", updateData);
@@ -679,7 +746,7 @@ export default function EditArticlePage({
 
   return (
     <div className="space-y-4">
-      {/* 本番URL表示カード - 新しく追加 */}
+      {/* 本番URL表示カード */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
