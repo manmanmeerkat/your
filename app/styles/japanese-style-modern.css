@@ -1,4 +1,4 @@
-/*japanese-style-modern.css - 完全修正版（エラー解消）*/
+/*japanese-style-modern.css - スクロールバー修正版*/
 
 /* 🎌 和風カラーパレット */
 :root {
@@ -6,7 +6,8 @@
   --japanese-black-secondary: #1b1b1b;
   --japanese-black-tertiary: #0a0a0a;
   --japanese-orange-primary: #f19072;
-  --japanese-orange-light: #f1bf99;
+  --japanese-orange-light: #f7b977;
+   --japanese-orange-strong: #f0cfa0;
   --japanese-orange-accent: #ee836f;
   --japanese-text-primary: #f3f3f2;
   --japanese-text-secondary: #e2e8f0;
@@ -38,7 +39,7 @@
 }
 
 .japanese-style-modern-container {
-  padding: 2rem 1.5rem;
+  padding: 0.5rem 1.5rem 1rem;
   position: relative;
   z-index: 2;
   display: flex;
@@ -73,42 +74,39 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
-  padding: 1.5rem;
-  height: 180px;
+  padding: 0 1.5rem;
+  height: 160px;
 }
 
 .japanese-style-modern-title {
   color: var(--japanese-text-primary);
-  font-size: 1.8rem;
-  font-weight: 500;
-  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
   position: relative;
-  padding: 1rem 0;
+  padding: 0 0 1rem;
+  text-align: center;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 2;
-  letter-spacing: 0.1em;
-  margin: 0 auto;
-  max-width: 90%;
-  width: auto;
+  letter-spacing: 0.05em;
 }
 
 .japanese-style-modern-title::after {
   content: "";
   position: absolute;
   bottom: 0;
-  left: 50% !important;
-  right: auto !important;
-  width: 100% !important;
-  transform: translateX(-48%) !important;
+  left: 50%;
+  right: auto;
+  width: 100%;
+  transform: translateX(-48%);
   height: 1px;
-  background: rgba(217, 119, 6, 0.5);
+  background: linear-gradient(90deg, rgba(241, 144, 114, 0.8), transparent);
 }
 
 .japanese-style-modern-date {
   display: none;
 }
 
-/* 🎌 デスクトップ・タブレット専用サイドバー */
+/* 🎌 デスクトップ・タブレット専用サイドバー - スクロールバー修正版 */
 .japanese-style-modern-sidebar.desktop-sidebar {
   position: sticky;
   top: 2rem;
@@ -131,6 +129,48 @@
   overflow-y: auto;
   align-self: flex-start;
   transition: all 0.3s ease;
+
+  /* 🚨 改善：デスクトップ用スクロールバーを細く上品に */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 144, 114, 0.4) rgba(0, 0, 0, 0.1);
+}
+
+/* 🚨 デスクトップ専用：Webkit系ブラウザ用スクロールバー（細く上品に） */
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar {
+  width: 6px !important; /* 8pxから6pxに縮小 */
+}
+
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-track {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 22, 14, 0.2),
+    rgba(27, 27, 27, 0.3),
+    rgba(22, 22, 14, 0.2)
+  ) !important;
+  border-radius: 3px !important; /* 4pxから3pxに */
+  margin: 4px 0 !important; /* 上下に余白を追加 */
+}
+
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(241, 144, 114, 0.6),
+    rgba(241, 191, 153, 0.4),
+    rgba(241, 144, 114, 0.6)
+  ) !important;
+  border-radius: 3px !important; /* 4pxから3pxに */
+  border: none !important; /* ボーダーを削除してより細く */
+  transition: all 0.2s ease !important;
+}
+
+.japanese-style-modern-sidebar.desktop-sidebar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(241, 144, 114, 0.8),
+    rgba(241, 191, 153, 0.6),
+    rgba(241, 144, 114, 0.8)
+  ) !important;
+  box-shadow: 0 1px 4px rgba(241, 144, 114, 0.3) !important; /* より控えめな影 */
 }
 
 .japanese-style-modern-sidebar.desktop-sidebar:hover {
@@ -206,12 +246,7 @@
 .japanese-style-modern-toc-item:hover {
   color: var(--japanese-text-primary);
   transform: translateX(4px) translateY(-1px);
-  background: linear-gradient(
-    135deg,
-    rgba(241, 144, 114, 0.08) 0%,
-    rgba(241, 191, 153, 0.06) 50%,
-    rgba(241, 144, 114, 0.08) 100%
-  );
+  background-color: #bbc8e6;
   border-color: rgba(241, 144, 114, 0.25);
   box-shadow: 0 6px 20px rgba(241, 144, 114, 0.15),
     0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -289,29 +324,6 @@
   font-size: 0.6rem;
 }
 
-/* 🎌 見出しスタイル */
-.japanese-style-modern-h1,
-.japanese-style-modern h1 {
-  font-size: 1.7rem;
-  font-weight: 600;
-  color: var(--japanese-text-primary);
-  margin: 2.5rem 0 1.5rem;
-  padding: 0.75rem 0;
-  position: relative;
-  letter-spacing: 0.05em;
-}
-
-.japanese-style-modern-h1::after,
-.japanese-style-modern h1::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(241, 144, 114, 0.8), transparent);
-}
-
 .japanese-style-modern-h2 {
   font-size: 1.4rem;
   font-weight: 500;
@@ -338,10 +350,10 @@
   font-weight: 500;
   color: var(--japanese-orange-light);
   margin: 1.5rem 0 1rem;
-  padding: 0.3rem 0 0.3rem 0.75rem;
+  padding: 0.3rem 0 0.3rem 0.9rem;
   background: rgba(50, 47, 47, 0.8);
   position: relative;
-  border-radius: 0.25rem;
+  border-radius: 0.2rem;
 }
 
 .japanese-style-modern-h3::before {
@@ -373,45 +385,52 @@
 }
 
 .japanese-style-modern-blockquote {
-  margin: 2rem 0;
-  padding: 1.5rem 1.5rem 1.5rem 2rem;
+  margin: 1rem 0;
+  padding: 1rem 1.5rem;
   background: #171717;
   border-radius: 0.25rem;
-  border-left: 3px solid #59b9c6;
+  border-left: 3px solid #c0a2c7;
   position: relative;
   font-style: italic;
 }
 
 .japanese-style-modern blockquote p,
 .japanese-style-modern-blockquote p {
-  color: #59b9c6;
-  margin-bottom: 0;
+  color: #c0a2c7;
+  margin: 0 auto;
   font-weight: 500;
+  line-height: 2;
+}
+
+.japanese-style-modern blockquote p em {
+  font-style: italic;
+  color: #c0a2c7;
+  font-weight: 600;
 }
 
 .japanese-style-modern-a {
-  color: #000;
+  color: #83ccd2;
   text-decoration: none;
   transition: all 0.2s ease;
-  padding: 0 8px 1px;
-  background-color: #bbc8e6;
-  border-bottom: 1px solid #bbc8e6;
+  padding: 0 4px 1px;
+  border-bottom: 1px solid #84b9cb;
 }
 
 .japanese-style-modern-a:hover {
-  border-bottom: 1px solid #bbc8e6;
+  border-bottom: 1px solid #a0d8ef;
   background: rgba(245, 158, 11, 0.1);
   color: var(--japanese-text-primary);
 }
 
 .japanese-style-modern-strong {
   font-weight: 700;
-  color: var(--japanese-orange-light);
+  color: var(--japanese-orange-strong);
 }
 
 .japanese-style-modern-em {
   font-style: italic;
-  color: #59b9c6;
+  /* color: #59b9c6; */
+  color: #db8449;
   font-weight: 600;
 }
 
@@ -449,19 +468,21 @@
 .japanese-style-modern-ul {
   margin: 1.25rem 0;
   padding-left: 0.5rem;
+  list-style: none;
 }
 
 .japanese-style-modern-ol {
   margin: 1.25rem 0;
   padding-left: 1rem;
   counter-reset: item;
+  list-style: none;
 }
 
 .japanese-style-modern-li {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0;
   position: relative;
   padding-left: 1.25rem;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 .japanese-style-modern-ul .japanese-style-modern-li::before {
@@ -595,34 +616,34 @@
 
 /* 🎌 モバイル目次システム */
 body.toc-open {
-  overflow: hidden !important;
-  position: static !important;
-  top: auto !important;
-  width: auto !important;
+  overflow: hidden;
+  position: static;
+  top: auto;
+  width: auto;
 }
 
 .japanese-style-modern-overlay {
   display: none;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  background: rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(6px) !important;
-  z-index: 999998 !important;
-  pointer-events: all !important;
-  transition: opacity 0.3s ease !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  z-index: 999998;
+  pointer-events: all;
+  transition: opacity 0.3s ease;
   opacity: 0;
   visibility: hidden;
 }
 
 .japanese-style-modern-overlay.visible {
-  display: block !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+  display: block;
+  opacity: 1;
+  visibility: visible;
 }
 
 @keyframes elegantSlideIn {
@@ -638,177 +659,176 @@ body.toc-open {
 
 /* 🎌 フローティングボタン */
 .japanese-style-modern-toc-button {
-  position: fixed !important;
-  top: 80px !important;
-  right: var(--button-right-desktop) !important;
-  width: 52px !important;
-  height: 52px !important;
+  position: fixed;
+  top: 80px;
+  right: var(--button-right-desktop);
+  width: 52px;
+  height: 52px;
   background: linear-gradient(
     135deg,
     var(--japanese-black-secondary),
     #2a2a2a
-  ) !important;
-  border: 2px solid var(--japanese-orange-primary) !important;
-  border-radius: 50% !important;
+  );
+  border: 2px solid var(--japanese-orange-primary);
+  border-radius: 50%;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3),
-    inset 0 2px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
-  display: none !important;
-  align-items: center !important;
-  justify-content: center !important;
-  cursor: pointer !important;
-  z-index: 999997 !important;
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  transform: translateX(0) !important;
+    inset 0 2px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999997;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  margin: 0;
+  padding: 0;
+  transform: translateX(0);
 }
 
 .japanese-style-modern-toc-button svg {
-  width: 20px !important;
-  height: 20px !important;
-  color: var(--japanese-orange-primary) !important;
-  transition: all 0.3s ease !important;
-  stroke-width: 2 !important;
+  width: 20px;
+  height: 20px;
+  color: var(--japanese-orange-primary);
+  transition: all 0.3s ease;
+  stroke-width: 2;
 }
 
 .japanese-style-modern-toc-button:hover {
-  transform: scale(1.08) translateY(-2px) !important;
-  background: linear-gradient(135deg, #2a2a2a, #3a3a3a) !important;
-  border-color: var(--japanese-orange-light) !important;
+  transform: scale(1.08) translateY(-2px);
+  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  border-color: var(--japanese-orange-light);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5),
     0 6px 16px rgba(241, 144, 114, 0.3), inset 0 2px 0 rgba(241, 191, 153, 0.3),
-    0 0 0 2px rgba(241, 144, 114, 0.4) !important;
+    0 0 0 2px rgba(241, 144, 114, 0.4);
 }
 
 .japanese-style-modern-toc-button:hover svg {
-  transform: scale(1.1) !important;
-  color: var(--japanese-orange-light) !important;
+  transform: scale(1.1);
+  color: var(--japanese-orange-light);
 }
 
 /* 🎌 ×ボタン */
 .japanese-style-modern-close-button {
-  position: absolute !important;
-  top: 50% !important;
-  right: 1.2rem !important;
-  transform: translateY(-50%) !important;
-  width: 32px !important;
-  height: 32px !important;
-  background: rgba(223, 113, 99, 0.1) !important;
-  border: 1px solid rgba(223, 113, 99, 0.3) !important;
-  border-radius: 50% !important;
-  color: #df7163 !important;
-  font-size: 1.4rem !important;
-  font-weight: 300 !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  backdrop-filter: blur(4px) !important;
-  z-index: 10 !important;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent !important;
+  position: absolute;
+  top: 50%;
+  right: 1.2rem;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(223, 113, 99, 0.1);
+  border: 1px solid rgba(223, 113, 99, 0.3);
+  border-radius: 50%;
+  color: #f19072;
+  font-size: 1.4rem ;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  padding-left: 2px;
 }
 
 .japanese-style-modern-close-button:hover {
-  background: rgba(223, 113, 99, 0.2) !important;
-  border-color: rgba(223, 113, 99, 0.5) !important;
-  color: #e8998f !important;
-  transform: translateY(-50%) scale(1.1) !important;
-  box-shadow: 0 2px 8px rgba(223, 113, 99, 0.3) !important;
+  background: rgba(223, 113, 99, 0.2);
+  border-color: rgba(223, 113, 99, 0.5);
+  color: #e8998f;
+  transform: translateY(-50%) scale(1.1);
+  box-shadow: 0 2px 8px rgba(223, 113, 99, 0.3);
 }
 
 .japanese-style-modern-close-button:active {
-  transform: translateY(-50%) scale(0.95) !important;
-  background: rgba(223, 113, 99, 0.3) !important;
+  transform: translateY(-50%) scale(0.95);
+  background: rgba(223, 113, 99, 0.3);
 }
 
 /* 🎌 レスポンシブ対応 - モバイル・タブレット共通 */
 @media (max-width: 1023px) {
   .japanese-style-modern-container {
     flex-direction: column;
-    padding: 1rem !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    /* padding: 1rem; */
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   .japanese-style-modern {
-    margin: 1rem auto !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    padding: 0 !important;
+    margin: 1rem auto;
+    max-width: 100%;
+    width: 100%;
+    padding: 0;
   }
 
   .japanese-style-modern-content {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    padding: 0 !important;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding: 0;
   }
 
   .japanese-style-modern-section {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0.75rem !important;
-    margin: 1rem 0 !important;
-    overflow-x: hidden !important;
-    box-sizing: border-box !important;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.75rem;
+    margin: 1rem 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   .japanese-style-modern-p {
-    width: 100% !important;
-    max-width: calc(100vw - 3rem) !important;
-    word-wrap: break-word !important;
-    overflow-wrap: anywhere !important;
-    hyphens: auto !important;
-    line-break: anywhere !important;
-    word-break: break-word !important;
-    padding: 0 !important;
-    margin: 0.75rem 0 !important;
-    -webkit-word-break: break-all !important;
-    -ms-word-break: break-all !important;
-    white-space: pre-wrap !important;
+    width: 100%;
+    max-width: calc(100vw - 3rem);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+    line-break: anywhere;
+    word-break: break-word;
+    padding: 0;
+    margin: 0.75rem 0;
+    -webkit-word-break: break-all;
+    -ms-word-break: break-all;
+    white-space: pre-wrap;
   }
 
   .japanese-style-modern * {
-    max-width: 100% !important;
-    word-wrap: break-word !important;
-    overflow-wrap: anywhere !important;
-    word-break: break-word !important;
-    box-sizing: border-box !important;
-    -webkit-hyphens: auto !important;
-    -moz-hyphens: auto !important;
-    hyphens: auto !important;
-    word-spacing: normal !important;
-    letter-spacing: normal !important;
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    box-sizing: border-box;
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+    word-spacing: normal;
+    letter-spacing: normal;
   }
 
-  .japanese-style-modern-p,
-  .japanese-style-modern p,
   .japanese-style-modern span,
   .japanese-style-modern div {
-    word-break: break-word !important;
-    overflow-wrap: anywhere !important;
-    word-wrap: break-word !important;
-    white-space: normal !important;
-    max-width: calc(100vw - 2rem) !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    white-space: normal;
+    max-width: calc(100vw - 2rem);
   }
 
   .japanese-style-modern-toc-button {
-    display: flex !important;
-    opacity: 0.9 !important;
+    display: flex;
+    opacity: 0.9;
   }
 
   .japanese-style-modern-toc-button::before {
-    content: "" !important;
-    position: absolute !important;
-    inset: -2px !important;
-    background: rgba(0, 0, 0, 0.1) !important;
-    border-radius: 50% !important;
-    z-index: -1 !important;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    z-index: -1;
   }
 
   .japanese-style-modern-h1,
@@ -820,11 +840,6 @@ body.toc-open {
   .japanese-style-modern-h2 {
     font-size: 1.3rem;
     margin: 1.5rem 0 0.8rem;
-  }
-
-  .japanese-style-modern-h3 {
-    font-size: 1.1rem;
-    margin: 1.2rem 0 0.6rem;
   }
 
   .markdown-image-container,
@@ -845,79 +860,80 @@ body.toc-open {
 
   /* モバイル・タブレット目次 */
   .japanese-style-modern-sidebar.mobile-visible {
-    display: block !important;
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 88% !important;
-    max-width: 420px !important;
-    max-height: 80vh !important;
-    z-index: 999999 !important;
+    display: block;
+    position: fixed;
+    top: 52%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88%;
+    max-width: 420px;
+    max-height: 80vh;
+    z-index: 999999;
     background: linear-gradient(
       135deg,
       var(--japanese-black-secondary) 0%,
       #1f1f1f 50%,
       var(--japanese-black-secondary) 100%
-    ) !important;
-    border: 2px solid var(--japanese-orange-primary) !important;
-    border-radius: 20px !important;
-    padding: 0 !important;
-    overflow: hidden !important;
+    );
+    border: 1px solid var(--japanese-orange-primary);
+    border-radius: 8px;
+    padding: 0;
+    overflow: hidden;
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6), 0 12px 25px rgba(0, 0, 0, 0.4),
       0 6px 12px rgba(241, 144, 114, 0.2),
-      inset 0 1px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3) !important;
-    animation: elegantSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    pointer-events: all !important;
-    isolation: isolate !important;
+      inset 0 1px 0 rgba(241, 144, 114, 0.2), 0 0 0 1px rgba(241, 144, 114, 0.3);
+    animation: elegantSlideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: all;
+    isolation: isolate;
   }
 
   .japanese-style-modern-sidebar:not(.mobile-visible) {
-    display: none !important;
+    display: none;
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-sidebar-title {
-    font-size: 1.4rem !important;
-    font-weight: 600 !important;
-    color: var(--japanese-text-primary) !important;
-    margin: 0 0 1.5rem 0 !important;
-    padding: 2rem 4rem 2rem 2rem !important;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--japanese-text-primary);
+    margin: 0 0 1.5rem 0;
+    padding: 2rem 4rem 2rem 2rem;
     background: linear-gradient(
       135deg,
       rgba(241, 144, 114, 0.15) 0%,
       rgba(241, 191, 153, 0.08) 30%,
       rgba(238, 131, 111, 0.1) 70%,
       rgba(241, 144, 114, 0.15) 100%
-    ) !important;
-    position: relative !important;
-    text-align: center !important;
-    border-bottom: 2px solid rgba(241, 144, 114, 0.3) !important;
-    letter-spacing: 0.08em !important;
+    );
+    position: relative;
+    text-align: center;
+    border-bottom: 2px solid rgba(241, 144, 114, 0.3);
+    letter-spacing: 0.08em;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
-      0 1px 2px rgba(241, 144, 114, 0.2) !important;
+      0 1px 2px rgba(241, 144, 114, 0.2);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-sidebar-title::before {
-    display: none !important;
+    display: none;
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-sidebar-title::after {
-    display: none !important;
+    display: none;
   }
 
+  /* 🚨 モバイル・タブレット用スクロールバー（従来通り） */
   .japanese-style-modern-sidebar.mobile-visible nav {
-    padding: 1.8rem !important;
-    max-height: calc(80vh - 120px) !important;
-    overflow-y: auto !important;
-    scrollbar-width: thin !important;
-    scrollbar-color: var(--japanese-orange-primary) rgba(0, 0, 0, 0.2) !important;
+    padding: 1.8rem;
+    max-height: calc(80vh - 120px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--japanese-orange-primary) rgba(0, 0, 0, 0.2);
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar {
-    width: 8px !important;
+    width: 6px; 
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-track {
@@ -926,8 +942,8 @@ body.toc-open {
       rgba(22, 22, 14, 0.3),
       rgba(27, 27, 27, 0.5),
       rgba(22, 22, 14, 0.3)
-    ) !important;
-    border-radius: 4px !important;
+    );
+    border-radius: 4px;
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-thumb {
@@ -948,52 +964,47 @@ body.toc-open {
       var(--japanese-orange-light),
       var(--japanese-orange-accent),
       var(--japanese-orange-light)
-    ) !important;
-    box-shadow: 0 2px 8px rgba(241, 144, 114, 0.4) !important;
+    );
+    box-shadow: 0 2px 8px rgba(241, 144, 114, 0.4);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item {
-    padding: 1.2rem 1.2rem 1.2rem 2.8rem !important;
-    margin-bottom: 0.8rem !important;
+    padding: 1.2rem 1.2rem 1.2rem 2.8rem;
+    margin-bottom: 0.8rem;
     background: linear-gradient(
       135deg,
       rgba(27, 27, 27, 0.8) 0%,
       rgba(22, 22, 14, 0.6) 50%,
       rgba(27, 27, 27, 0.8) 100%
-    ) !important;
-    border: 1px solid rgba(241, 144, 114, 0.15) !important;
-    border-radius: 12px !important;
-    cursor: pointer !important;
-    position: relative !important;
-    font-size: 1.05rem !important;
-    font-weight: 500 !important;
-    color: var(--japanese-text-primary) !important;
-    line-height: 1.6 !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    min-height: 56px !important;
-    display: flex !important;
-    align-items: center !important;
-    overflow-wrap: break-word !important;
-    word-break: break-word !important;
-    hyphens: auto !important;
+    );
+    border: 1px solid rgba(241, 144, 114, 0.15);
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--japanese-text-primary);
+    line-height: 1.6;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(241, 144, 114, 0.12) 0%,
-      rgba(241, 191, 153, 0.08) 50%,
-      rgba(241, 144, 114, 0.12) 100%
-    ) !important;
-    border-color: rgba(241, 144, 114, 0.4) !important;
-    transform: translateX(6px) translateY(-1px) !important;
-    color: var(--japanese-orange-primary) !important;
+       background-color: #bbc8e6;
+    border-color: rgba(241, 144, 114, 0.4);
+    transform: translateX(6px) translateY(-1px);
+    color: var(--japanese-orange-primary);
     box-shadow: 0 6px 20px rgba(241, 144, 114, 0.2),
-      0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+      0 3px 10px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
@@ -1003,180 +1014,168 @@ body.toc-open {
       rgba(241, 144, 114, 0.2) 0%,
       rgba(238, 131, 111, 0.15) 50%,
       rgba(241, 144, 114, 0.2) 100%
-    ) !important;
-    border-color: rgba(241, 144, 114, 0.6) !important;
-    color: var(--japanese-orange-primary) !important;
-    font-weight: 600 !important;
+    );
+    border-color: rgba(241, 144, 114, 0.6);
+    color: var(--japanese-orange-primary);
+    font-weight: 600;
     box-shadow: 0 8px 24px rgba(241, 144, 114, 0.3),
       0 4px 12px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.1),
-      inset 0 -1px 0 rgba(241, 144, 114, 0.3) !important;
-  }
-
-  .japanese-style-modern-sidebar.mobile-visible
-    .japanese-style-modern-toc-item::before {
-    content: "▶" !important;
-    position: absolute !important;
-    left: 1.2rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    color: var(--japanese-orange-primary) !important;
-    font-size: 0.9rem !important;
-    font-weight: bold !important;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-    opacity: 0.8 !important;
+      inset 0 -1px 0 rgba(241, 144, 114, 0.3);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item:hover::before {
-    transform: translateY(-50%) translateX(3px) scale(1.1) !important;
-    opacity: 1 !important;
-    color: var(--japanese-orange-light) !important;
+    transform: translateY(-50%) translateX(3px) scale(1.1);
+    opacity: 1;
+    color: var(--japanese-orange-light);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item.active::before {
-    color: var(--japanese-orange-accent) !important;
-    opacity: 1 !important;
-    transform: translateY(-50%) translateX(2px) scale(1.05) !important;
+    color: var(--japanese-orange-accent);
+    opacity: 1;
+    transform: translateY(-50%) translateX(2px) scale(1.05);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item[data-level="2"] {
     padding-left: 3.2rem !important;
-    font-size: 1rem !important;
-    min-height: 52px !important;
-    opacity: 0.96 !important;
-    margin-left: 0.8rem !important;
-    margin-right: 0.8rem !important;
-    border-left: 3px solid rgba(241, 191, 153, 0.3) !important;
+    font-size: 1rem;
+    min-height: 52px;
+    opacity: 0.96;
+    margin-left: 0.8rem;
+    margin-right: 0.8rem;
+    border-left: 3px solid rgba(241, 191, 153, 0.3);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item[data-level="3"] {
     padding-left: 3.8rem !important;
-    font-size: 0.95rem !important;
-    min-height: 48px !important;
-    opacity: 0.92 !important;
-    margin-left: 1.6rem !important;
-    margin-right: 1.6rem !important;
-    border-left: 2px solid rgba(241, 191, 153, 0.2) !important;
+    font-size: 0.95rem;
+    min-height: 48px;
+    opacity: 0.92;
+    margin-left: 1.6rem;
+    margin-right: 1.6rem;
+    border-left: 2px solid rgba(241, 191, 153, 0.2);
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item[data-level="2"]::before {
-    content: "▸" !important;
-    font-size: 0.8rem !important;
+    content: "-";
+    font-size: 0.8rem ;
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item[data-level="3"]::before {
-    content: "◆" !important;
-    font-size: 0.7rem !important;
+    content: "-";
+    font-size: 0.7rem;
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-close-button {
-    display: flex !important;
+    display: flex
   }
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-sidebar-title {
-    position: relative !important;
-    padding-right: 4rem !important;
+    position: relative;
+    padding-right: 4rem;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
   }
 }
 
 /* モバイル専用調整 */
 @media (max-width: 767px) {
   .japanese-style-modern-header {
-    padding: 2rem 40px 2rem 2rem !important;
-    height: auto !important;
-    min-height: 140px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    padding: 1rem 40px 1rem 2rem;
+    height: auto;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .japanese-style-modern-title {
-    margin: 0 auto !important;
-    padding: 1rem 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    text-align: center !important;
-    display: block !important;
-    position: relative !important;
-    left: 0 !important;
-    word-wrap: break-word !important;
-    overflow-wrap: break-word !important;
-    hyphens: auto !important;
-    white-space: normal !important;
-    line-height: 1.3 !important;
-    word-break: normal !important;
-    line-break: auto !important;
+    margin: 0 auto;
+    padding: 1rem 0;
+    width: 100%;
+    max-width: none;
+    text-align: center;
+    display: block;
+    position: relative;
+    left: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    white-space: normal;
+    line-height: 1.3t;
+    word-break: normal;
+    line-break: auto;
   }
 
   .japanese-style-modern-title::after {
-    left: 50% !important;
-    right: auto !important;
-    width: 85% !important;
-    transform: translateX(-50%) !important;
-    bottom: -0.5rem !important;
+    left: 50%;
+    right: auto;
+    width: 85%;
+    transform: translateX(-50%);
+    bottom: -0.5rem;
   }
 }
 
 @media (max-width: 480px) {
   .japanese-style-modern-header {
-    padding: 1.5rem 35px 1.5rem 1.5rem !important;
-    min-height: 120px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    padding: 1.5rem 35px 1.5rem 1.5rem;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .japanese-style-modern-title {
-    font-size: 1.4rem !important;
-    line-height: 1.25 !important;
-    letter-spacing: 0.05em !important;
-    left: 0 !important;
+    font-size: 1.4rem;
+    line-height: 1.25;
+    letter-spacing: 0.05em;
+    left: 0;
   }
 
   .japanese-style-modern-title::after {
-    left: 50% !important;
-    right: auto !important;
-    width: 80% !important;
-    transform: translateX(-50%) !important;
+    left: 50%;
+    right: auto;
+    width: 80%;
+    transform: translateX(-50%);
   }
 
   .japanese-style-modern-toc-button {
-    top: 70px !important;
-    right: var(--button-right-mobile) !important;
-    width: 44px !important;
-    height: 44px !important;
+    top: 80px;
+    right: var(--button-right-mobile);
+    width: 44px;
+    height: 44px;
   }
 
   .japanese-style-modern-toc-button svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (max-width: 360px) {
   .japanese-style-modern-header {
-    padding: 1rem 32px 1rem 1rem !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    padding: 1rem 32px 1rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .japanese-style-modern-title {
-    font-size: 1.3rem !important;
-    line-height: 1.2 !important;
-    left: 0 !important;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    left: 0;
   }
 
   .japanese-style-modern-title::after {
-    left: 30% !important;
-    right: 30% !important;
+    left: 30%;
+    right: 30%;
   }
 }
 
@@ -1184,19 +1183,19 @@ body.toc-open {
 @media (min-width: 1024px) {
   .japanese-style-modern-overlay,
   .japanese-style-modern-toc-button {
-    display: none !important;
+    display: none;
   }
 
   .japanese-style-modern-close-button {
-    display: none !important;
+    display: none;
   }
 
   .japanese-style-modern-sidebar.mobile-visible {
-    display: none !important;
+    display: none;
   }
 
   .japanese-style-modern-sidebar.desktop-sidebar {
-    display: block !important;
+    display: block;
   }
 
   .table-of-contents,
@@ -1205,8 +1204,33 @@ body.toc-open {
   [class*="toc"]:not(.japanese-style-modern-toc-item):not(
       .japanese-style-modern-toc-button
     ) {
-    display: none !important;
+    display: none;
   }
+}
+
+/* 🚨 汎用スクロールバークラス */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(241, 144, 114, 0.4) rgba(0, 0, 0, 0.1);
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: rgba(22, 22, 14, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(241, 144, 114, 0.6);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(241, 144, 114, 0.8);
 }
 
 /* アクセシビリティ */
@@ -1215,9 +1239,9 @@ body.toc-open {
   .japanese-style-modern-overlay,
   .japanese-style-modern-toc-item,
   .japanese-style-modern-toc-button {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
   }
 }
 
@@ -1230,18 +1254,6 @@ body.toc-open {
 .japanese-style-modern-toc-button:focus {
   outline: 2px solid var(--japanese-orange-primary);
   outline-offset: 2px;
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .japanese-style-modern-toc-item {
-    min-height: 60px !important;
-    padding: 1.4rem !important;
-  }
-
-  .japanese-style-modern-toc-button {
-    width: 60px !important;
-    height: 60px !important;
-  }
 }
 
 .japanese-style-modern *::selection {

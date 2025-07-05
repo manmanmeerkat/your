@@ -34,6 +34,7 @@ async function getLatestArticles(): Promise<articleType[]> {
         category: true,
         summary: true,
         createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -81,7 +82,8 @@ async function getLatestArticles(): Promise<articleType[]> {
           | "customs",
         content: "", // ホームページでは不使用
         summary: article.summary ?? undefined,
-        createdAt: article.createdAt.toISOString(),
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
         images: featuredImage
           ? [
               {
