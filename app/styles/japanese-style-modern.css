@@ -483,6 +483,8 @@
   position: relative;
   padding-left: 1.25rem;
   line-height: 1.6;
+  font-size: 1rem;
+  color: var(--japanese-text-primary);
 }
 
 .japanese-style-modern-ul .japanese-style-modern-li::before {
