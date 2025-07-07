@@ -171,3 +171,106 @@ html {
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
   background-color: #cbd5e1; /* slate-300 */
 }
+
+/* SimpleImageコンポーネント用スタイル */
+.simple-image-container {
+  display: inline-block;
+  width: 100%;
+  vertical-align: top;
+  position: relative;
+}
+
+.simple-image {
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: block;
+  max-width: 100%;
+  height: auto;
+  transition: opacity 0.3s ease;
+}
+
+.simple-image-loading {
+  opacity: 0.6;
+}
+
+.simple-image-error {
+  display: inline-block;
+  text-align: center;
+  background-color: #f3f4f6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.25rem;
+  width: 200px;
+  height: 150px;
+  box-sizing: border-box;
+  vertical-align: middle;
+  line-height: 150px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border: 1px dashed #d1d5db;
+}
+
+.simple-image-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.simple-image-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #6b7280;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.simple-image-loading-text {
+  color: #6b7280;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.simple-image-caption {
+  display: block;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* マークダウンセクション用スタイル */
+.markdown-section {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.markdown-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+img.simple-image {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: none !important;
+}

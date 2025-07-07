@@ -1,11 +1,9 @@
-// app/api/images/route.ts - 認証修正版
+// app/api/images/route.ts - Supabase Storage対応版
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { join } from 'path';
-import { randomUUID } from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 
 // 🔐 サーバー側認証チェック関数
 async function checkAuth() {
@@ -96,7 +94,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// 📤 画像アップロード
+// 📤 画像アップロード（Supabase Storage対応）
 export async function POST(request: NextRequest) {
   try {
     console.log('📤 POST /api/images 呼び出し');
@@ -112,12 +110,14 @@ export async function POST(request: NextRequest) {
     const file = formData.get('image') as File;
     const altText = formData.get('altText') as string;
     const articleId = formData.get('articleId') as string;
+    const isFeatured = formData.get('isFeatured') === 'true';
 
     console.log('📊 アップロード情報:', {
       fileName: file?.name,
       fileSize: file?.size,
       altText,
       articleId,
+      isFeatured,
     });
 
     if (!file) {
@@ -157,23 +157,41 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ ファイル検証OK');
 
-    // 💾 ファイル保存
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // 🚀 Supabase Storageにアップロード
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const fileExtension = file.name.split('.').pop() || 'jpg';
-    const fileName = `${randomUUID()}.${fileExtension}`;
-    const uploadDir = join(process.cwd(), 'public', 'images', 'articles', articleId);
+    const fileName = `${articleId}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
     
-    console.log('📁 アップロードディレクトリ:', uploadDir);
+    console.log('📁 Supabase Storage アップロード:', fileName);
 
-    await mkdir(uploadDir, { recursive: true });
-    
-    const filePath = join(uploadDir, fileName);
-    await writeFile(filePath, buffer);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('article-images')
+      .upload(fileName, file, {
+        contentType: file.type,
+        cacheControl: '3600',
+        upsert: false
+      });
 
-    console.log('✅ ファイル保存成功:', filePath);
+    if (uploadError) {
+      console.error('❌ Supabase Storage アップロードエラー:', uploadError);
+      return NextResponse.json({ 
+        error: '画像のアップロードに失敗しました', 
+        details: uploadError.message 
+      }, { status: 500 });
+    }
+
+    console.log('✅ Supabase Storage アップロード成功:', uploadData.path);
 
     // 🌐 公開URL生成
-    const imageUrl = `/images/articles/${articleId}/${fileName}`;
+    const { data: { publicUrl } } = supabase.storage
+      .from('article-images')
+      .getPublicUrl(fileName);
+
+    console.log('✅ 公開URL生成:', publicUrl);
 
     // 🔍 アップロード前のフィーチャー画像状態を確認
     const existingFeaturedImages = await prisma.image.findMany({
@@ -183,19 +201,34 @@ export async function POST(request: NextRequest) {
       },
       select: {
         id: true,
-        url: true,
-        altText: true,
+        isFeatured: true,
       },
     });
-    console.log('📊 アップロード前のフィーチャー画像:', existingFeaturedImages.length, '枚');
 
-    // 💽 データベースに保存
+    console.log('📊 既存フィーチャー画像数:', existingFeaturedImages.length);
+
+    // 🔄 フィーチャー画像の処理
+    if (isFeatured && existingFeaturedImages.length > 0) {
+      // 既存のフィーチャー画像を非フィーチャーに変更
+      await prisma.image.updateMany({
+        where: {
+          articleId: articleId,
+          isFeatured: true,
+        },
+        data: {
+          isFeatured: false,
+        },
+      });
+      console.log('🔄 既存フィーチャー画像を非フィーチャーに変更');
+    }
+
+    // 💾 データベースに画像情報を保存
     const image = await prisma.image.create({
       data: {
-        articleId: articleId,
-        url: imageUrl,
+        url: publicUrl,
         altText: altText || file.name.replace(/\.[^/.]+$/, ''),
-        isFeatured: false,
+        isFeatured: isFeatured,
+        articleId: articleId,
       },
       select: {
         id: true,
@@ -206,25 +239,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log('✅ データベース保存成功:', image.id);
-
-    // 🔍 アップロード後のフィーチャー画像状態を確認
-    const updatedFeaturedImages = await prisma.image.findMany({
-      where: {
-        articleId: articleId,
-        isFeatured: true,
-      },
-      select: {
-        id: true,
-        url: true,
-        altText: true,
-      },
+    console.log('✅ データベース保存成功:', {
+      imageId: image.id,
+      isFeatured: image.isFeatured,
     });
-    console.log('📊 アップロード後のフィーチャー画像:', updatedFeaturedImages.length, '枚');
 
-    return NextResponse.json({ 
-      message: '画像がアップロードされました',
-      image 
+    return NextResponse.json({
+      success: true,
+      image,
+      message: isFeatured
+        ? '画像をアップロードし、フィーチャー画像に設定しました'
+        : '画像をアップロードしました',
     });
   } catch (error) {
     console.error('❌ 画像アップロードエラー:', error);
@@ -235,10 +260,10 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 🔧 画像更新
+// 🔄 画像更新
 export async function PUT(request: NextRequest) {
   try {
-    console.log('🔧 PUT /api/images 呼び出し');
+    console.log('🔄 PUT /api/images 呼び出し');
 
     // 🔐 認証チェック
     const authResult = await checkAuth();
@@ -246,47 +271,49 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: authResult.error }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const imageId = searchParams.get('imageId');
-    const articleId = searchParams.get('articleId');
+    const body = await request.json();
+    const { imageId, altText, isFeatured } = body;
 
-    if (!imageId || !articleId) {
-      return NextResponse.json({ error: 'imageId と articleId が必要です' }, { status: 400 });
+    if (!imageId) {
+      return NextResponse.json({ error: 'imageId が必要です' }, { status: 400 });
     }
 
-    const { altText, isFeatured } = await request.json();
+    console.log('📊 更新情報:', { imageId, altText, isFeatured });
 
-    const existingImage = await prisma.image.findFirst({
-      where: {
-        id: imageId,
-        articleId: articleId,
-      },
+    // 🔍 画像の存在確認
+    const existingImage = await prisma.image.findUnique({
+      where: { id: imageId },
+      select: { id: true, articleId: true, isFeatured: true },
     });
 
     if (!existingImage) {
       return NextResponse.json({ error: '画像が見つかりません' }, { status: 404 });
     }
 
-    // フィーチャー画像設定時は他を解除
-    if (isFeatured === true) {
-      await prisma.image.updateMany({
-        where: {
-          articleId: articleId,
-          id: { not: imageId },
-        },
-        data: {
-          isFeatured: false,
-        },
-      });
+    // 🔄 フィーチャー画像の処理
+    if (isFeatured !== undefined) {
+      if (isFeatured) {
+        // 他の画像を非フィーチャーに変更
+        await prisma.image.updateMany({
+          where: {
+            articleId: existingImage.articleId,
+            isFeatured: true,
+          },
+          data: {
+            isFeatured: false,
+          },
+        });
+        console.log('🔄 他の画像を非フィーチャーに変更');
+      }
     }
 
-    const updateData: { altText?: string; isFeatured?: boolean } = {};
-    if (altText !== undefined) updateData.altText = altText;
-    if (isFeatured !== undefined) updateData.isFeatured = isFeatured;
-
+    // 💾 画像情報を更新
     const updatedImage = await prisma.image.update({
       where: { id: imageId },
-      data: updateData,
+      data: {
+        altText: altText !== undefined ? altText : undefined,
+        isFeatured: isFeatured !== undefined ? isFeatured : undefined,
+      },
       select: {
         id: true,
         url: true,
@@ -296,22 +323,23 @@ export async function PUT(request: NextRequest) {
       },
     });
 
-    console.log('✅ 画像更新成功:', imageId);
+    console.log('✅ 画像更新成功:', updatedImage.id);
 
-    return NextResponse.json({ 
-      message: '画像情報が更新されました',
-      image: updatedImage 
+    return NextResponse.json({
+      success: true,
+      image: updatedImage,
+      message: '画像を更新しました',
     });
   } catch (error) {
     console.error('❌ 画像更新エラー:', error);
     return NextResponse.json(
-      { error: '画像の更新に失敗しました' },
+      { error: '画像の更新に失敗しました', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
 }
 
-// 🗑️ 画像削除
+// 🗑️ 画像削除（Supabase Storage対応）
 export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ DELETE /api/images 呼び出し');
@@ -330,36 +358,74 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'imageId と articleId が必要です' }, { status: 400 });
     }
 
-    const existingImage = await prisma.image.findFirst({
-      where: {
-        id: imageId,
-        articleId: articleId,
-      },
+    console.log('📊 削除対象:', { imageId, articleId });
+
+    // 🔍 画像の存在確認
+    const image = await prisma.image.findUnique({
+      where: { id: imageId },
+      select: { id: true, url: true, isFeatured: true },
     });
 
-    if (!existingImage) {
+    if (!image) {
       return NextResponse.json({ error: '画像が見つかりません' }, { status: 404 });
     }
 
-    // ファイル削除
+    // 🗑️ Supabase Storageからファイル削除
     try {
-      const imagePath = join(process.cwd(), 'public', existingImage.url);
-      await unlink(imagePath);
-      console.log('✅ ファイル削除成功:', imagePath);
-    } catch (fileError) {
-      console.warn('⚠️ ファイル削除エラー（続行）:', fileError);
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      // URLからファイルパスを抽出
+      const urlParts = image.url.split('/');
+      const fileName = urlParts[urlParts.length - 2] + '/' + urlParts[urlParts.length - 1];
+
+      const { error: deleteError } = await supabase.storage
+        .from('article-images')
+        .remove([fileName]);
+
+      if (deleteError) {
+        console.error('❌ Supabase Storage 削除エラー:', deleteError);
+      } else {
+        console.log('✅ Supabase Storage ファイル削除成功:', fileName);
+      }
+    } catch (storageError) {
+      console.error('❌ ストレージ削除エラー:', storageError);
     }
 
-    // データベースから削除
-    await prisma.image.delete({ where: { id: imageId } });
+    // 💾 データベースから削除
+    await prisma.image.delete({
+      where: { id: imageId },
+    });
 
-    console.log('✅ 画像削除成功:', imageId);
+    console.log('✅ データベース削除成功');
 
-    return NextResponse.json({ message: '画像が削除されました' });
+    // 🔄 フィーチャー画像が削除された場合の処理
+    if (image.isFeatured) {
+      const remainingImages = await prisma.image.findMany({
+        where: { articleId },
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+      });
+
+      if (remainingImages.length > 0) {
+        await prisma.image.update({
+          where: { id: remainingImages[0].id },
+          data: { isFeatured: true },
+        });
+        console.log('🔄 新しいフィーチャー画像を設定:', remainingImages[0].id);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: '画像を削除しました',
+    });
   } catch (error) {
     console.error('❌ 画像削除エラー:', error);
     return NextResponse.json(
-      { error: '画像の削除に失敗しました' },
+      { error: '画像の削除に失敗しました', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
