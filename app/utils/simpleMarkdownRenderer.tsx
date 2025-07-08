@@ -302,8 +302,6 @@ function SimpleImage({
   src,
   alt,
   title,
-  width,
-  height,
 }: {
   src?: string;
   alt?: string;
@@ -407,7 +405,8 @@ const separateTriviaFromMarkdown = (
 // 🔧 分離されたコンテンツをレンダリングする関数
 const renderSeparatedContent = (
   markdownContent: string,
-  triviaElements: React.ReactNode[]
+  triviaElements: React.ReactNode[],
+  triviaList: ArticleTrivia[]
 ): React.ReactNode[] => {
   const elements: React.ReactNode[] = [];
   const parts = markdownContent.split(/(<!-- TRIVIA_\d+ -->)/);
@@ -653,7 +652,9 @@ const renderSeparatedContent = (
                   return <hr className="japanese-style-modern-hr" />;
                 },
 
-                code(props: { inline?: boolean; children: React.ReactNode }) {
+                code(
+                  props: React.ComponentProps<"code"> & { inline?: boolean }
+                ) {
                   if (props.inline) {
                     return (
                       <code className="japanese-style-modern-code-inline">
@@ -704,7 +705,8 @@ export function MarkdownRenderer({
   // 🔧 分離されたコンテンツをレンダリング
   const renderedElements = renderSeparatedContent(
     markdownContent,
-    triviaElements
+    triviaElements,
+    triviaList || []
   );
 
   return <>{renderedElements}</>;
