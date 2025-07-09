@@ -302,6 +302,8 @@ function SimpleImage({
   src,
   alt,
   title,
+  width,
+  height,
 }: {
   src?: string;
   alt?: string;
@@ -331,6 +333,8 @@ function SimpleImage({
     original: src,
     normalized: normalizedSrc,
     isSupabase: src && src.includes("supabase.co"),
+    width,
+    height,
   });
 
   if (!normalizedSrc || hasError) {
@@ -355,6 +359,15 @@ function SimpleImage({
         className={`simple-image ${isLoading ? "simple-image-loading" : ""}`}
         loading="lazy"
         decoding="async"
+        width={width}
+        height={height}
+        style={{
+          width: width ? `${width}px !important` : undefined,
+          height: height ? `${height}px !important` : undefined,
+          maxWidth: "100%",
+          maxHeight: "100%",
+          display: "block",
+        }}
         onLoad={() => {
           console.log("✅ 画像読み込み完了:", normalizedSrc);
           setIsLoading(false);
@@ -452,14 +465,30 @@ const renderSeparatedContent = (
                 },
 
                 img(props) {
-                  const { src, alt, title, width, height } = props;
+                  const { src, title } = props;
+                  let alt = props.alt || "";
+                  let width: number | undefined;
+                  let height: number | undefined;
 
-                  // 画像URLの正規化
+                  // altに {width=400 height=250} のような指定があればパース
+                  const sizeMatch = alt.match(/\{([^}]+)\}/);
+                  if (sizeMatch) {
+                    const sizeStr = sizeMatch[1];
+                    const widthMatch = sizeStr.match(/width\s*=\s*(\d+)/);
+                    const heightMatch = sizeStr.match(/height\s*=\s*(\d+)/);
+                    width = widthMatch
+                      ? parseInt(widthMatch[1], 10)
+                      : undefined;
+                    height = heightMatch
+                      ? parseInt(heightMatch[1], 10)
+                      : undefined;
+                    // altテキストからサイズ指定部分を除去
+                    alt = alt.replace(/\{[^}]+\}/, "").trim();
+                  }
+
+                  // 画像URLの正規化（既存の処理を流用）
                   let normalizedSrc = src;
-
-                  // Supabase StorageのURLかどうかチェック
                   if (src && src.includes("supabase.co")) {
-                    // Supabase StorageのURLはそのまま使用
                     normalizedSrc = src;
                   } else if (src && src.startsWith("//")) {
                     normalizedSrc = "https:" + src;
@@ -472,21 +501,13 @@ const renderSeparatedContent = (
                     normalizedSrc = "/" + src;
                   }
 
-                  console.log("🔍 画像URL処理:", {
-                    original: src,
-                    normalized: normalizedSrc,
-                    isSupabase: src && src.includes("supabase.co"),
-                  });
-
-                  // 画像がpタグ内にある場合は、pタグをdivに変換する必要がある
-                  // この処理は親コンポーネントで行うため、ここではSimpleImageを返す
                   return (
                     <SimpleImage
                       src={normalizedSrc}
                       alt={alt}
                       title={title}
-                      width={width ? parseInt(String(width)) : undefined}
-                      height={height ? parseInt(String(height)) : undefined}
+                      width={width}
+                      height={height}
                     />
                   );
                 },
