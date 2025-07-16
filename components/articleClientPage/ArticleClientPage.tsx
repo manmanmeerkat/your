@@ -1,4 +1,4 @@
-// components/articleClientPage/ArticleClientPage.tsx - 型修正版（リファクタリング済み）
+// components/articleClientPage/ArticleClientPage.tsx - 完全修正版
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -91,7 +91,9 @@ const OptimizedImage = ({
         width={width}
         height={height}
         unoptimized
-        className={`transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"} max-w-full h-auto rounded-lg shadow-lg ${className || ""}`}
+        className={`transition-opacity duration-500 ${
+          isLoaded ? "opacity-100" : "opacity-0"
+        } max-w-full h-auto rounded-lg shadow-lg ${className || ""}`}
         priority={priority}
         onLoad={handleLoad}
         onError={handleError}
@@ -125,12 +127,33 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
   const [showMobileToc, setShowMobileToc] = useState(false);
   const [scrollPosition, setScrollPosition] = useState(0);
 
-  const tableOfContents = useMemo(() => extractHeaders(article.content), [article.content]);
+  const tableOfContents = useMemo(
+    () => extractHeaders(article.content),
+    [article.content]
+  );
 
   const renderedContent = useMemo(() => {
-    const activeTrivia = article.trivia?.filter((t: ArticleTrivia) => t.isActive) || [];
-    return <ContentWithTrivia content={article.content} triviaList={activeTrivia} />;
+    const activeTrivia =
+      article.trivia?.filter((t: ArticleTrivia) => t.isActive) || [];
+    return (
+      <ContentWithTrivia content={article.content} triviaList={activeTrivia} />
+    );
   }, [article.content, article.trivia]);
+
+  // 🚨 修正：レンダリング後に見出しにIDを設定（useEffectで分離）
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const headings = document.querySelectorAll(
+        ".japanese-style-modern-content h1, .japanese-style-modern-content h2, .japanese-style-modern-content h3"
+      );
+      headings.forEach((heading) => {
+        if (!heading.id && heading.textContent) {
+          heading.id = safeId(heading.textContent);
+        }
+      });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [article.content]);
 
   const handleScroll = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -138,7 +161,9 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     setShowScrollTop(window.scrollY > 300);
 
     if (tableOfContents.length > 0) {
-      const headings = document.querySelectorAll(".japanese-style-modern-section h1[id], .japanese-style-modern-section h2[id], .japanese-style-modern-section h3[id]");
+      const headings = document.querySelectorAll(
+        ".japanese-style-modern-content h1[id], .japanese-style-modern-content h2[id], .japanese-style-modern-content h3[id]"
+      );
       if (!headings.length) return;
 
       const currentScrollY = window.scrollY;
@@ -155,7 +180,10 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
         const elementTop = rect.top + currentScrollY;
         const distance = Math.abs(elementTop - viewportCenter);
 
-        if (elementTop <= currentScrollY + headerOffset && distance < closestDistance) {
+        if (
+          elementTop <= currentScrollY + headerOffset &&
+          distance < closestDistance
+        ) {
           closestDistance = distance;
           activeId = heading.id;
         }
@@ -195,31 +223,64 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     }
   }, []);
 
-  const scrollToHeading = useCallback((id: string) => {
-    if (typeof window === "undefined") return;
-    const element = document.getElementById(id);
-    if (!element) return;
+  // 🚨 修正：IDがない場合はテキストで見出しを探す
+  const scrollToHeading = useCallback(
+    (id: string) => {
+      if (typeof window === "undefined") return;
 
-    if (window.innerWidth < 1280) {
-      const rect = element.getBoundingClientRect();
-      const targetScrollY = rect.top + scrollPosition - 100;
+      // まずIDで要素を探す
+      let element = document.getElementById(id);
 
-      setShowMobileToc(false);
-      document.body.classList.remove("toc-open");
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
+      // IDで見つからない場合は、テキストで見出しを探す
+      if (!element) {
+        const headings = document.querySelectorAll(
+          ".japanese-style-modern-content h1, .japanese-style-modern-content h2, .japanese-style-modern-content h3"
+        );
 
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: Math.max(0, targetScrollY), behavior: "smooth" });
-      });
-    } else {
-      const position = element.getBoundingClientRect().top + window.pageYOffset - 100;
-      window.scrollTo({ top: Math.max(0, position), behavior: "smooth" });
-    }
+        // 目次アイテムのテキストと完全一致する見出しを探す
+        const tableOfContentsItem = tableOfContents.find(
+          (item) => item.id === id
+        );
+        if (tableOfContentsItem) {
+          headings.forEach((heading) => {
+            if (heading.textContent?.trim() === tableOfContentsItem.text) {
+              element = heading as HTMLElement;
+              return;
+            }
+          });
+        }
+      }
 
-    setActiveSection(id);
-  }, [scrollPosition]);
+      if (!element) return;
+
+      // モバイル目次が開いている場合の処理
+      if (showMobileToc) {
+        // 目次を閉じる
+        setShowMobileToc(false);
+        document.body.classList.remove("toc-open");
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+
+        // DOM更新後にスクロール実行
+        requestAnimationFrame(() => {
+          if (element) {
+            const rect = element.getBoundingClientRect();
+            const position = rect.top + window.pageYOffset - 100;
+            window.scrollTo({ top: Math.max(0, position), behavior: "smooth" });
+          }
+        });
+      } else {
+        // 通常のスクロール処理（デスクトップ・タブレット共通）
+        const rect = element.getBoundingClientRect();
+        const position = rect.top + window.pageYOffset - 100;
+        window.scrollTo({ top: Math.max(0, position), behavior: "smooth" });
+      }
+
+      setActiveSection(id);
+    },
+    [showMobileToc, tableOfContents]
+  );
 
   const toggleMobileToc = useCallback(() => {
     setShowMobileToc((prev) => {
@@ -267,16 +328,26 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
   }, []);
 
   const featuredImage = useMemo(() => {
-    return article.images?.find((img) => img.isFeatured)?.url ?? "/fallback.jpg";
+    return (
+      article.images?.find((img) => img.isFeatured)?.url ?? "/fallback.jpg"
+    );
   }, [article.images]);
 
   const hasFeaturedImage = article.images?.some((img) => img.isFeatured);
 
   const formatDisplayDate = (date: Date): string => {
     try {
-      return date.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+      return date.toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
     } catch {
-      return new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+      return new Date().toLocaleDateString("ja-JP", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
     }
   };
 
@@ -285,7 +356,14 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
       {hasFeaturedImage && (
         <div className="w-full overflow-hidden pt-8 px-4 sm:px-8">
           <div className="relative max-h-[400px] w-full flex justify-center">
-            <OptimizedImage src={featuredImage} alt={article.title} className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md" priority width={400} height={400} />
+            <OptimizedImage
+              src={featuredImage}
+              alt={article.title}
+              className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md"
+              priority
+              width={400}
+              height={400}
+            />
           </div>
         </div>
       )}
@@ -294,14 +372,18 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
         <div className="japanese-style-modern">
           <div className="japanese-style-modern-header">
             <h1 className="japanese-style-modern-title">{article.title}</h1>
-            <div className="japanese-style-modern-date">{formatDisplayDate(article.updatedAt)}</div>
+            <div className="japanese-style-modern-date">
+              {formatDisplayDate(article.updatedAt)}
+            </div>
           </div>
 
           <div className="japanese-style-modern-container">
             <div className="flex flex-col xl:flex-row gap-4">
               <div className="order-2 xl:order-1 flex-1 min-w-0">
                 <div className="japanese-style-modern-content max-w-none">
-                  <div className="prose prose-lg prose-invert max-w-none overflow-hidden">{renderedContent}</div>
+                  <div className="prose prose-lg prose-invert max-w-none overflow-hidden">
+                    {renderedContent}
+                  </div>
                 </div>
               </div>
 
@@ -309,12 +391,16 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                 <div className="space-y-6 xl:sticky xl:top-8">
                   {tableOfContents.length > 0 && (
                     <aside className="hidden xl:block japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
-                      <h3 className="japanese-style-modern-sidebar-title">Contents</h3>
+                      <h3 className="japanese-style-modern-sidebar-title">
+                        Contents
+                      </h3>
                       <nav>
                         {tableOfContents.map((item) => (
                           <div
                             key={item.id}
-                            className={`japanese-style-modern-toc-item ${activeSection === item.id ? "active" : ""}`}
+                            className={`japanese-style-modern-toc-item ${
+                              activeSection === item.id ? "active" : ""
+                            }`}
                             data-level={item.level}
                             onClick={() => scrollToHeading(item.id)}
                             style={{ cursor: "pointer" }}
@@ -327,28 +413,44 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                   )}
 
                   <div className="hidden xl:block">
-                    <RelatedArticles currentCategory={article.category} currentArticleId={article.id} />
+                    <RelatedArticles
+                      currentCategory={article.category}
+                      currentArticleId={article.id}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <FloatingButtons showScrollTop={showScrollTop} scrollToTop={scrollToTop} toggleMobileToc={toggleMobileToc} />
+          <FloatingButtons
+            showScrollTop={showScrollTop}
+            scrollToTop={scrollToTop}
+            toggleMobileToc={toggleMobileToc}
+          />
         </div>
 
         <div className="block xl:hidden mt-8">
-          <RelatedArticles currentCategory={article.category} currentArticleId={article.id} />
+          <RelatedArticles
+            currentCategory={article.category}
+            currentArticleId={article.id}
+          />
         </div>
 
         <div className="flex flex-col justify-center items-center mt-24 gap-8">
           <Link href={`/${article.category}`}>
-            <Button size="lg" className="w-[320px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300">
+            <Button
+              size="lg"
+              className="w-[320px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
+            >
               Back to {CATEGORY_LABELS[article.category]} Posts ≫
             </Button>
           </Link>
           <Link href="/all-articles">
-            <Button size="lg" className="w-[220px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300">
+            <Button
+              size="lg"
+              className="w-[220px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
+            >
               View all posts ≫
             </Button>
           </Link>
