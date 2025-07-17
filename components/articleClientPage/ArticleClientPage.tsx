@@ -7,8 +7,6 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
-import { TableOfContents } from "@/components/japanese-style/TableOfContents";
-import { FloatingButtons } from "@/components/japanese-style/FloatingButtons";
 import RelatedArticles from "@/components/sidebar/RelatedArticles";
 import Redbubble from "../redBubble/RedBubble";
 import { ContentWithTrivia } from "@/components/trivia/ContentWithTrivia";
@@ -124,8 +122,6 @@ const extractHeaders = (content: string): TocItem[] => {
 const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
-  const [showMobileToc, setShowMobileToc] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0);
 
   const tableOfContents = useMemo(
     () => extractHeaders(article.content),
@@ -140,7 +136,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     );
   }, [article.content, article.trivia]);
 
-  // 🚨 修正：レンダリング後に見出しにIDを設定（useEffectで分離）
+  // レンダリング後に見出しにIDを設定
   useEffect(() => {
     const timer = setTimeout(() => {
       const headings = document.querySelectorAll(
@@ -223,7 +219,6 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     }
   }, []);
 
-  // 🚨 修正：IDがない場合はテキストで見出しを探す
   const scrollToHeading = useCallback(
     (id: string) => {
       if (typeof window === "undefined") return;
@@ -253,79 +248,15 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
 
       if (!element) return;
 
-      // モバイル目次が開いている場合の処理
-      if (showMobileToc) {
-        // 目次を閉じる
-        setShowMobileToc(false);
-        document.body.classList.remove("toc-open");
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-
-        // DOM更新後にスクロール実行
-        requestAnimationFrame(() => {
-          if (element) {
-            const rect = element.getBoundingClientRect();
-            const position = rect.top + window.pageYOffset - 100;
-            window.scrollTo({ top: Math.max(0, position), behavior: "smooth" });
-          }
-        });
-      } else {
-        // 通常のスクロール処理（デスクトップ・タブレット共通）
-        const rect = element.getBoundingClientRect();
-        const position = rect.top + window.pageYOffset - 100;
-        window.scrollTo({ top: Math.max(0, position), behavior: "smooth" });
-      }
+      // スクロール実行
+      const rect = element.getBoundingClientRect();
+      const position = rect.top + window.pageYOffset - 120;
+      window.scrollTo({ top: Math.max(0, position), behavior: "smooth" });
 
       setActiveSection(id);
     },
-    [showMobileToc, tableOfContents]
+    [tableOfContents]
   );
-
-  const toggleMobileToc = useCallback(() => {
-    setShowMobileToc((prev) => {
-      const newValue = !prev;
-      if (newValue) {
-        const scroll = window.scrollY;
-        setScrollPosition(scroll);
-        document.body.classList.add("toc-open");
-        document.body.style.position = "fixed";
-        document.body.style.top = `-${scroll}px`;
-        document.body.style.width = "100%";
-      } else {
-        document.body.classList.remove("toc-open");
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        setTimeout(() => {
-          if (scrollPosition > 0) window.scrollTo(0, scrollPosition);
-        }, 50);
-      }
-      return newValue;
-    });
-  }, [scrollPosition]);
-
-  const closeMobileToc = useCallback(() => {
-    setShowMobileToc(false);
-    document.body.classList.remove("toc-open");
-    document.body.style.position = "";
-    document.body.style.top = "";
-    document.body.style.width = "";
-    setTimeout(() => {
-      if (scrollPosition >= 0) window.scrollTo(0, scrollPosition);
-    }, 50);
-  }, [scrollPosition]);
-
-  useEffect(() => {
-    return () => {
-      if (typeof document !== "undefined") {
-        document.body.classList.remove("toc-open");
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-      }
-    };
-  }, []);
 
   const featuredImage = useMemo(() => {
     return (
@@ -353,122 +284,226 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
 
   return (
     <div className="min-h-screen article-page-container">
-      {hasFeaturedImage && (
-        <div className="w-full overflow-hidden pt-8 px-4 sm:px-8">
-          <div className="relative max-h-[400px] w-full flex justify-center">
-            <OptimizedImage
-              src={featuredImage}
-              alt={article.title}
-              className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md"
-              priority
-              width={400}
-              height={400}
-            />
-          </div>
-        </div>
-      )}
-
       <div className="container mx-auto px-4 pb-8 max-w-7xl">
-        <div className="japanese-style-modern">
-          <div className="japanese-style-modern-header">
-            <h1 className="japanese-style-modern-title">{article.title}</h1>
-            <div className="japanese-style-modern-date">
-              {formatDisplayDate(article.updatedAt)}
-            </div>
-          </div>
+        {/* フレックスコンテナで上部を揃える */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* メインコンテンツエリア - 70% */}
+          <div className="flex-1 lg:w-[70%] min-w-0">
+            <div className="japanese-style-modern">
+              <div className="japanese-style-modern-header">
+                <h1 className="japanese-style-modern-title">{article.title}</h1>
+                <div className="japanese-style-modern-date">
+                  {formatDisplayDate(article.updatedAt)}
+                </div>
+              </div>
 
-          <div className="japanese-style-modern-container">
-            <div className="flex flex-col xl:flex-row gap-4">
-              <div className="order-2 xl:order-1 flex-1 min-w-0">
+              {hasFeaturedImage && (
+                <div className="w-full overflow-hidden mb-6 px-6">
+                  <div className="relative max-h-[400px] w-full flex justify-center">
+                    <OptimizedImage
+                      src={featuredImage}
+                      alt={article.title}
+                      className="h-auto max-h-[400px] w-full max-w-[400px] object-contain rounded-md"
+                      priority
+                      width={400}
+                      height={400}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 目次を強制表示 */}
+              <div
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(27, 27, 27, 0.9) 0%, rgba(22, 22, 14, 0.7) 50%, rgba(27, 27, 27, 0.9) 100%)",
+                  border: "1px solid rgba(241, 144, 114, 0.3)",
+                  borderRadius: "12px",
+                  margin: "0 1.5rem 2rem 1.5rem",
+                  boxShadow:
+                    "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(241, 144, 114, 0.1)",
+                  padding: "1.5rem",
+                }}
+              >
+                <h3
+                  style={{
+                    fontSize: "1.3rem",
+                    fontWeight: "600",
+                    color: "#f3f3f2",
+                    margin: "0 0 1.5rem 0",
+                    textAlign: "center",
+                    padding: "0.75rem 0",
+                    background:
+                      "linear-gradient(135deg, rgba(241, 144, 114, 0.12) 0%, rgba(241, 191, 153, 0.08) 50%, rgba(241, 144, 114, 0.12) 100%)",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(241, 144, 114, 0.2)",
+                    letterSpacing: "0.1em",
+                    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                  }}
+                >
+                  Contents
+                </h3>
+                <nav
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.75rem",
+                  }}
+                >
+                  {tableOfContents.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => scrollToHeading(item.id)}
+                      style={{
+                        padding:
+                          item.level === 1
+                            ? "1rem 1.25rem"
+                            : item.level === 2
+                            ? "0.75rem 1rem 0.75rem 1.5rem"
+                            : "0.75rem 1rem 0.75rem 2rem",
+                        background:
+                          activeSection === item.id
+                            ? "linear-gradient(135deg, rgba(241, 144, 114, 0.15) 0%, rgba(238, 131, 111, 0.12) 50%, rgba(241, 144, 114, 0.15) 100%)"
+                            : "linear-gradient(135deg, rgba(27, 27, 27, 0.6) 0%, rgba(22, 22, 14, 0.4) 50%, rgba(27, 27, 27, 0.6) 100%)",
+                        border:
+                          activeSection === item.id
+                            ? "1px solid rgba(241, 144, 114, 0.4)"
+                            : "1px solid rgba(241, 144, 114, 0.1)",
+                        borderLeft:
+                          item.level === 2
+                            ? "3px solid rgba(241, 144, 114, 0.2)"
+                            : item.level === 3
+                            ? "2px solid rgba(241, 191, 153, 0.15)"
+                            : "1px solid rgba(241, 144, 114, 0.1)",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        transition:
+                          "all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                        fontSize:
+                          item.level === 1
+                            ? "1rem"
+                            : item.level === 2
+                            ? "0.9rem"
+                            : "0.85rem",
+                        fontWeight:
+                          activeSection === item.id
+                            ? "600"
+                            : item.level === 1
+                            ? "600"
+                            : item.level === 2
+                            ? "500"
+                            : "400",
+                        color:
+                          activeSection === item.id ? "#f19072" : "#e2e8f0",
+                        lineHeight: "1.5",
+                        boxShadow:
+                          activeSection === item.id
+                            ? "0 8px 24px rgba(241, 144, 114, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(241, 144, 114, 0.3)"
+                            : "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
+                        opacity:
+                          item.level === 2
+                            ? "0.95"
+                            : item.level === 3
+                            ? "0.9"
+                            : "1",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeSection !== item.id) {
+                          e.currentTarget.style.color = "#f3f3f2";
+                          e.currentTarget.style.background = "#bbc8e6";
+                          e.currentTarget.style.borderColor =
+                            "rgba(241, 144, 114, 0.25)";
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.style.boxShadow =
+                            "0 6px 20px rgba(241, 144, 114, 0.15), 0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeSection !== item.id) {
+                          e.currentTarget.style.color = "#e2e8f0";
+                          e.currentTarget.style.background =
+                            "linear-gradient(135deg, rgba(27, 27, 27, 0.6) 0%, rgba(22, 22, 14, 0.4) 50%, rgba(27, 27, 27, 0.6) 100%)";
+                          e.currentTarget.style.borderColor =
+                            "rgba(241, 144, 114, 0.1)";
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow =
+                            "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)";
+                        }
+                      }}
+                    >
+                      {item.text}
+                    </div>
+                  ))}
+                </nav>
+              </div>
+
+              <div className="japanese-style-modern-container">
                 <div className="japanese-style-modern-content max-w-none">
                   <div className="prose prose-lg prose-invert max-w-none overflow-hidden">
                     {renderedContent}
                   </div>
                 </div>
               </div>
-
-              <div className="order-1 xl:order-2 xl:w-80 flex-shrink-0">
-                <div className="space-y-6 xl:sticky xl:top-8">
-                  {tableOfContents.length > 0 && (
-                    <aside className="hidden xl:block japanese-style-modern-sidebar desktop-sidebar scrollbar-custom">
-                      <h3 className="japanese-style-modern-sidebar-title">
-                        Contents
-                      </h3>
-                      <nav>
-                        {tableOfContents.map((item) => (
-                          <div
-                            key={item.id}
-                            className={`japanese-style-modern-toc-item ${
-                              activeSection === item.id ? "active" : ""
-                            }`}
-                            data-level={item.level}
-                            onClick={() => scrollToHeading(item.id)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {item.text}
-                          </div>
-                        ))}
-                      </nav>
-                    </aside>
-                  )}
-
-                  <div className="hidden xl:block">
-                    <RelatedArticles
-                      currentCategory={article.category}
-                      currentArticleId={article.id}
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
-          <FloatingButtons
-            showScrollTop={showScrollTop}
-            scrollToTop={scrollToTop}
-            toggleMobileToc={toggleMobileToc}
-          />
+          {/* 関連記事サイドバー - 30% */}
+          <div className="lg:w-[30%] flex-shrink-0">
+            {/* メインコンテンツの japanese-style-modern のマージン（2rem = 32px）と同じ余白を追加 */}
+            <div style={{ marginTop: "2rem" }}>
+              <RelatedArticles
+                currentCategory={article.category}
+                currentArticleId={article.id}
+              />
+            </div>
+          </div>
         </div>
-
-        <div className="block xl:hidden mt-8">
-          <RelatedArticles
-            currentCategory={article.category}
-            currentArticleId={article.id}
-          />
-        </div>
-
-        <div className="flex flex-col justify-center items-center mt-24 gap-8">
-          <Link href={`/${article.category}`}>
-            <Button
-              size="lg"
-              className="w-[320px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
-            >
-              Back to {CATEGORY_LABELS[article.category]} Posts ≫
-            </Button>
-          </Link>
-          <Link href="/all-articles">
-            <Button
-              size="lg"
-              className="w-[220px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
-            >
-              View all posts ≫
-            </Button>
-          </Link>
-        </div>
-        <WhiteLine />
-        <Redbubble />
       </div>
 
-      {tableOfContents.length > 0 && (
-        <div className="xl:hidden">
-          <TableOfContents
-            tableOfContents={tableOfContents}
-            activeSection={activeSection}
-            scrollToHeading={scrollToHeading}
-            showMobileToc={showMobileToc}
-            closeMobileToc={closeMobileToc}
-          />
-        </div>
+      {/* モバイル用関連記事は削除（重複を防ぐ） */}
+
+      <div className="flex flex-col justify-center items-center mt-24 gap-8">
+        <Link href={`/${article.category}`}>
+          <Button
+            size="lg"
+            className="w-[320px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
+          >
+            Back to {CATEGORY_LABELS[article.category]} Posts ≫
+          </Button>
+        </Link>
+        <Link href="/all-articles">
+          <Button
+            size="lg"
+            className="w-[220px] border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
+          >
+            View all posts ≫
+          </Button>
+        </Link>
+      </div>
+      <WhiteLine />
+      <Redbubble />
+
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 z-50"
+          aria-label="ページトップへ戻る"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            className="w-6 h-6 mx-auto"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 15l7-7 7 7"
+            />
+          </svg>
+        </button>
       )}
     </div>
   );

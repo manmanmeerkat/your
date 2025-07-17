@@ -7,7 +7,7 @@
   --japanese-black-tertiary: #0a0a0a;
   --japanese-orange-primary: #f19072;
   --japanese-orange-light: #f7b977;
-   --japanese-orange-strong: #f0cfa0;
+  --japanese-orange-strong: #f0cfa0;
   --japanese-orange-accent: #ee836f;
   --japanese-text-primary: #f3f3f2;
   --japanese-text-secondary: #e2e8f0;
@@ -666,11 +666,7 @@ body.toc-open {
   right: var(--button-right-desktop);
   width: 52px;
   height: 52px;
-  background: linear-gradient(
-    135deg,
-    var(--japanese-black-secondary),
-    #2a2a2a
-  );
+  background: linear-gradient(135deg, var(--japanese-black-secondary), #2a2a2a);
   border: 2px solid var(--japanese-orange-primary);
   border-radius: 50%;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3),
@@ -720,7 +716,7 @@ body.toc-open {
   border: 1px solid rgba(223, 113, 99, 0.3);
   border-radius: 50%;
   color: #f19072;
-  font-size: 1.4rem ;
+  font-size: 1.4rem;
   font-weight: 300;
   cursor: pointer;
   display: flex;
@@ -935,7 +931,7 @@ body.toc-open {
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar {
-    width: 6px; 
+    width: 6px;
   }
 
   .japanese-style-modern-sidebar.mobile-visible nav::-webkit-scrollbar-track {
@@ -1001,7 +997,7 @@ body.toc-open {
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item:hover {
-       background-color: #bbc8e6;
+    background-color: #bbc8e6;
     border-color: rgba(241, 144, 114, 0.4);
     transform: translateX(6px) translateY(-1px);
     color: var(--japanese-orange-primary);
@@ -1064,7 +1060,7 @@ body.toc-open {
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-toc-item[data-level="2"]::before {
     content: "-";
-    font-size: 0.8rem ;
+    font-size: 0.8rem;
   }
 
   .japanese-style-modern-sidebar.mobile-visible
@@ -1075,7 +1071,7 @@ body.toc-open {
 
   .japanese-style-modern-sidebar.mobile-visible
     .japanese-style-modern-close-button {
-    display: flex
+    display: flex;
   }
 
   .japanese-style-modern-sidebar.mobile-visible
@@ -1266,4 +1262,203 @@ body.toc-open {
 .japanese-style-modern *::-moz-selection {
   background: rgba(241, 144, 114, 0.3);
   color: var(--japanese-text-primary);
+}
+/* タイトル下目次のスタイル */
+.title-under-toc {
+  background: linear-gradient(
+    135deg,
+    rgba(27, 27, 27, 0.9) 0%,
+    rgba(22, 22, 14, 0.7) 50%,
+    rgba(27, 27, 27, 0.9) 100%
+  );
+  border: 1px solid rgba(241, 144, 114, 0.3);
+  border-radius: 12px;
+  margin: 0 0 2rem 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(241, 144, 114, 0.1);
+}
+
+.title-under-toc-container {
+  padding: 1.5rem;
+}
+
+.title-under-toc-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #f3f3f2;
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+  padding: 0.75rem 0;
+  background: linear-gradient(
+    135deg,
+    rgba(241, 144, 114, 0.12) 0%,
+    rgba(241, 191, 153, 0.08) 50%,
+    rgba(241, 144, 114, 0.12) 100%
+  );
+  border-radius: 8px;
+  border: 1px solid rgba(241, 144, 114, 0.2);
+  position: relative;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.title-under-toc-title::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #f19072 20%,
+    #f7b977 50%,
+    #f19072 80%,
+    transparent 100%
+  );
+  border-radius: 1px;
+}
+
+.title-under-toc-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.title-under-toc-item {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(27, 27, 27, 0.6) 0%,
+    rgba(22, 22, 14, 0.4) 50%,
+    rgba(27, 27, 27, 0.6) 100%
+  );
+  border: 1px solid rgba(241, 144, 114, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.title-under-toc-item:hover {
+  color: #f3f3f2;
+  background: #bbc8e6;
+  border-color: rgba(241, 144, 114, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(241, 144, 114, 0.15),
+    0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.title-under-toc-item.active {
+  color: #f19072;
+  font-weight: 600;
+  background: linear-gradient(
+    135deg,
+    rgba(241, 144, 114, 0.15) 0%,
+    rgba(238, 131, 111, 0.12) 50%,
+    rgba(241, 144, 114, 0.15) 100%
+  );
+  border-color: rgba(241, 144, 114, 0.4);
+  box-shadow: 0 8px 24px rgba(241, 144, 114, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(241, 144, 114, 0.3);
+}
+
+.title-under-toc-item::before {
+  content: "▸";
+  position: absolute;
+  left: -0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #f19072;
+  font-size: 0.8rem;
+  font-weight: bold;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.title-under-toc-item:hover::before,
+.title-under-toc-item.active::before {
+  opacity: 1;
+  left: -0.2rem;
+}
+
+.title-under-toc-item.active::before {
+  color: #f7b977;
+}
+
+/* 階層レベル */
+.title-under-toc-item[data-level="1"] {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+}
+
+.title-under-toc-item[data-level="2"] {
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.95;
+  border-left: 3px solid rgba(241, 144, 114, 0.2);
+  padding-left: 1.5rem;
+}
+
+.title-under-toc-item[data-level="3"] {
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.9;
+  border-left: 2px solid rgba(241, 191, 153, 0.15);
+  padding-left: 2rem;
+}
+
+.title-under-toc-item[data-level="2"]::before {
+  content: "▫";
+  font-size: 0.7rem;
+}
+
+.title-under-toc-item[data-level="3"]::before {
+  content: "▪";
+  font-size: 0.6rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .title-under-toc-container {
+    padding: 1rem;
+  }
+
+  .title-under-toc-item {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.9rem;
+  }
+
+  .title-under-toc-item[data-level="2"] {
+    padding-left: 1.25rem;
+  }
+
+  .title-under-toc-item[data-level="3"] {
+    padding-left: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title-under-toc-container {
+    padding: 0.75rem;
+  }
+
+  .title-under-toc-title {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .title-under-toc-item {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.85rem;
+  }
 }
