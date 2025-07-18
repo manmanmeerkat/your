@@ -1,4 +1,4 @@
-// components/articleClientPage/ArticleClientPage.tsx - 完全修正版
+// components/articleClientPage/ArticleClientPage.tsx - 展開可能目次付き完全版
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -122,11 +122,23 @@ const extractHeaders = (content: string): TocItem[] => {
 const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [isTocExpanded, setIsTocExpanded] = useState(false); // 目次展開状態
 
   const tableOfContents = useMemo(
     () => extractHeaders(article.content),
     [article.content]
   );
+
+  // 目次の表示制御
+  const initialVisibleItems = 3;
+  const shouldShowViewMore = tableOfContents.length > initialVisibleItems;
+  const visibleTocItems = isTocExpanded
+    ? tableOfContents
+    : tableOfContents.slice(0, initialVisibleItems);
+
+  const toggleTocExpanded = () => {
+    setIsTocExpanded((prev) => !prev);
+  };
 
   const renderedContent = useMemo(() => {
     const activeTrivia =
@@ -312,130 +324,183 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                 </div>
               )}
 
-              {/* 目次を強制表示 */}
-              <div
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(27, 27, 27, 0.9) 0%, rgba(22, 22, 14, 0.7) 50%, rgba(27, 27, 27, 0.9) 100%)",
-                  border: "1px solid rgba(241, 144, 114, 0.3)",
-                  borderRadius: "12px",
-                  margin: "0 1.5rem 2rem 1.5rem",
-                  boxShadow:
-                    "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(241, 144, 114, 0.1)",
-                  padding: "1.5rem",
-                }}
-              >
-                <h3
+              {/* 展開可能な目次 - 元の背景色に戻す */}
+              {tableOfContents.length > 0 && (
+                <div
                   style={{
-                    fontSize: "1.3rem",
-                    fontWeight: "600",
-                    color: "#f3f3f2",
-                    margin: "0 0 1.5rem 0",
-                    textAlign: "center",
-                    padding: "0.75rem 0",
                     background:
-                      "linear-gradient(135deg, rgba(241, 144, 114, 0.12) 0%, rgba(241, 191, 153, 0.08) 50%, rgba(241, 144, 114, 0.12) 100%)",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(241, 144, 114, 0.2)",
-                    letterSpacing: "0.1em",
-                    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                      "linear-gradient(135deg, rgba(27, 27, 27, 0.9) 0%, rgba(22, 22, 14, 0.7) 50%, rgba(27, 27, 27, 0.9) 100%)",
+                    border: "1px solid rgba(241, 144, 114, 0.3)",
+                    borderRadius: "12px",
+                    margin: "0 1.5rem 2rem 1.5rem",
+                    boxShadow:
+                      "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(241, 144, 114, 0.1)",
+                    padding: "0",
+                    overflow: "hidden",
                   }}
                 >
-                  Contents
-                </h3>
-                <nav
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.75rem",
-                  }}
-                >
-                  {tableOfContents.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => scrollToHeading(item.id)}
-                      style={{
-                        padding:
-                          item.level === 1
-                            ? "1rem 1.25rem"
-                            : item.level === 2
-                            ? "0.75rem 1rem 0.75rem 1.5rem"
-                            : "0.75rem 1rem 0.75rem 2rem",
-                        background:
-                          activeSection === item.id
-                            ? "linear-gradient(135deg, rgba(241, 144, 114, 0.15) 0%, rgba(238, 131, 111, 0.12) 50%, rgba(241, 144, 114, 0.15) 100%)"
-                            : "linear-gradient(135deg, rgba(27, 27, 27, 0.6) 0%, rgba(22, 22, 14, 0.4) 50%, rgba(27, 27, 27, 0.6) 100%)",
-                        border:
-                          activeSection === item.id
-                            ? "1px solid rgba(241, 144, 114, 0.4)"
-                            : "1px solid rgba(241, 144, 114, 0.1)",
-                        borderLeft:
-                          item.level === 2
-                            ? "3px solid rgba(241, 144, 114, 0.2)"
-                            : item.level === 3
-                            ? "2px solid rgba(241, 191, 153, 0.15)"
-                            : "1px solid rgba(241, 144, 114, 0.1)",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        transition:
-                          "all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                        fontSize:
-                          item.level === 1
-                            ? "1rem"
-                            : item.level === 2
-                            ? "0.9rem"
-                            : "0.85rem",
-                        fontWeight:
-                          activeSection === item.id
-                            ? "600"
-                            : item.level === 1
-                            ? "600"
-                            : item.level === 2
-                            ? "500"
-                            : "400",
-                        color:
-                          activeSection === item.id ? "#f19072" : "#e2e8f0",
-                        lineHeight: "1.5",
-                        boxShadow:
-                          activeSection === item.id
-                            ? "0 8px 24px rgba(241, 144, 114, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 rgba(241, 144, 114, 0.3)"
-                            : "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)",
-                        opacity:
-                          item.level === 2
-                            ? "0.95"
-                            : item.level === 3
-                            ? "0.9"
-                            : "1",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (activeSection !== item.id) {
-                          e.currentTarget.style.color = "#f3f3f2";
-                          e.currentTarget.style.background = "#bbc8e6";
-                          e.currentTarget.style.borderColor =
-                            "rgba(241, 144, 114, 0.25)";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 6px 20px rgba(241, 144, 114, 0.15), 0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (activeSection !== item.id) {
-                          e.currentTarget.style.color = "#e2e8f0";
-                          e.currentTarget.style.background =
-                            "linear-gradient(135deg, rgba(27, 27, 27, 0.6) 0%, rgba(22, 22, 14, 0.4) 50%, rgba(27, 27, 27, 0.6) 100%)";
-                          e.currentTarget.style.borderColor =
-                            "rgba(241, 144, 114, 0.1)";
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow =
-                            "0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03)";
-                        }
-                      }}
-                    >
-                      {item.text}
-                    </div>
-                  ))}
-                </nav>
-              </div>
+                  <h3
+                    style={{
+                      fontSize: "1.3rem",
+                      fontWeight: "600",
+                      color: "#f3f3f2",
+                      margin: "0",
+                      textAlign: "center",
+                      padding: "1rem 0",
+                      background:
+                        "linear-gradient(135deg, rgba(241, 144, 114, 0.12) 0%, rgba(241, 191, 153, 0.08) 50%, rgba(241, 144, 114, 0.12) 100%)",
+                      borderBottom: "1px solid rgba(241, 144, 114, 0.2)",
+                      letterSpacing: "0.1em",
+                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                    }}
+                  >
+                    Contents
+                  </h3>
+
+                  <nav
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.375rem",
+                      padding: "1.5rem",
+                    }}
+                  >
+                    {/* 表示する目次項目 - 左バーと文字のスペース調整 */}
+                    {visibleTocItems.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => scrollToHeading(item.id)}
+                        style={{
+                          padding:
+                            item.level === 1
+                              ? "0.75rem 1rem 0.75rem 1.25rem"
+                              : item.level === 2
+                              ? "0.625rem 1rem 0.625rem 2rem"
+                              : "0.5rem 1rem 0.5rem 2.75rem",
+                          background: "transparent",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          fontSize:
+                            item.level === 1
+                              ? "1.1rem"
+                              : item.level === 2
+                              ? "0.95rem"
+                              : "0.85rem",
+                          fontWeight: item.level === 1 ? "600" : "500",
+                          color:
+                            activeSection === item.id ? "#daa520" : "#ffffff",
+                          lineHeight: "1.4",
+                          position: "relative",
+                          letterSpacing: "0.02em",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (activeSection !== item.id) {
+                            e.currentTarget.style.color = "#daa520";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (activeSection !== item.id) {
+                            e.currentTarget.style.color = "#ffffff";
+                          }
+                        }}
+                      >
+                        {/* 左のオレンジバー - スペース調整版 */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            left:
+                              item.level === 1
+                                ? "0"
+                                : item.level === 2
+                                ? "0.75rem"
+                                : "1.5rem",
+                            top: "0",
+                            bottom: "0",
+                            width: "3px",
+                            backgroundColor:
+                              item.level === 1
+                                ? "#daa520"
+                                : item.level === 2
+                                ? "#cd853f"
+                                : "#bc9a6a",
+                          }}
+                        />
+                        {item.text}
+                      </div>
+                    ))}
+
+                    {/* View more / View less ボタン - より洗練されたデザイン */}
+                    {shouldShowViewMore && (
+                      <div
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #8b6914 0%, #a0752d 30%, #daa520 70%, #8b6914 100%)",
+                          borderTop: "1px solid rgba(218, 165, 32, 0.3)",
+                          marginTop: "1rem",
+                          borderRadius: "0 0 8px 8px",
+                          position: "relative",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "0",
+                            left: "0",
+                            right: "0",
+                            height: "1px",
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)",
+                          }}
+                        />
+                        <button
+                          onClick={toggleTocExpanded}
+                          style={{
+                            width: "100%",
+                            padding: "1rem 1.25rem",
+                            background: "transparent",
+                            border: "none",
+                            color: "#f4e4bc",
+                            fontSize: "0.95rem",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            textAlign: "center" as const,
+                            letterSpacing: "0.075em",
+                            transition: "all 0.3s ease",
+                            fontFamily: "inherit",
+                            textShadow: "0 1px 3px rgba(0, 0, 0, 0.6)",
+                            position: "relative",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background =
+                              "rgba(0, 0, 0, 0.15)";
+                            e.currentTarget.style.color = "#ffffff";
+                            e.currentTarget.style.transform =
+                              "translateY(-1px)";
+                            e.currentTarget.style.textShadow =
+                              "0 2px 4px rgba(0, 0, 0, 0.8)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.color = "#f4e4bc";
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.textShadow =
+                              "0 1px 3px rgba(0, 0, 0, 0.6)";
+                          }}
+                          type="button"
+                          aria-label={
+                            isTocExpanded
+                              ? "目次を折りたたむ"
+                              : "目次をもっと見る"
+                          }
+                        >
+                          {isTocExpanded ? "View less <<" : "View more >>"}
+                        </button>
+                      </div>
+                    )}
+                  </nav>
+                </div>
+              )}
 
               <div className="japanese-style-modern-container">
                 <div className="japanese-style-modern-content max-w-none">

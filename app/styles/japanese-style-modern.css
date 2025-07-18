@@ -1462,3 +1462,122 @@ body.toc-open {
     font-size: 0.85rem;
   }
 }
+/* 🎌 View More ボタンのスタイル */
+.toc-view-more-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  margin-top: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba(241, 144, 114, 0.12) 0%,
+    rgba(241, 191, 153, 0.08) 30%,
+    rgba(238, 131, 111, 0.06) 70%,
+    rgba(241, 144, 114, 0.12) 100%
+  );
+  border: 1px solid rgba(241, 144, 114, 0.3);
+  border-radius: 8px;
+  color: var(--japanese-orange-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  text-align: center;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.toc-view-more-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(241, 144, 114, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.toc-view-more-button:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(241, 144, 114, 0.2) 0%,
+    rgba(241, 191, 153, 0.15) 30%,
+    rgba(238, 131, 111, 0.1) 70%,
+    rgba(241, 144, 114, 0.2) 100%
+  );
+  border-color: rgba(241, 144, 114, 0.5);
+  color: var(--japanese-orange-light);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(241, 144, 114, 0.15),
+    0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.toc-view-more-button:hover::before {
+  left: 100%;
+}
+
+.toc-view-more-button:active {
+  transform: translateY(0);
+  background: linear-gradient(
+    135deg,
+    rgba(241, 144, 114, 0.25) 0%,
+    rgba(241, 191, 153, 0.2) 50%,
+    rgba(241, 144, 114, 0.25) 100%
+  );
+  box-shadow: 0 2px 8px rgba(241, 144, 114, 0.2),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toc-view-more-button:focus {
+  outline: 2px solid var(--japanese-orange-primary);
+  outline-offset: 2px;
+}
+
+/* モバイル・タブレット用のView moreボタン */
+@media (max-width: 1023px) {
+  .japanese-style-modern-sidebar.mobile-visible .toc-view-more-button {
+    padding: 1rem 1.2rem;
+    margin-top: 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    background: linear-gradient(
+      135deg,
+      rgba(241, 144, 114, 0.15) 0%,
+      rgba(241, 191, 153, 0.1) 50%,
+      rgba(241, 144, 114, 0.15) 100%
+    );
+    border: 1px solid rgba(241, 144, 114, 0.4);
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .japanese-style-modern-sidebar.mobile-visible .toc-view-more-button:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(241, 144, 114, 0.25) 0%,
+      rgba(241, 191, 153, 0.2) 50%,
+      rgba(241, 144, 114, 0.25) 100%
+    );
+    border-color: rgba(241, 144, 114, 0.6);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(241, 144, 114, 0.2),
+      0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* スマートフォン用調整 */
+@media (max-width: 480px) {
+  .japanese-style-modern-sidebar.mobile-visible .toc-view-more-button {
+    padding: 0.875rem 1rem;
+    font-size: 0.95rem;
+  }
+}
