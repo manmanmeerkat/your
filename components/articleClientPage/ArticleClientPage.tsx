@@ -326,173 +326,55 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
 
               {/* 展開可能な目次 - 元の背景色に戻す */}
               {tableOfContents.length > 0 && (
-                <div
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(27, 27, 27, 0.9) 0%, rgba(22, 22, 14, 0.7) 50%, rgba(27, 27, 27, 0.9) 100%)",
-                    border: "1px solid rgba(241, 144, 114, 0.3)",
-                    borderRadius: "12px",
-                    margin: "0 1.5rem 2rem 1.5rem",
-                    boxShadow:
-                      "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(241, 144, 114, 0.1)",
-                    padding: "0",
-                    overflow: "hidden",
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: "1.3rem",
-                      fontWeight: "600",
-                      color: "#f3f3f2",
-                      margin: "0",
-                      textAlign: "center",
-                      padding: "1rem 0",
-                      background:
-                        "linear-gradient(135deg, rgba(241, 144, 114, 0.12) 0%, rgba(241, 191, 153, 0.08) 50%, rgba(241, 144, 114, 0.12) 100%)",
-                      borderBottom: "1px solid rgba(241, 144, 114, 0.2)",
-                      letterSpacing: "0.1em",
-                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                    }}
-                  >
+                <div className="rounded-xl border border-[rgba(241,144,114,0.3)] mx-6 mb-8 shadow-[0_4px_16px_rgba(0,0,0,0.3),_inset_0_1px_0_rgba(241,144,114,0.1)] bg-gradient-to-br from-[#1b1b1bcc] via-[#16160e] to-[#1b1b1bcc] overflow-hidden">
+                  <h3 className="text-[1.3rem] font-semibold text-[#f3f3f2] m-0 text-center py-4 bg-gradient-to-br from-[rgba(241,144,114,0.12)] via-[rgba(241,191,153,0.08)] to-[rgba(241,144,114,0.12)] border-b border-[rgba(241,144,114,0.2)] tracking-wider shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                     Contents
                   </h3>
 
-                  <nav
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "0.375rem",
-                      padding: "1.5rem",
-                    }}
-                  >
-                    {/* 表示する目次項目 - 左バーと文字のスペース調整 */}
+                  <nav className="flex flex-col gap-1.5 p-6">
                     {visibleTocItems.map((item) => (
                       <div
                         key={item.id}
                         onClick={() => scrollToHeading(item.id)}
-                        style={{
-                          padding:
-                            item.level === 1
-                              ? "0.75rem 1rem 0.75rem 1.25rem"
-                              : item.level === 2
-                              ? "0.625rem 1rem 0.625rem 2rem"
-                              : "0.5rem 1rem 0.5rem 2.75rem",
-                          background: "transparent",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          fontSize:
-                            item.level === 1
-                              ? "1.1rem"
-                              : item.level === 2
-                              ? "0.95rem"
-                              : "0.85rem",
-                          fontWeight: item.level === 1 ? "600" : "500",
-                          color:
-                            activeSection === item.id ? "#daa520" : "#ffffff",
-                          lineHeight: "1.4",
-                          position: "relative",
-                          letterSpacing: "0.02em",
-                        }}
+                        className={`relative cursor-pointer transition-all duration-200 ${
+                          item.level === 1
+                            ? "pl-5 pr-4 py-3 text-[1.1rem] font-semibold"
+                            : item.level === 2
+                            ? "pl-8 pr-4 py-2.5 text-[0.95rem] font-medium"
+                            : "pl-11 pr-4 py-2 text-[0.85rem] font-medium"
+                        } ${activeSection === item.id ? "text-[#daa520]" : "text-white"}`}
                         onMouseEnter={(e) => {
-                          if (activeSection !== item.id) {
-                            e.currentTarget.style.color = "#daa520";
-                          }
+                          if (activeSection !== item.id)
+                            e.currentTarget.classList.add("text-[#daa520]");
                         }}
                         onMouseLeave={(e) => {
-                          if (activeSection !== item.id) {
-                            e.currentTarget.style.color = "#ffffff";
-                          }
+                          if (activeSection !== item.id)
+                            e.currentTarget.classList.remove("text-[#daa520]");
                         }}
                       >
-                        {/* 左のオレンジバー - スペース調整版 */}
                         <div
-                          style={{
-                            position: "absolute",
-                            left:
-                              item.level === 1
-                                ? "0"
-                                : item.level === 2
-                                ? "0.75rem"
-                                : "1.5rem",
-                            top: "0",
-                            bottom: "0",
-                            width: "3px",
-                            backgroundColor:
-                              item.level === 1
-                                ? "#daa520"
-                                : item.level === 2
-                                ? "#cd853f"
-                                : "#bc9a6a",
-                          }}
+                          className={`absolute w-[3px] h-[60%] top-1/2 -translate-y-1/2 ${
+                            item.level === 1
+                              ? "left-0 bg-[#f19072]"
+                              : item.level === 2
+                              ? "left-3 bg-[#f19072]"
+                              : "left-6 bg-[#f7b977]"
+                          }`}
                         />
                         {item.text}
                       </div>
                     ))}
 
-                    {/* View more / View less ボタン - より洗練されたデザイン */}
                     {shouldShowViewMore && (
-                      <div
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #8b6914 0%, #a0752d 30%, #daa520 70%, #8b6914 100%)",
-                          borderTop: "1px solid rgba(218, 165, 32, 0.3)",
-                          marginTop: "1rem",
-                          borderRadius: "0 0 8px 8px",
-                          position: "relative",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: "0",
-                            left: "0",
-                            right: "0",
-                            height: "1px",
-                            background:
-                              "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 20%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.3) 80%, transparent 100%)",
-                          }}
-                        />
+                      <div className="mt-4 rounded-b-lg relative overflow-hidden bg-gradient-to-r from-[#8b6914] via-[#a0752d] to-[#daa520] border-t border-[rgba(218,165,32,0.3)]">
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent" />
                         <button
                           onClick={toggleTocExpanded}
-                          style={{
-                            width: "100%",
-                            padding: "1rem 1.25rem",
-                            background: "transparent",
-                            border: "none",
-                            color: "#f4e4bc",
-                            fontSize: "0.95rem",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            textAlign: "center" as const,
-                            letterSpacing: "0.075em",
-                            transition: "all 0.3s ease",
-                            fontFamily: "inherit",
-                            textShadow: "0 1px 3px rgba(0, 0, 0, 0.6)",
-                            position: "relative",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background =
-                              "rgba(0, 0, 0, 0.15)";
-                            e.currentTarget.style.color = "#ffffff";
-                            e.currentTarget.style.transform =
-                              "translateY(-1px)";
-                            e.currentTarget.style.textShadow =
-                              "0 2px 4px rgba(0, 0, 0, 0.8)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "transparent";
-                            e.currentTarget.style.color = "#f4e4bc";
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.textShadow =
-                              "0 1px 3px rgba(0, 0, 0, 0.6)";
-                          }}
                           type="button"
                           aria-label={
-                            isTocExpanded
-                              ? "目次を折りたたむ"
-                              : "目次をもっと見る"
+                            isTocExpanded ? "目次を折りたたむ" : "目次をもっと見る"
                           }
+                          className="w-full py-4 px-5 text-[#f4e4bc] font-semibold text-[0.95rem] bg-transparent border-none text-center tracking-wider transition-all duration-300 relative hover:bg-black/15 hover:text-white hover:-translate-y-[1px] hover:shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                         >
                           {isTocExpanded ? "View less <<" : "View more >>"}
                         </button>
@@ -501,7 +383,6 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                   </nav>
                 </div>
               )}
-
               <div className="japanese-style-modern-container">
                 <div className="japanese-style-modern-content max-w-none">
                   <div className="prose prose-lg prose-invert max-w-none overflow-hidden">
