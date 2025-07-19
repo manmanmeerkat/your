@@ -342,15 +342,11 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                             : item.level === 2
                             ? "pl-8 pr-4 py-2.5 text-[0.95rem] font-medium"
                             : "pl-11 pr-4 py-2 text-[0.85rem] font-medium"
-                        } ${activeSection === item.id ? "text-[#daa520]" : "text-white"}`}
-                        onMouseEnter={(e) => {
-                          if (activeSection !== item.id)
-                            e.currentTarget.classList.add("text-[#daa520]");
-                        }}
-                        onMouseLeave={(e) => {
-                          if (activeSection !== item.id)
-                            e.currentTarget.classList.remove("text-[#daa520]");
-                        }}
+                        } ${
+                          activeSection === item.id
+                            ? "text-[#daa520]"
+                            : "text-white hover:text-[#daa520]"
+                        }`}
                       >
                         <div
                           className={`absolute w-[3px] h-[60%] top-1/2 -translate-y-1/2 ${
