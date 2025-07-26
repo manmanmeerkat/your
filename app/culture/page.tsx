@@ -4,7 +4,7 @@ import Image from "next/image";
 import { articleType } from "@/types/types";
 import ArticleCard from "../../components/articleCard/articleCard";
 import { CULTURE_CATEGORIES } from "@/constants/constants";
-import RedBubble from "@/components/redBubble/RedBubble";
+// import RedBubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import { Breadcrumb } from "@/components/breadcrumb";
@@ -234,7 +234,7 @@ export default async function CulturePage({
       </section>
 
       <WhiteLine />
-      <RedBubble />
+      {/* <RedBubble /> */}
     </div>
   );
 }

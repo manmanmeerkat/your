@@ -6,7 +6,7 @@ import ArticleCard from "../../components/articleCard/articleCard";
 import { articleType } from "@/types/types";
 import { THREE_BIG_FESTIVALS } from "@/constants/constants";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import RedBubble from "@/components/redBubble/RedBubble";
+// import RedBubble from "@/components/redBubble/RedBubble";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
@@ -276,7 +276,7 @@ export default async function FestivalsPage({
       </section>
 
       <WhiteLine />
-      <RedBubble />
+      {/* <RedBubble /> */}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import RelatedArticles from "@/components/sidebar/RelatedArticles";
-import Redbubble from "../redBubble/RedBubble";
+// import Redbubble from "../redBubble/RedBubble";
 import { ContentWithTrivia } from "@/components/trivia/ContentWithTrivia";
 
 import type { Article, ArticleTrivia } from "@/types/types";
@@ -423,7 +423,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
         </Link>
       </div>
       <WhiteLine />
-      <Redbubble />
+      {/* <Redbubble /> */}
 
       {showScrollTop && (
         <button

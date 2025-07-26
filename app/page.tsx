@@ -6,7 +6,7 @@ import HeroSection from "@/components/top/heroSection/HeroSection";
 import CategoriesSection from "@/components/top/categoriesSection/CategoriesSection";
 import LatestArticlesSection from "@/components/top/latestArticlesSection/LatestArticlesSection";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import Redbubble from "@/components/redBubble/RedBubble";
+// import Redbubble from "@/components/redBubble/RedBubble";
 import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
 
 // 🚀 超最適化されたデータベースクエリ（N+1問題解決版）
@@ -250,7 +250,7 @@ export default async function HomePage() {
       <WhiteLine />
 
       {/* 🚀 Below the fold コンテンツ - 軽量遅延読み込み */}
-      <LightweightSuspense
+      {/* <LightweightSuspense
         fallback={
           <div
             className="h-48 bg-[#1a1a1a] animate-pulse rounded-lg mx-4"
@@ -259,9 +259,9 @@ export default async function HomePage() {
         }
       >
         <Redbubble />
-      </LightweightSuspense>
+      </LightweightSuspense> */}
 
-      <WhiteLine />
+      {/* <WhiteLine /> */}
 
       {/* 🚀 お問い合わせ - 最後に読み込み */}
       <LightweightSuspense

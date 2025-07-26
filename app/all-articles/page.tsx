@@ -6,7 +6,7 @@ import ArticleCard from "@/components/articleCard/articleCard";
 import AllArticlesCategoryFilter from "@/components/AllArticlesCategoryFilter";
 import AllArticlesPaginationWrapper from "@/components/AllArticlesPaginationWrapper";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import Redbubble from "@/components/redBubble/RedBubble";
+// import Redbubble from "@/components/redBubble/RedBubble";
 import { articleType } from "@/types/types";
 import Link from "next/link";
 
@@ -222,7 +222,7 @@ export default async function AllArticlesPage({
         </section>
 
         <WhiteLine />
-        <Redbubble />
+        {/* <Redbubble /> */}
       </Suspense>
     </div>
   );

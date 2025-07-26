@@ -5,7 +5,7 @@ import { articleType } from "@/types/types";
 import ArticleCard from "@/components/articleCard/articleCard";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { WAY_OF_LIFE } from "@/constants/constants";
-import Redbubble from "@/components/redBubble/RedBubble";
+// import Redbubble from "@/components/redBubble/RedBubble";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
@@ -232,7 +232,7 @@ export default async function CustomsPage({
       </section>
 
       <WhiteLine />
-      <Redbubble />
+      {/* <Redbubble /> */}
     </div>
   );
 }

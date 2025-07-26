@@ -4,7 +4,7 @@ import Image from "next/image";
 import ArticleCard from "../../components/articleCard/articleCard";
 import { articleType } from "@/types/types";
 import { JAPANESE_GODS } from "@/constants/constants";
-import RedBubble from "@/components/redBubble/RedBubble";
+// import RedBubble from "@/components/redBubble/RedBubble";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import PaginationWrapper from "@/components/pagination-wrapper";
 import GodsGallery from "@/components/gods/GodsGallery";
@@ -361,7 +361,7 @@ export default async function MythologyPage({
       </section>
 
       <WhiteLine />
-      <RedBubble />
+      {/* <RedBubble /> */}
     </div>
   );
 }

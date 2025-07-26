@@ -33,7 +33,7 @@ export const INFO_LINKS: linksType[] = [
 ];
 
 export const SNS_LINKS: SNSLinkType[] = [
-  { img: "/images/icon/redbubble.png", label: "REDBUBBLE", href: "https://www.redbubble.com/people/manmanmeerkat/shop?asc=u" },
+  // { img: "/images/icon/redbubble.png", label: "REDBUBBLE", href: "https://www.redbubble.com/people/manmanmeerkat/shop?asc=u" },
   { img: "/images/icon/pinterest.png", label: "Pinterest", href: "https://jp.pinterest.com/enokidesign/" },
   // { img: "/images/icon/x-black.png", label: "X", href: "https://x.com/youraccount" },
   // { img: "/images/icon/x-white.png", label: "X", href: "https://x.com/youraccount" },
