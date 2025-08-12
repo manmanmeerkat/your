@@ -25,6 +25,47 @@ type ArticleTrivia = {
   updatedAt: string;
 };
 
+// 🔧 外部リンクかどうかを判定するヘルパー関数
+const isExternalLink = (href: string): boolean => {
+  if (!href) return false;
+
+  // 相対リンクの場合は内部リンク
+  if (href.startsWith("/") || href.startsWith("#") || href.startsWith("?")) {
+    return false;
+  }
+
+  // プロトコルが含まれている場合は外部リンク
+  if (href.startsWith("http://") || href.startsWith("https://")) {
+    try {
+      const url = new URL(href);
+      const currentDomain =
+        typeof window !== "undefined" ? window.location.hostname : "";
+
+      // 同じドメインの場合は内部リンク
+      if (
+        url.hostname === currentDomain ||
+        url.hostname === "yoursecretjapan.com" ||
+        url.hostname === "www.yoursecretjapan.com"
+      ) {
+        return false;
+      }
+
+      // それ以外は外部リンク
+      return true;
+    } catch {
+      return true; // URLが不正な場合は外部リンクとして扱う
+    }
+  }
+
+  // その他のプロトコル（mailto:, tel: など）も外部として扱う
+  if (href.includes(":")) {
+    return true;
+  }
+
+  // デフォルトは内部リンク
+  return false;
+};
+
 // 🆕 インライン一口メモコンポーネント
 const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   trivia,
@@ -508,16 +549,41 @@ export function MarkdownRenderer({
               );
             },
 
+            // 🔧 外部リンクを別タブで開くように修正
             a(props) {
               const { href, title, children, ...rest } = props;
+              const isExternal = href ? isExternalLink(href) : false;
+
               return (
                 <a
                   {...rest}
                   href={href}
                   className="japanese-style-modern-a"
                   title={title}
+                  target={isExternal ? "_blank" : undefined}
+                  rel={isExternal ? "noopener noreferrer" : undefined}
                 >
                   {children}
+                  {/* 外部リンクの場合はアイコンを表示 */}
+                  {isExternal && (
+                    <span className="external-link-icon ml-1 inline-block">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="inline-block"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15,3 21,3 21,9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                    </span>
+                  )}
                 </a>
               );
             },

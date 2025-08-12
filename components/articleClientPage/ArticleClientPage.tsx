@@ -107,8 +107,9 @@ const safeId = (text: unknown): string => {
   return text.toLowerCase().replace(/[^\w぀-ゟ゠-ヿ一-龯]+/g, "-");
 };
 
+// 🔧 修正：H2までのみ抽出するように変更
 const extractHeaders = (content: string): TocItem[] => {
-  const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+  const headingRegex = /^(#{1,2})\s+(.+)$/gm; // H1とH2のみ（H3を除外）
   const headers: TocItem[] = [];
   let match;
   while ((match = headingRegex.exec(content)) !== null) {
@@ -159,8 +160,8 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     };
   }, []);
 
-  // 目次の表示制御
-  const initialVisibleItems = 3;
+  // 🔧 修正：初期表示数を3から5に変更
+  const initialVisibleItems = 5;
   const shouldShowViewMore = tableOfContents.length > initialVisibleItems;
   const visibleTocItems = isTocExpanded
     ? tableOfContents
@@ -178,11 +179,11 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     );
   }, [article.content, article.trivia]);
 
-  // レンダリング後に見出しにIDを設定
+  // 🔧 修正：H3の処理を削除してH1, H2のみに変更
   useEffect(() => {
     const timer = setTimeout(() => {
       const headings = document.querySelectorAll(
-        ".japanese-style-modern-content h1, .japanese-style-modern-content h2, .japanese-style-modern-content h3"
+        ".japanese-style-modern-content h1, .japanese-style-modern-content h2"
       );
       headings.forEach((heading) => {
         if (!heading.id && heading.textContent) {
@@ -199,8 +200,9 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
     setShowScrollTop(window.scrollY > 300);
 
     if (tableOfContents.length > 0) {
+      // 🔧 修正：H3のセレクターを削除
       const headings = document.querySelectorAll(
-        ".japanese-style-modern-content h1[id], .japanese-style-modern-content h2[id], .japanese-style-modern-content h3[id]"
+        ".japanese-style-modern-content h1[id], .japanese-style-modern-content h2[id]"
       );
       if (!headings.length) return;
 
@@ -270,8 +272,9 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
 
       // IDで見つからない場合は、テキストで見出しを探す
       if (!element) {
+        // 🔧 修正：H3のセレクターを削除
         const headings = document.querySelectorAll(
-          ".japanese-style-modern-content h1, .japanese-style-modern-content h2, .japanese-style-modern-content h3"
+          ".japanese-style-modern-content h1, .japanese-style-modern-content h2"
         );
 
         // 目次アイテムのテキストと完全一致する見出しを探す
@@ -369,9 +372,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                         className={`relative cursor-pointer transition-all duration-200 ${
                           item.level === 1
                             ? "pl-5 pr-4 py-3 text-[1.1rem] font-semibold"
-                            : item.level === 2
-                            ? "pl-8 pr-4 py-2.5 text-[0.95rem] font-medium"
-                            : "pl-11 pr-4 py-2 text-[0.85rem] font-medium"
+                            : "pl-8 pr-4 py-2.5 text-[0.95rem] font-medium"
                         } ${
                           activeSection === item.id
                             ? "text-[#daa520]"
@@ -382,9 +383,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                           className={`absolute w-[3px] h-[60%] top-1/2 -translate-y-1/2 ${
                             item.level === 1
                               ? "left-0 bg-[#f19072]"
-                              : item.level === 2
-                              ? "left-3 bg-[#f19072]"
-                              : "left-6 bg-[#f7b977]"
+                              : "left-3 bg-[#f19072]"
                           }`}
                         />
                         {item.text}
@@ -398,7 +397,9 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                           onClick={toggleTocExpanded}
                           type="button"
                           aria-label={
-                            isTocExpanded ? "目次を折りたたむ" : "目次をもっと見る"
+                            isTocExpanded
+                              ? "目次を折りたたむ"
+                              : "目次をもっと見る"
                           }
                           className="w-full py-4 px-5 text-[#f4e4bc] font-semibold text-[0.95rem] bg-transparent border-none text-center tracking-wider transition-all duration-300 relative hover:bg-black/15 hover:text-white hover:-translate-y-[1px] hover:shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                         >
