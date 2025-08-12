@@ -398,9 +398,7 @@ const ArticleClientPage: React.FC<ArticleClientPageProps> = ({ article }) => {
                           onClick={toggleTocExpanded}
                           type="button"
                           aria-label={
-                            isTocExpanded
-                              ? "目次を折りたたむ"
-                              : "目次をもっと見る"
+                            isTocExpanded ? "目次を折りたたむ" : "目次をもっと見る"
                           }
                           className="w-full py-4 px-5 text-[#f4e4bc] font-semibold text-[0.95rem] bg-transparent border-none text-center tracking-wider transition-all duration-300 relative hover:bg-black/15 hover:text-white hover:-translate-y-[1px] hover:shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                         >

@@ -9,6 +9,7 @@ import { TableOfContents } from "@/components/japanese-style/TableOfContents";
 
 // 和風スタイルを読み込む
 import "@/app/styles/japanese-style-modern.css";
+import { Button } from "@/components/ui/button";
 
 // 型定義
 type ImageType = {
@@ -441,7 +442,7 @@ export default function CategoryItemClient({ item }: CategoryItemClientProps) {
             <div className="japanese-style-modern-header">
               <h1 className="japanese-style-modern-title">{item.title}</h1>
             </div>
-            <div className="text-center">読み込み中...</div>
+            <div className="text-center">Loading...</div>
           </div>
         </div>
       </div>
@@ -582,7 +583,7 @@ export default function CategoryItemClient({ item }: CategoryItemClientProps) {
           )}
 
           <Link href="/">
-            <button
+            <Button
               className="
                 max-w-[340px] w-full
                 border border-gray-400 bg-transparent text-gray-300
@@ -593,7 +594,7 @@ export default function CategoryItemClient({ item }: CategoryItemClientProps) {
               "
             >
               ← Back to Home
-            </button>
+            </Button>
           </Link>
         </div>
       </div>
