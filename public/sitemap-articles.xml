@@ -23,6 +23,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/mount-fuji</loc>
+    <lastmod>2025-08-29T12:43:04.137Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/bushido</loc>
     <lastmod>2025-07-10T09:12:06.654Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -46,13 +53,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/kabuki</loc>
     <lastmod>2025-06-30T02:48:02.676Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/mount-fuji</loc>
-    <lastmod>2025-06-12T06:56:54.268Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -100,15 +100,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/susanoo-and-the-eight-headed-serpent</loc>
-    <lastmod>2025-06-05T12:09:33.977Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/national-foundation-day</loc>
+    <lastmod>2025-08-28T12:09:33.433Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/national-foundation-day</loc>
-    <lastmod>2025-06-12T02:35:03.073Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/susanoo-and-the-eight-headed-serpent</loc>
+    <lastmod>2025-06-05T12:09:33.977Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1081,7 +1081,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/emperor-birthday</loc>
-    <lastmod>2025-06-12T02:47:54.847Z</lastmod>
+    <lastmod>2025-08-28T11:58:00.886Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1108,6 +1108,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/category-item/okuninushi-no-mikoto</loc>
+    <lastmod>2025-05-04T00:30:04.167Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/category-item/kagutsuchi-no-mikoto</loc>
     <lastmod>2025-05-05T06:57:53.546Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -1117,13 +1124,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/category-item/iwanaga-hime</loc>
     <lastmod>2025-05-04T02:08:19.339Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/category-item/kuninushi-no-mikoto</loc>
-    <lastmod>2025-05-04T00:30:04.167Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
