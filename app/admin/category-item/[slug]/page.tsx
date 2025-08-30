@@ -1,3 +1,4 @@
+// app/admin/category-item/[slug]/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -43,10 +44,10 @@ export default function EditCategoryItemPage({
   const [copied, setCopied] = useState(false);
   const router = useRouter();
 
-  // 🚨 新機能：本番環境URLの生成
+  // 本番環境URLの生成
   const productionUrl = `https://www.yoursecretjapan.com/category-item/${slug}`;
 
-  // 🚨 新機能：URLコピー機能
+  // URLコピー機能
   const copyUrl = async () => {
     try {
       await navigator.clipboard.writeText(productionUrl);
@@ -177,6 +178,30 @@ export default function EditCategoryItemPage({
     }
   };
 
+  // キャッシュ無効化関数
+  const revalidateCache = async () => {
+    try {
+      const response = await fetch("/api/revalidate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tag: "gods-data",
+          path: "/mythology",
+        }),
+      });
+
+      if (response.ok) {
+        console.log("キャッシュ無効化完了");
+      } else {
+        console.warn("キャッシュ無効化に失敗");
+      }
+    } catch (error) {
+      console.warn("キャッシュ無効化エラー:", error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -251,6 +276,9 @@ export default function EditCategoryItemPage({
       console.log("カテゴリ項目更新成功:", data);
       toast.success("カテゴリ項目を更新しました");
 
+      // キャッシュを無効化
+      await revalidateCache();
+
       // カテゴリ項目管理ページに戻る
       router.push("/admin/category-item");
       router.refresh();
@@ -292,7 +320,7 @@ export default function EditCategoryItemPage({
             </div>
           )}
 
-          {/* 🚨 新機能：本番環境URL表示 */}
+          {/* 本番環境URL表示 */}
           {slug && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
               <div className="space-y-2">

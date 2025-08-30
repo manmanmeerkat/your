@@ -1,4 +1,4 @@
-// components/gods/GodsGallery.tsx - 戻り先記録機能付き（Button修正版）
+// components/gods/GodsGallery.tsx - 戻り先記録機能付き（完全修正版）
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
@@ -22,7 +22,7 @@ const TABS = [
   { label: "Female", value: "female" },
 ] as const;
 
-// 🎯 神のアイテムコンポーネント（戻り先記録機能付き）
+// 神のアイテムコンポーネント（戻り先記録機能付き）
 const GodItem = ({
   god,
   slug,
@@ -32,7 +32,7 @@ const GodItem = ({
   slug: string;
   isMobile?: boolean;
 }) => {
-  // 🚀 クリック時に正確なスクロール位置を記録（デバッグ付き）
+  // クリック時に正確なスクロール位置を記録（デバッグ付き）
   const handleGodClick = useCallback(() => {
     // 複数の方法でスクロール位置を取得
     const scrollY1 = window.pageYOffset;
@@ -79,7 +79,7 @@ const GodItem = ({
         }
       `}
       prefetch={true}
-      onClick={handleGodClick} // 🎯 クリック時に戻り先を記録
+      onClick={handleGodClick} // クリック時に戻り先を記録
     >
       <div className="w-32 h-32 bg-slate-200 rounded-full relative overflow-hidden">
         <Image
@@ -107,6 +107,69 @@ const GodItem = ({
   );
 };
 
+// 共通のスラグ取得関数
+const getGodSlug = (
+  name: string,
+  slugMap: Record<string, string>,
+  isDebug: boolean = false
+): string => {
+  const debugPrefix = isDebug ? "デスクトップ" : "モバイル";
+
+  if (isDebug) {
+    console.log(`\n=== ${debugPrefix} - 神 "${name}" のスラグ検索開始 ===`);
+  }
+
+  // 完全一致を先に試す
+  if (slugMap[name]) {
+    console.log(
+      `${debugPrefix} - 神 "${name}": 完全一致でデータベースから取得したスラグを使用: ${slugMap[name]}`
+    );
+    return slugMap[name];
+  }
+
+  // 部分一致を試す（柔軟なマッチング）
+  const normalizedName = name.toLowerCase().replace(/\s/g, "-");
+
+  for (const [title, slug] of Object.entries(slugMap)) {
+    const normalizedTitle = title.toLowerCase();
+
+    // パターン1: 通常の部分一致
+    if (normalizedTitle.startsWith(name.toLowerCase())) {
+      console.log(
+        `${debugPrefix} - 神 "${name}": 部分一致(通常)でデータベースのスラグを使用: ${slug} (マッチしたタイトル: "${title}")`
+      );
+      return slug;
+    }
+
+    // パターン2: スペースをハイフンに変換してマッチング
+    if (normalizedTitle.startsWith(normalizedName)) {
+      console.log(
+        `${debugPrefix} - 神 "${name}": 部分一致(正規化)でデータベースのスラグを使用: ${slug} (マッチしたタイトル: "${title}")`
+      );
+      return slug;
+    }
+  }
+
+  if (isDebug) {
+    console.log(
+      `${debugPrefix} - 神 "${name}": マッチするタイトルが見つかりませんでした`
+    );
+  }
+
+  // データベースから最新のスラグが見つからない場合のフォールバック
+  const fallbackSlug = name
+    .toLowerCase()
+    .replace(/ō/g, "o") // 特殊文字を標準文字に変換
+    .replace(/ū/g, "u")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+
+  console.log(
+    `${debugPrefix} - 神 "${name}": フォールバックスラグを使用: ${fallbackSlug}`
+  );
+  return fallbackSlug;
+};
+
 // デスクトップグリッドコンポーネント
 const DesktopGrid = ({
   gods,
@@ -115,23 +178,10 @@ const DesktopGrid = ({
   gods: GodData[];
   slugMap: Record<string, string>;
 }) => {
-  const getGodSlug = useCallback(
-    (name: string): string => {
-      if (slugMap[name]) {
-        return slugMap[name];
-      }
-      return name
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
-    },
-    [slugMap]
-  );
-
   return (
     <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 justify-items-center text-center">
       {gods.map((god, index) => {
-        const slug = getGodSlug(god.name);
+        const slug = getGodSlug(god.name, slugMap, true); // デスクトップはデバッグモード
         return (
           <GodItem
             key={`${god.name}-${index}`}
@@ -153,24 +203,11 @@ const MobileScroll = ({
   gods: GodData[];
   slugMap: Record<string, string>;
 }) => {
-  const getGodSlug = useCallback(
-    (name: string): string => {
-      if (slugMap[name]) {
-        return slugMap[name];
-      }
-      return name
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
-    },
-    [slugMap]
-  );
-
   return (
     <div className="lg:hidden overflow-x-auto whitespace-nowrap px-4 scrollbar-custom">
       <div className="inline-flex gap-8">
         {gods.map((god, index) => {
-          const slug = getGodSlug(god.name);
+          const slug = getGodSlug(god.name, slugMap, false); // モバイルは簡潔ログ
           return (
             <GodItem
               key={`mobile-${god.name}-${index}`}
@@ -187,6 +224,13 @@ const MobileScroll = ({
 
 export default function GodsGallery({ gods, slugMap }: GodsGalleryProps) {
   const [activeTab, setActiveTab] = useState<"all" | "male" | "female">("all");
+
+  // デバッグ用: slugMapの内容をコンソールに表示
+  console.log("GodsGallery: 受信したslugMap:", slugMap);
+  console.log(
+    "GodsGallery: 神々の名前リスト:",
+    gods.map((god) => god.name)
+  );
 
   // フィルタリングをメモ化
   const filteredGods = useMemo(() => {

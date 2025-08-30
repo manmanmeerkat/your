@@ -82,7 +82,7 @@ async function getMythologyArticles(page = 1): Promise<{
   }
 }
 
-// 神々データ取得（元のまま）
+// 神々データ取得（修正版）
 async function getGodsSlugMap(): Promise<Record<string, string>> {
   try {
     const baseUrl =
@@ -98,13 +98,9 @@ async function getGodsSlugMap(): Promise<Record<string, string>> {
       `${baseUrl}/api/category-items?category=about-japanese-gods`,
       {
         signal: controller.signal,
-        next: {
-          revalidate: 86400,
-          tags: ["gods-data"],
-        },
+        cache: "no-store",
         headers: {
-          "Cache-Control":
-            "public, s-maxage=86400, stale-while-revalidate=172800",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
           Accept: "application/json",
         },
       }
@@ -119,7 +115,10 @@ async function getGodsSlugMap(): Promise<Record<string, string>> {
       if (Array.isArray(gods)) {
         gods.forEach((god: { title: string; slug: string }) => {
           if (god.title && god.slug) {
-            slugMap[god.title] = god.slug;
+            // タイトルの正規化バリエーションをキーにして対応
+            const normalizedTitle = god.title.trim();
+            slugMap[normalizedTitle] = god.slug;
+            console.log(`マッピング: "${normalizedTitle}" -> "${god.slug}"`);
           }
         });
       }
@@ -252,7 +251,7 @@ async function MythologyArticlesSection({
   );
 }
 
-// 神々ギャラリーのラッパーコンポーネント（元のまま）
+// 神々ギャラリーのラッパーコンポーネント（修正版）
 async function GodsGalleryWrapper({
   godsSlugMapPromise,
 }: {
@@ -282,7 +281,7 @@ async function GodsGalleryWrapper({
   }
 }
 
-// 🎯 メインページコンポーネント
+// メインページコンポーネント
 export default async function MythologyPage({
   searchParams,
 }: {
