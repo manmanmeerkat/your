@@ -527,7 +527,7 @@
 }
 
 .japanese-style-modern-th {
-  background: #18181b;
+  background: rgb(241, 144, 114, 0.1);
   color: var(--japanese-text-primary);
   font-weight: 500;
   padding: 0.7rem;
@@ -539,6 +539,7 @@
   padding: 0.7rem;
   border: 1px solid #383c3c;
   background: var(--japanese-black-secondary);
+  color: var(--japanese-text-primary);
 }
 
 .japanese-style-modern hr,
