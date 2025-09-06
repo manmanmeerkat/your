@@ -1,4 +1,4 @@
-// app/api/articles/[slug]/route.ts - UUID対応 & エラー修正版
+// app/api/articles/[slug]/route.ts - 完全版修正済み
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
@@ -106,7 +106,7 @@ export async function GET(
     console.log('- 元のスラッグ:', rawSlug);
     console.log('- デコードされたスラッグ:', decodedSlug);
     
-    // 🔧 include設定（安全性向上）
+    // include設定（安全性向上）
     const includeConfig = {
       images: {
         select: {
@@ -315,8 +315,26 @@ export async function PUT(
     }
     
     // リクエストボディを取得
-    const { title, slug, summary, description, content, category, published, images } = await req.json();
-    console.log('受信データ（抜粋）:', { title, slug, category, published });
+    const { 
+      title, 
+      slug, 
+      summary, 
+      description, 
+      content, 
+      category, 
+      published, 
+      updateImages = false, // 画像更新フラグ（デフォルトfalse）
+      images 
+    } = await req.json();
+    
+    console.log('受信データ:', { 
+      title, 
+      slug, 
+      category, 
+      published, 
+      updateImages,
+      imagesCount: images?.length || 0
+    });
     
     // 新しいスラッグの重複チェック
     if (slug !== existingArticle.slug) {
@@ -384,38 +402,124 @@ export async function PUT(
     
     console.log('記事更新成功:', updatedArticle.id);
     
-    // 画像の処理
-    if (images && Array.isArray(images)) {
-      console.log('画像処理開始:', images.length, '個の画像');
+    // 画像処理の改善（画像管理システム保護）
+    if (updateImages === true && images && Array.isArray(images)) {
+      console.log('画像更新処理開始（画像管理システム保護モード）');
       
       try {
-        // 既存の画像をすべて削除
-        await prisma.image.deleteMany({
-          where: { articleId: updatedArticle.id },
+        // 画像管理システムで管理されている画像を取得
+        const managedImages = await prisma.image.findMany({
+          where: {
+            articleId: updatedArticle.id,
+            // 画像管理システムで管理されている画像を識別
+            OR: [
+              { url: { contains: '/images/articles/' } },
+              // 将来的にmanagedByImageManagerフィールドを追加する場合
+              // { managedByImageManager: true },
+            ]
+          },
+          orderBy: { createdAt: 'asc' },
         });
-        
-        // 新しい画像を追加
-        for (const image of images) {
-          if (image.url) {
-            await prisma.image.create({
-              data: {
+
+        console.log('既存画像状況:', {
+          managedImagesCount: managedImages.length,
+          updateImagesCount: images.length,
+          managedImageIds: managedImages.map(img => img.id),
+        });
+
+        // フィーチャー画像の処理のみ実行（他の画像は保持）
+        for (const imageData of images) {
+          if (imageData.isFeatured) {
+            console.log('フィーチャー画像処理:', imageData);
+            
+            // 既存のフィーチャー画像を非フィーチャーに変更（画像管理システムの画像は除外）
+            await prisma.image.updateMany({
+              where: {
                 articleId: updatedArticle.id,
-                url: image.url,
-                altText: image.altText || title,
-                isFeatured: image.isFeatured || false,
+                isFeatured: true,
+                // 重要: 画像管理システムの画像は更新しない
+                NOT: {
+                  id: {
+                    in: managedImages.map(img => img.id)
+                  }
+                }
+              },
+              data: {
+                isFeatured: false,
               },
             });
+
+            if (imageData.id) {
+              // 既存の画像を更新
+              const updatedImage = await prisma.image.update({
+                where: { id: imageData.id },
+                data: {
+                  altText: imageData.altText || title,
+                  isFeatured: true,
+                },
+              });
+              console.log('既存フィーチャー画像を更新:', updatedImage.id);
+            } else {
+              // 新しい画像を作成
+              const newImage = await prisma.image.create({
+                data: {
+                  url: imageData.url,
+                  altText: imageData.altText || title,
+                  articleId: updatedArticle.id,
+                  isFeatured: true,
+                },
+              });
+              console.log('新しいフィーチャー画像を作成:', newImage.id);
+            }
+            
+            break; // フィーチャー画像は1つだけ
           }
         }
         
-        console.log('画像処理完了');
+        console.log('画像処理完了（画像管理システムの画像は保護済み）');
       } catch (imageError) {
         console.error('画像処理エラー:', imageError);
-        // 画像処理エラーは無視して続行
+        // 画像処理エラーは記録するが続行
       }
+    } else {
+      console.log('画像更新をスキップ（画像管理システムの画像を完全保護）');
     }
     
-    return NextResponse.json(formatArticleData(updatedArticle));
+    // 最終的な画像状況を確認
+    const finalArticle = await prisma.article.findUnique({
+      where: { id: updatedArticle.id },
+      include: {
+        images: {
+          select: {
+            id: true,
+            url: true,
+            altText: true,
+            isFeatured: true,
+            createdAt: true,
+            articleId: true,
+          },
+        },
+      },
+    });
+
+    const finalFeaturedImages = finalArticle?.images?.filter(img => img.isFeatured) || [];
+    
+    console.log('最終画像状況:', {
+      totalImages: finalArticle?.images?.length || 0,
+      featuredImages: finalFeaturedImages.length,
+      featuredImageIds: finalFeaturedImages.map(img => img.id),
+    });
+    
+    return NextResponse.json({
+      ...formatArticleData(updatedArticle),
+      // 更新サマリーを追加
+      updateSummary: {
+        totalImages: finalArticle?.images?.length || 0,
+        featuredImages: finalFeaturedImages.length,
+        imagesPreserved: true,
+        updateImages: updateImages,
+      }
+    });
   } catch (error) {
     console.error('記事更新API エラー:', {
       error: error instanceof Error ? error.message : String(error),

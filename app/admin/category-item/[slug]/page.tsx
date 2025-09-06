@@ -1,4 +1,4 @@
-// app/admin/category-item/[slug]/page.tsx
+// app/admin/category-item/[slug]/page.tsx - 修正版
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,6 +24,14 @@ interface CategoryItemEditProps {
   };
 }
 
+// 🔧 画像データのインターface
+interface ImageData {
+  id?: string;
+  url: string;
+  altText: string;
+  isFeatured?: boolean;
+}
+
 export default function EditCategoryItemPage({
   params,
 }: CategoryItemEditProps) {
@@ -36,6 +44,7 @@ export default function EditCategoryItemPage({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [currentImageId, setCurrentImageId] = useState<string | null>(null); // 🆕 画像IDを追跡
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -79,8 +88,12 @@ export default function EditCategoryItemPage({
         setPublished(data.published);
 
         if (data.images && data.images.length > 0) {
-          setCurrentImageUrl(data.images[0].url);
-          setAltText(data.images[0].altText || "");
+          const featuredImage =
+            data.images.find((img: ImageData) => img.isFeatured) ||
+            data.images[0];
+          setCurrentImageUrl(featuredImage.url);
+          setCurrentImageId(featuredImage.id); // 🆕 画像IDを保存
+          setAltText(featuredImage.altText || "");
         }
       } catch (error) {
         console.error("Error fetching category item:", error);
@@ -122,55 +135,79 @@ export default function EditCategoryItemPage({
       if (!altText) {
         setAltText(selectedFile.name.split(".")[0]);
       }
+
+      // 🔧 ファイル選択時のリセット処理
+      // （新しいファイルが選択されたので、プレビューを更新）
     }
   };
 
-  // 画像アップロード関数
-  const uploadImage = async () => {
+  // 🔧 画像アップロード関数（画像管理システム対応）
+  const uploadImage = async (): Promise<ImageData | null> => {
     if (!file) return null;
 
     setUploading(true);
-    console.log("画像アップロード開始...");
+    console.log("🖼️ 画像アップロード開始...");
 
     try {
       // FormDataオブジェクトを作成
       const formData = new FormData();
       formData.append("file", file);
 
-      console.log("FormDataを作成:", file.name, file.type, file.size);
+      console.log("📁 FormDataを作成:", file.name, file.type, file.size);
 
-      // 画像アップロードAPIを呼び出し
-      const uploadResponse = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      // 🆕 カテゴリ項目専用の画像アップロードAPIを使用
+      const uploadResponse = await fetch(
+        `/api/category-items/${params.slug}/images`,
+        {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        }
+      );
 
-      console.log("アップロードレスポンス状態:", uploadResponse.status);
+      if (!uploadResponse.ok) {
+        // 🔄 フォールバック: 従来のアップロードAPIを使用
+        console.log("🔄 カテゴリ項目専用APIが失敗、従来APIにフォールバック");
 
-      // レスポンスを解析
+        const fallbackResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const fallbackData = await fallbackResponse.json();
+
+        if (fallbackData.url) {
+          const imageData: ImageData = {
+            url: fallbackData.url,
+            altText: altText || title,
+            isFeatured: true,
+          };
+          console.log("✅ フォールバックアップロード成功:", imageData);
+          return imageData;
+        }
+
+        throw new Error(fallbackData.error || "アップロードに失敗しました");
+      }
+
       const uploadData = await uploadResponse.json();
-      console.log("アップロードレスポンス:", uploadData);
+      console.log("📤 アップロードレスポンス:", uploadData);
 
-      // URLが含まれている場合は成功とみなす（エラーメッセージがあっても）
-      if (uploadData.url) {
-        console.log("アップロード成功:", uploadData.url);
-        return {
-          url: uploadData.url,
-          altText: altText || title,
+      if (uploadData.image) {
+        const imageData: ImageData = {
+          id: uploadData.image.id,
+          url: uploadData.image.url,
+          altText: uploadData.image.altText,
           isFeatured: true,
         };
+        console.log("✅ 画像管理システムアップロード成功:", imageData);
+        return imageData;
       }
 
-      // エラーが返された場合
-      if (uploadData.error) {
-        throw new Error(uploadData.error || "アップロードに失敗しました");
-      }
-
-      return null;
+      throw new Error("画像データが返されませんでした");
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "不明なエラーが発生しました";
-      console.error("画像アップロードエラー:", error);
+      console.error("💥 画像アップロードエラー:", error);
       toast.error(`画像アップロードエラー: ${errorMessage}`);
       return null;
     } finally {
@@ -193,12 +230,12 @@ export default function EditCategoryItemPage({
       });
 
       if (response.ok) {
-        console.log("キャッシュ無効化完了");
+        console.log("✅ キャッシュ無効化完了");
       } else {
-        console.warn("キャッシュ無効化に失敗");
+        console.warn("⚠️ キャッシュ無効化に失敗");
       }
     } catch (error) {
-      console.warn("キャッシュ無効化エラー:", error);
+      console.warn("⚠️ キャッシュ無効化エラー:", error);
     }
   };
 
@@ -216,34 +253,67 @@ export default function EditCategoryItemPage({
         throw new Error("タイトル、スラッグ、カテゴリーは必須です");
       }
 
-      // 画像をアップロード（ある場合）
-      let imageData = null;
+      // 🔧 画像をアップロード（新しいファイルがある場合のみ）
+      let newImageData: ImageData | null = null;
       if (file) {
-        console.log("画像ファイルあり、アップロード処理を開始");
-        imageData = await uploadImage();
+        console.log("🆕 新しい画像ファイルあり、アップロード処理を開始");
+        newImageData = await uploadImage();
 
-        // アップロードに失敗した場合でも続行（オプションとして）
-        if (!imageData && file) {
+        if (newImageData) {
+          console.log("✅ 新しい画像データを設定:", newImageData);
+        } else {
           console.warn(
-            "画像アップロードに失敗しましたが、項目更新を続行します"
+            "⚠️ 画像アップロードに失敗しましたが、項目更新を続行します"
           );
         }
       }
 
-      // カテゴリ項目データを準備
-      const categoryItemData = {
+      // 🔧 カテゴリ項目データを準備（画像管理システム対応）
+      const categoryItemData: {
+        title: string;
+        slug: string;
+        description: string;
+        content: string;
+        category: string;
+        published: boolean;
+        updateImages: boolean;
+        images?: ImageData[];
+      } = {
         title,
         slug,
         description,
         content,
         category,
         published,
-        imageUrl: imageData ? imageData.url : file ? null : currentImageUrl,
-        imageAltText: imageData ? imageData.altText : altText,
+        updateImages: false, // 🔧 デフォルトは false（既存画像を保持）
       };
 
+      // 🔧 画像更新の判定
+      if (newImageData) {
+        // 新しい画像がアップロードされた場合
+        categoryItemData.updateImages = true;
+        categoryItemData.images = [newImageData];
+        console.log("🆕 新しい画像をフィーチャー画像として設定");
+      } else if (currentImageId && altText !== (currentImageUrl ? "" : "")) {
+        // 既存画像の代替テキストが変更された場合
+        if (currentImageUrl) {
+          categoryItemData.updateImages = true;
+          categoryItemData.images = [
+            {
+              id: currentImageId,
+              url: currentImageUrl,
+              altText: altText,
+              isFeatured: true,
+            },
+          ];
+          console.log("🔧 既存画像の代替テキストを更新");
+        }
+      } else {
+        console.log("📷 画像に変更なし（既存画像を保持）");
+      }
+
       console.log(
-        "送信するカテゴリ項目データ:",
+        "📤 送信するカテゴリ項目データ:",
         JSON.stringify(categoryItemData, null, 2)
       );
 
@@ -253,28 +323,36 @@ export default function EditCategoryItemPage({
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(categoryItemData),
       });
 
-      console.log("カテゴリ項目更新APIレスポンスステータス:", response.status);
+      console.log(
+        "📡 カテゴリ項目更新APIレスポンスステータス:",
+        response.status
+      );
 
       // レスポンスがJSONかどうかを確認
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
-        console.error("予期しないレスポンス形式:", text);
+        console.error("💥 予期しないレスポンス形式:", text);
         throw new Error("APIから予期しないレスポンス形式が返されました");
       }
 
       const data = await response.json();
-      console.log("カテゴリ項目更新APIレスポンス:", data);
+      console.log("📨 カテゴリ項目更新APIレスポンス:", data);
 
       if (!response.ok) {
         throw new Error(data.error || "カテゴリ項目の更新に失敗しました");
       }
 
-      console.log("カテゴリ項目更新成功:", data);
+      console.log("✅ カテゴリ項目更新成功:", data);
       toast.success("カテゴリ項目を更新しました");
+
+      // 🔧 アップロード済み画像データをリセット
+      setFile(null);
+      setPreviewUrl(null);
 
       // キャッシュを無効化
       await revalidateCache();
@@ -285,7 +363,7 @@ export default function EditCategoryItemPage({
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "不明なエラーが発生しました";
-      console.error("カテゴリ項目更新エラー:", error);
+      console.error("💥 カテゴリ項目更新エラー:", error);
       setError(errorMessage);
       toast.error(`エラー: ${errorMessage}`);
     } finally {
@@ -472,9 +550,12 @@ The creator god who, with Izanami, birthed the Japanese islands...
               onChange={handleFileChange}
             />
 
+            {/* 🔧 画像プレビューの改善 */}
             {(previewUrl || currentImageUrl) && (
               <div className="mt-2">
-                <p className="text-sm font-medium mb-1">プレビュー:</p>
+                <p className="text-sm font-medium mb-1">
+                  {previewUrl ? "新しい画像プレビュー:" : "現在の画像:"}
+                </p>
                 <Image
                   src={previewUrl || currentImageUrl || ""}
                   alt="プレビュー"
@@ -482,6 +563,11 @@ The creator god who, with Izanami, birthed the Japanese islands...
                   height={300}
                   className="max-w-full h-auto max-h-40 rounded-md object-cover"
                 />
+                {previewUrl && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    ※ 保存後に新しい画像が適用されます
+                  </p>
+                )}
               </div>
             )}
           </div>

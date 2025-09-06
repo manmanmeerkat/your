@@ -1,5 +1,4 @@
-// 修正版 EditArticlePage - 画像管理システム連携対応
-
+// 記事編集ページ - パート1（前半）
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -25,11 +24,19 @@ export default function EditArticlePage({
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [image, setImage] = useState<{
+
+  // 画像状態の分離
+  const [editorImage, setEditorImage] = useState<{
     id: string;
     url: string;
     altText?: string;
-  } | null>(null);
+  } | null>(null); // 記事編集専用の画像
+  const [initialFeaturedImage, setInitialFeaturedImage] = useState<{
+    id: string;
+    url: string;
+    altText?: string;
+  } | null>(null); // 初期読み込み時のフィーチャー画像を保持
+
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -39,10 +46,10 @@ export default function EditArticlePage({
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [autoUpdateSummary, setAutoUpdateSummary] = useState(true);
 
-  // 🆕 記事IDの状態を追加
+  // 記事IDの状態を追加
   const [articleId, setArticleId] = useState<string>("");
 
-  // 新しく追加: URL関連の状態
+  // URL関連の状態
   const [urlCopied, setUrlCopied] = useState(false);
 
   const isMountedRef = useRef(true);
@@ -65,14 +72,11 @@ export default function EditArticlePage({
     try {
       await navigator.clipboard.writeText(productionUrl);
       setUrlCopied(true);
-
-      // 2秒後にコピー状態をリセット
       setTimeout(() => {
         setUrlCopied(false);
       }, 2000);
     } catch (error) {
       console.error("URL copy failed:", error);
-      // フォールバック: 選択可能な状態にする
       const textArea = document.createElement("textarea");
       textArea.value = productionUrl;
       document.body.appendChild(textArea);
@@ -93,47 +97,21 @@ export default function EditArticlePage({
   const stripMarkdown = (text: string) => {
     if (!text) return "";
 
-    // 見出し記号(#)の削除
     let result = text.replace(/^#+\s+/gm, "");
-
-    // 強調(**と__)の削除
     result = result.replace(/(\*\*|__)(.*?)\1/g, "$2");
-
-    // 斜体(*と_)の削除
     result = result.replace(/(\*|_)(.*?)\1/g, "$2");
-
-    // コードブロック(```)と行内コード(`)の削除
     result = result.replace(/```[\s\S]*?```/g, "");
     result = result.replace(/`([^`]+)`/g, "$1");
-
-    // リンク記法([text](url))の削除 - テキスト部分のみを残す
     result = result.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
-
-    // 画像記法(![alt](src))の削除
     result = result.replace(/!\[([^\]]*)\]\([^\)]+\)/g, "");
-
-    // リスト記号(-, *, +)の削除
     result = result.replace(/^[\-\*\+]\s+/gm, "");
-
-    // 番号付きリストの削除
     result = result.replace(/^\d+\.\s+/gm, "");
-
-    // 水平線(---, ***, ___)の削除
     result = result.replace(/^([\-\*\_]){3,}$/gm, "");
-
-    // 引用(>)の削除
     result = result.replace(/^\>\s+/gm, "");
-
-    // 表記法の削除
     result = result.replace(/\|.*\|/g, "");
-
-    // 余分な空白行の削除
     result = result.replace(/\n\s*\n/g, "\n");
 
-    // 最初の数文字（最大150文字程度）を抽出
     let truncated = result.trim().substring(0, 150);
-
-    // 文章が途中で切れないように調整（最後のピリオドまで）
     const lastPeriod = truncated.lastIndexOf("。");
     if (lastPeriod > 0 && lastPeriod < 140) {
       truncated = truncated.substring(0, lastPeriod + 1);
@@ -142,12 +120,11 @@ export default function EditArticlePage({
     return truncated;
   };
 
-  // コンテンツの変更ハンドラー - マークダウンから自動要約を生成
+  // コンテンツの変更ハンドラー
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setContent(newContent);
 
-    // 自動要約機能がオンの場合、マークダウンを削除して要約欄を更新
     if (autoUpdateSummary) {
       setSummary(stripMarkdown(newContent));
     }
@@ -156,13 +133,12 @@ export default function EditArticlePage({
   // マウント状態の管理
   useEffect(() => {
     isMountedRef.current = true;
-
     return () => {
       isMountedRef.current = false;
     };
   }, []);
 
-  // ローカルストレージからデータを取得する関数
+  // ローカルストレージ関数
   const getLocalArticleData = () => {
     try {
       const savedData = localStorage.getItem(`article_draft_${params.slug}`);
@@ -175,7 +151,6 @@ export default function EditArticlePage({
     return null;
   };
 
-  // ローカルストレージにデータを保存する関数
   const saveLocalArticleData = (data: Record<string, unknown>) => {
     try {
       localStorage.setItem(
@@ -215,11 +190,14 @@ export default function EditArticlePage({
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
-          setArticleId(localData.articleId || ""); // 🆕 記事IDを設定
+          setArticleId(localData.articleId || "");
 
-          if (localData.image) {
-            setImage(localData.image);
-            setAltText(localData.image.altText || "");
+          if (localData.editorImage) {
+            setEditorImage(localData.editorImage);
+            setAltText(localData.editorImage.altText || "");
+          }
+          if (localData.initialFeaturedImage) {
+            setInitialFeaturedImage(localData.initialFeaturedImage);
           }
 
           setLoading(false);
@@ -229,7 +207,6 @@ export default function EditArticlePage({
         // スラッグをエンコード
         const encodedSlug = encodeURIComponent(params.slug);
 
-        // 通常のfetchを使用
         const response = await fetch(`/api/articles/${encodedSlug}`);
 
         if (!response.ok) {
@@ -249,19 +226,35 @@ export default function EditArticlePage({
         setContent(article.content);
         setCategory(article.category);
         setPublished(article.published);
-        setArticleId(article.id); // 🆕 記事IDを設定
+        setArticleId(article.id);
 
-        // 画像は最初の1枚だけを使用
-        const featuredImage =
-          article.images && article.images.length > 0
-            ? article.images[0]
-            : null;
-        setImage(featuredImage);
-        if (featuredImage) {
-          setAltText(featuredImage.altText || "");
+        // 画像の処理を修正 - 記事編集用のフィーチャー画像のみを取得
+        const managedImages =
+          article.images?.filter(
+            (img: { url: string }) => img.url.includes("/images/articles/") // 画像管理システムの画像は除外
+          ) || [];
+
+        const editorFeaturedImage =
+          article.images?.find(
+            (img: { isFeatured: boolean; url: string }) =>
+              img.isFeatured && !img.url.includes("/images/articles/")
+          ) || null;
+
+        console.log("画像処理結果:", {
+          totalImages: article.images?.length || 0,
+          managedImages: managedImages.length,
+          editorFeaturedImage: !!editorFeaturedImage,
+        });
+
+        // 記事編集用の画像を設定（画像管理システムの画像は無視）
+        setEditorImage(editorFeaturedImage);
+        setInitialFeaturedImage(editorFeaturedImage);
+
+        if (editorFeaturedImage) {
+          setAltText(editorFeaturedImage.altText || "");
         }
 
-        // ローカルストレージにキャッシュ
+        // ローカルストレージにキャッシュ（分離された画像情報で保存）
         saveLocalArticleData({
           title: article.title,
           slug: article.slug,
@@ -270,8 +263,9 @@ export default function EditArticlePage({
           content: article.content,
           category: article.category,
           published: article.published,
-          articleId: article.id, // 🆕 記事IDも保存
-          image: featuredImage,
+          articleId: article.id,
+          editorImage: editorFeaturedImage,
+          initialFeaturedImage: editorFeaturedImage,
           timestamp: Date.now(),
         });
       } catch (error: unknown) {
@@ -279,7 +273,6 @@ export default function EditArticlePage({
 
         if (!isMountedRef.current) return;
 
-        // ローカルデータがあれば最終手段としてそれを使用
         const localData = getLocalArticleData();
         if (localData) {
           console.log("Using local cached data as fallback after fetch error");
@@ -290,11 +283,14 @@ export default function EditArticlePage({
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
-          setArticleId(localData.articleId || ""); // 🆕 記事IDを設定
+          setArticleId(localData.articleId || "");
 
-          if (localData.image) {
-            setImage(localData.image);
-            setAltText(localData.image.altText || "");
+          if (localData.editorImage) {
+            setEditorImage(localData.editorImage);
+            setAltText(localData.editorImage.altText || "");
+          }
+          if (localData.initialFeaturedImage) {
+            setInitialFeaturedImage(localData.initialFeaturedImage);
           }
 
           setError(
@@ -316,18 +312,17 @@ export default function EditArticlePage({
 
     fetchArticle();
 
-    // クリーンアップ
     return () => {
       isMountedRef.current = false;
     };
   }, [params.slug]);
+  // 以下はパート1の続きです
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
 
-      // 画像プレビューの作成
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreview(reader.result as string);
@@ -336,28 +331,38 @@ export default function EditArticlePage({
     }
   };
 
-  // 🔧 画像アップロード関数を画像管理システム対応に修正
+  // 画像アップロード関数
   const uploadImage = async () => {
     if (!file || !articleId) return null;
 
     setUploading(true);
-    console.log("Uploading image to image management system:", file.name);
+    console.log("記事編集用画像アップロード:", file.name);
 
     try {
-      // 🆕 画像管理システムのAPIを使用
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("altText", altText || file.name.replace(/\.[^/.]+$/, ""));
+      // 従来のアップロード方式を使用（記事編集専用）
+      console.log("Using legacy upload method for article editor");
 
-      const response = await fetch(`/api/articles/${articleId}/images`, {
+      const safeFileName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, "_")
+        .replace(/_+/g, "_")
+        .toLowerCase();
+
+      const newFile = new File([file], safeFileName, {
+        type: file.type,
+        lastModified: file.lastModified,
+      });
+
+      const formData = new FormData();
+      formData.append("file", newFile);
+
+      const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
-        credentials: "include",
       });
 
       if (!isMountedRef.current) return null;
 
-      console.log("Image management upload response status:", response.status);
+      console.log("Article editor upload response status:", response.status);
       const data = await response.json();
 
       if (!response.ok) {
@@ -366,74 +371,23 @@ export default function EditArticlePage({
         );
       }
 
-      console.log("Image uploaded successfully to management system:", data);
+      console.log("記事編集用画像アップロード成功:", data.url);
 
-      // 🆕 画像管理システムから返された画像情報を返す
       return {
-        id: data.image.id,
-        url: data.image.url,
-        altText: data.image.altText,
-        isFeatured: data.image.isFeatured,
+        url: data.url,
+        altText: altText || file.name.replace(/\.[^/.]+$/, ""),
+        isFeatured: true,
       };
     } catch (error: unknown) {
-      console.error("Image management upload error:", error);
-
-      // 🔧 フォールバック: 従来のアップロード方式
-      console.log("Falling back to legacy upload method");
-
-      try {
-        // ファイル名を安全な形式に変換
-        const safeFileName = file.name
-          .replace(/[^a-zA-Z0-9.-]/g, "_")
-          .replace(/_+/g, "_")
-          .toLowerCase();
-
-        // 新しいファイル名でファイルを作成
-        const newFile = new File([file], safeFileName, {
-          type: file.type,
-          lastModified: file.lastModified,
-        });
-
-        // フォームデータの作成
-        const formData = new FormData();
-        formData.append("file", newFile);
-
-        // 通常のfetchを使用
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!isMountedRef.current) return null;
-
-        console.log("Legacy upload response status:", response.status);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error || data.details || "画像のアップロードに失敗しました"
-          );
-        }
-
-        console.log("Image uploaded successfully via legacy method:", data.url);
-
-        // 🆕 従来形式の場合は新しいIDを生成
-        return {
-          url: data.url,
-          altText: altText || file.name.replace(/\.[^/.]+$/, ""),
-          isFeatured: true,
-        };
-      } catch (legacyError: unknown) {
-        console.error("Legacy upload also failed:", legacyError);
-        if (isMountedRef.current) {
-          setError(
-            legacyError instanceof Error
-              ? legacyError.message
-              : "画像のアップロードに失敗しました"
-          );
-        }
-        return null;
+      console.error("記事編集用画像アップロードエラー:", error);
+      if (isMountedRef.current) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : "画像のアップロードに失敗しました"
+        );
       }
+      return null;
     } finally {
       if (isMountedRef.current) {
         setUploading(false);
@@ -442,11 +396,10 @@ export default function EditArticlePage({
   };
 
   const handleDeleteImage = () => {
-    if (!image) return;
+    if (!editorImage) return;
 
     try {
-      // 画像情報をクリア
-      setImage(null);
+      setEditorImage(null);
       setAltText("");
       setPreview(null);
     } catch (error: unknown) {
@@ -457,26 +410,19 @@ export default function EditArticlePage({
     }
   };
 
-  // 管理者トップページに戻る関数
+  // ナビゲーション関数
   const navigateToAdminDashboard = () => {
     try {
-      // セッションストレージのリセット（ダッシュボード再初期化のため）
       sessionStorage.removeItem("dashboardInitialized");
 
-      // 保存成功時はローカルストレージのドラフトをクリア
       if (saveSuccess) {
         localStorage.removeItem(`article_draft_${params.slug}`);
       }
 
-      // 管理者トップページへのURL構築
       let url = "/admin";
-
-      // 強制的にキャッシュ回避のためにタイムスタンプを追加
       url += `?_ts=${Date.now()}`;
 
       console.log("管理者トップページへ遷移:", url);
-
-      // 直接ブラウザの遷移を使用
       window.location.href = url;
     } catch (error) {
       console.error("ナビゲーションエラー:", error);
@@ -485,28 +431,20 @@ export default function EditArticlePage({
     }
   };
 
-  // 元のページに戻る関数（キャンセル時に使用）
   const navigateBack = () => {
     try {
-      // セッションストレージのリセット（ダッシュボード再初期化のため）
       sessionStorage.removeItem("dashboardInitialized");
 
-      // 戻り先のURLを構築
       let url = returnPath;
-
-      // クエリパラメータを追加
       const urlParams = new URLSearchParams();
 
-      // 特に注意：returnPageの処理を強化
       if (returnCategory) urlParams.append("category", returnCategory);
       if (returnSearch) urlParams.append("search", returnSearch);
 
-      // returnPageが存在し、空でなければ追加
       if (returnPage && returnPage !== "") {
         urlParams.append("page", returnPage);
       }
 
-      // パラメータがある場合は追加
       const queryString = urlParams.toString();
       if (queryString) {
         url = `${url}?${queryString}`;
@@ -514,14 +452,12 @@ export default function EditArticlePage({
 
       console.log("戻り先URL:", url);
 
-      // 強制的にキャッシュ回避のためにタイムスタンプを追加
       if (url.includes("?")) {
         url += `&_ts=${Date.now()}`;
       } else {
         url += `?_ts=${Date.now()}`;
       }
 
-      // 直接ブラウザの遷移を使用
       window.location.href = url;
     } catch (error) {
       console.error("ナビゲーションエラー:", error);
@@ -533,7 +469,6 @@ export default function EditArticlePage({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // すでに保存中なら処理しない
     if (saving) return;
 
     setSaving(true);
@@ -541,15 +476,14 @@ export default function EditArticlePage({
     setError("");
 
     try {
-      // 必須フィールドの検証
       if (!title || !slug || !content || !category) {
         throw new Error("タイトル、スラッグ、コンテンツ、カテゴリーは必須です");
       }
 
-      // 🔧 新しい画像のアップロード処理（画像管理システム連携）
+      // 新しい画像のアップロード処理（記事編集専用）
       let uploadedImageData = null;
       if (file) {
-        console.log("Starting image upload process...");
+        console.log("記事編集用画像アップロード開始...");
         uploadedImageData = await uploadImage();
 
         if (!uploadedImageData) {
@@ -583,53 +517,48 @@ export default function EditArticlePage({
         content,
         category,
         published,
-        updateImages: false, // 🔧 画像管理システムの画像を保持するため false に変更
+        updateImages: false, // デフォルトは false（画像管理システムの画像を保持）
       };
 
-      // 🔧 画像の更新処理（画像管理システムの画像を保持）
+      // 記事編集用画像の更新処理（画像管理システムの画像は保持）
       if (uploadedImageData) {
-        // 新しい画像がある場合のみ、フィーチャー画像として設定
+        // 新しい画像がアップロードされた場合のみ更新
         updateData.updateImages = true;
-        updateData.images = [
-          {
-            id: uploadedImageData.id,
-            url: uploadedImageData.url,
-            altText: uploadedImageData.altText,
-            isFeatured: true,
-          },
-        ];
-        console.log("🆕 新しい画像をフィーチャー画像として設定");
-      } else if (image && image.id) {
-        // 既存のフィーチャー画像の代替テキストのみ更新
-        if (altText !== (image.altText || "")) {
+        updateData.images = [uploadedImageData];
+        console.log("新しい記事編集用画像をフィーチャー画像として設定");
+      } else if (editorImage && editorImage.id) {
+        // 既存の記事編集用画像の代替テキストのみ更新
+        if (altText !== (editorImage.altText || "")) {
           updateData.updateImages = true;
           updateData.images = [
             {
-              id: image.id,
-              url: image.url,
+              id: editorImage.id,
+              url: editorImage.url,
               altText: altText,
               isFeatured: true,
             },
           ];
-          console.log("🔧 既存フィーチャー画像の代替テキストを更新");
+          console.log("既存記事編集用画像の代替テキストを更新");
         } else {
-          console.log("📷 既存の画像設定を維持（変更なし）");
+          console.log("記事編集用画像に変更なし");
         }
-      } else {
-        // フィーチャー画像を削除する場合（画像管理システムの他の画像は保持）
+      } else if (editorImage === null && initialFeaturedImage) {
+        // 記事編集用画像が削除された場合
+        updateData.updateImages = true;
+        updateData.images = [];
         console.log(
-          "🗑️ フィーチャー画像のみ削除（画像管理システムの画像は保持）"
+          "記事編集用フィーチャー画像を削除（画像管理システムの画像は保持）"
         );
-        // updateImages を false のままにして、既存の画像管理システムの画像を保持
+      } else {
+        console.log("画像更新をスキップ（画像管理システムの画像を完全保護）");
       }
 
       console.log("Updating article with data:", updateData);
 
-      // 記事を更新 - スラッグをエンコードして使用
+      // 記事を更新
       const encodedSlug = encodeURIComponent(params.slug);
       console.log("Encoded slug for API call:", encodedSlug);
 
-      // 通常のフェッチを使用
       const response = await fetch(`/api/articles/${encodedSlug}`, {
         method: "PUT",
         headers: {
@@ -655,16 +584,11 @@ export default function EditArticlePage({
       const data = await response.json();
       console.log("Update successful:", data);
 
-      // ★ 追加: 保存成功後にローカルストレージをクリア
       localStorage.removeItem(`article_draft_${params.slug}`);
-
-      // 保存成功フラグをセット
       setSaveSuccess(true);
 
-      // 少し待機してから遷移
       setTimeout(() => {
         if (isMountedRef.current) {
-          // 成功したら管理者トップページに戻る
           navigateToAdminDashboard();
         }
       }, 500);
@@ -673,7 +597,6 @@ export default function EditArticlePage({
 
       if (!isMountedRef.current) return;
 
-      // エラーメッセージをより詳細に表示
       setError(
         error instanceof Error ? error.message : "不明なエラーが発生しました"
       );
@@ -687,17 +610,14 @@ export default function EditArticlePage({
       return;
     }
 
-    // 既に処理中なら重複実行しない
     if (saving) return;
 
     setSaving(true);
     setError("");
 
     try {
-      // スラッグをエンコード
       const encodedSlug = encodeURIComponent(params.slug);
 
-      // 通常のフェッチを使用
       const response = await fetch(`/api/articles/${encodedSlug}`, {
         method: "DELETE",
       });
@@ -712,14 +632,10 @@ export default function EditArticlePage({
       }
 
       setSaveSuccess(true);
-
-      // ローカルストレージのドラフトをクリア
       localStorage.removeItem(`article_draft_${params.slug}`);
 
-      // 少し待機してから遷移
       setTimeout(() => {
         if (isMountedRef.current) {
-          // 削除成功後も管理者トップページに戻る
           navigateToAdminDashboard();
         }
       }, 500);
@@ -735,7 +651,6 @@ export default function EditArticlePage({
     }
   };
 
-  // ローディング中の表示を固定
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -756,7 +671,6 @@ export default function EditArticlePage({
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {/* URL表示 */}
             <div className="flex items-center gap-2 p-3 bg-white border rounded-lg">
               <code className="flex-1 text-sm break-all text-blue-600">
                 {productionUrl}
@@ -783,7 +697,6 @@ export default function EditArticlePage({
               </Button>
             </div>
 
-            {/* アクションボタン */}
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -865,7 +778,6 @@ export default function EditArticlePage({
               </p>
             </div>
 
-            {/* 説明文フィールド - SEO・SNS用 */}
             <div className="space-y-2">
               <label htmlFor="description" className="text-sm font-medium">
                 説明文
@@ -883,7 +795,6 @@ export default function EditArticlePage({
               </p>
             </div>
 
-            {/* 要約フィールド - 自動生成オプション付き */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label htmlFor="summary" className="text-sm font-medium">
@@ -955,16 +866,20 @@ export default function EditArticlePage({
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">画像</label>
+              <label className="text-sm font-medium">記事編集用画像</label>
+              <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mb-2">
+                ℹ️
+                この画像は記事編集専用です。画像管理システムの画像とは独立しています。
+              </div>
 
-              {/* 現在の画像表示 */}
-              {image && !preview && (
+              {/* 現在の記事編集用画像表示 */}
+              {editorImage && !preview && (
                 <div className="mt-2 relative">
                   <div className="relative h-auto w-full max-w-xs bg-slate-200 rounded-md overflow-hidden">
                     <div className="w-full pb-[56.25%] relative">
                       <Image
-                        src={image.url}
-                        alt={image.altText || "記事画像"}
+                        src={editorImage.url}
+                        alt={editorImage.altText || "記事画像"}
                         fill
                         style={{ objectFit: "contain" }}
                         className="absolute inset-0"
@@ -1028,7 +943,7 @@ export default function EditArticlePage({
             </div>
 
             {/* 画像の代替テキスト入力欄 */}
-            {(image || preview) && (
+            {(editorImage || preview) && (
               <div className="space-y-2">
                 <label htmlFor="altText" className="text-sm font-medium">
                   画像の代替テキスト
@@ -1082,6 +997,39 @@ export default function EditArticlePage({
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* 画像管理システムとの違いを説明するカード */}
+      <Card className="bg-gray-50 border-gray-200">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-md flex items-center gap-2">
+            📋 画像管理について
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm text-gray-700">
+            <div className="flex items-start gap-2">
+              <span className="font-medium text-blue-600">
+                📝 記事編集用画像:
+              </span>
+              <span>
+                この記事に直接添付される画像。記事一覧などでサムネイルとして表示されます。
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="font-medium text-green-600">
+                🗂️ 画像管理システム:
+              </span>
+              <span>
+                記事内で使用する複数の画像を管理。マークダウンで記事本文に挿入できます。
+              </span>
+            </div>
+            <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-800">
+              💡 <strong>重要:</strong>{" "}
+              この2つの画像システムは完全に独立しており、互いに影響しません。
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
