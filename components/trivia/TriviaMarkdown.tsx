@@ -100,6 +100,10 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
         ),
         ul: ({ children, ...props }) => (
           <ul
+            style={{
+              fontFamily:
+                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+            }}
             className="list-disc list-inside text-gray-200 space-y-1 my-2 pl-2 text-left"
             {...props}
           >
@@ -115,7 +119,7 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
           </ol>
         ),
         li: ({ children, ...props }) => (
-          <li className="text-gray-200 leading-relaxed text-sm text-left" {...props}>
+          <li className="text-gray-200 leading-relaxed text-base text-left tracking-wide leading-relaxed" {...props}>
             {children}
           </li>
         ),
