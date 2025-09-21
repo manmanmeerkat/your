@@ -118,13 +118,39 @@ async function getGodsSlugMap(): Promise<Record<string, string>> {
             // タイトルの正規化バリエーションをキーにして対応
             const normalizedTitle = god.title.trim();
             slugMap[normalizedTitle] = god.slug;
-            console.log(`マッピング: "${normalizedTitle}" -> "${god.slug}"`);
+
+            // より柔軟なマッピングのため、複数のバリエーションを追加
+            const titleVariations = [
+              normalizedTitle,
+              normalizedTitle.toLowerCase(),
+              normalizedTitle
+                .replace(/\s+(no\s+)?(kami|mikoto|okami|gami)$/i, "")
+                .trim(),
+              normalizedTitle.split(" ")[0], // 最初の単語のみ
+            ];
+
+            titleVariations.forEach((variation) => {
+              if (variation && variation !== normalizedTitle) {
+                slugMap[variation] = god.slug;
+              }
+            });
+
+            console.log(
+              `マッピング: "${normalizedTitle}" -> "${god.slug}" (バリエーション: ${titleVariations.length}個)`
+            );
           }
         });
       }
 
+      console.log(
+        `✅ スラグマッピング生成完了: ${
+          Object.keys(slugMap).length
+        }個のエントリ`
+      );
+      console.log("生成されたslugMap:", slugMap);
       return slugMap;
     }
+    console.warn("⚠️ 神々データの取得に失敗しました");
     return {};
   } catch (error) {
     console.error("Failed to fetch gods data:", error);

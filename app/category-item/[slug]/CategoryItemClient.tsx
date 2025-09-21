@@ -197,7 +197,7 @@ const CategoryItemRelatedArticles = ({
   // カテゴリに応じたタイトルを決定
   const getSectionTitle = (category: string): string => {
     if (category.includes("gods") || category.includes("mythology")) {
-      return "Other Japanese Deities";
+      return "About Japanese Gods";
     }
     if (category.includes("culture")) {
       return "More Japanese Culture";
@@ -333,14 +333,27 @@ const CategoryItemRelatedArticles = ({
           })}
         </div>
 
-        <div className="mt-8 pt-6 border-t border-slate-700 text-center">
-          <Link
-            href="/all-articles"
-            className="font-normal border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 py-2 rounded-md"
-          >
-            View All Articles
-            <span className="text-lg ml-2">≫</span>
-          </Link>
+        <div className="mt-8 pt-6 border-t border-slate-700 text-center px-2">
+          {currentCategory.includes("gods") ||
+          currentCategory.includes("mythology") ? (
+            <Link
+              href="/mythology#about-japanese-gods"
+              className="font-normal border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg w-full px-4 py-2 rounded-md text-center break-words inline-block"
+            >
+              <span className="block sm:inline">
+                About Japanese Gods <span className="text-lg ml-1">≫</span>
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href="/all-articles"
+              className="font-normal border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg w-full px-4 py-2 rounded-md text-center break-words inline-block"
+            >
+              <span className="block sm:inline">
+                View All Articles <span className="text-lg ml-1">≫</span>
+              </span>
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -729,21 +742,44 @@ export default function CategoryItemClient({ item }: CategoryItemClientProps) {
         </div>
       </div>
 
-      <div className="flex flex-col justify-center items-center mt-24 gap-8">
-        <Link href={`/${item.category}`}>
+      <div className="flex flex-col justify-center items-center mt-24 gap-8 px-4">
+        {item.category.includes("gods") ||
+        item.category.includes("mythology") ? (
+          <Link
+            href="/mythology#about-japanese-gods"
+            className="w-full max-w-sm"
+          >
+            <Button
+              size="lg"
+              className="border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg w-full px-4 py-3 transition-all duration-300 text-center break-words"
+            >
+              <span className="block sm:inline">
+                Back to about Japanese Gods Posts{" "}
+                <span className="ml-1">≫</span>
+              </span>
+            </Button>
+          </Link>
+        ) : (
+          <Link href={`/${item.category}`} className="w-full max-w-sm">
+            <Button
+              size="lg"
+              className="border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg w-full px-4 py-3 transition-all duration-300 text-center break-words"
+            >
+              <span className="block sm:inline">
+                Back to {CATEGORY_LABELS[item.category] || item.category} Posts{" "}
+                <span className="ml-1">≫</span>
+              </span>
+            </Button>
+          </Link>
+        )}
+        <Link href="/all-articles" className="w-full max-w-sm">
           <Button
             size="lg"
-            className="border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
+            className="border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg w-full px-4 py-3 transition-all duration-300 text-center break-words"
           >
-            Back to {CATEGORY_LABELS[item.category] || item.category} Posts ≫
-          </Button>
-        </Link>
-        <Link href="/all-articles">
-          <Button
-            size="lg"
-            className="border border-[#df7163] bg-[#df7163] text-[#f3f3f2] hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold shadow hover:shadow-lg whitespace-nowrap w-auto px-6 transition-all duration-300"
-          >
-            View all posts ≫
+            <span className="block sm:inline">
+              View all posts <span className="ml-1">≫</span>
+            </span>
           </Button>
         </Link>
       </div>

@@ -47,7 +47,9 @@ export async function PUT(
       category, 
       published,
       imageUrl, 
-      imageAltText 
+      imageAltText,
+      updateImages,
+      images
     } = body;
 
     console.log('リクエストボディ:', body);
@@ -66,16 +68,34 @@ export async function PUT(
       include: { images: true }
     });
 
-    // 画像の処理 (明示的なnullでない限り、画像情報を保持)
-    // imageUrlがnull（明示的に画像を削除する場合）の場合は既存の画像を削除
-    if (imageUrl === null) {
+    // 画像の処理（新しい画像管理システム対応）
+    if (updateImages && images && Array.isArray(images)) {
+      // 既存の画像を削除
+      await prisma.categoryItemImage.deleteMany({
+        where: { categoryItemId: categoryItem.id }
+      });
+
+      // 新しい画像を作成
+      for (const imageData of images) {
+        await prisma.categoryItemImage.create({
+          data: {
+            categoryItemId: categoryItem.id,
+            url: imageData.url,
+            altText: imageData.altText || '',
+            isFeatured: imageData.isFeatured || false
+          }
+        });
+      }
+      console.log('画像管理システムで画像を更新しました:', images);
+    }
+    // 従来の画像処理（後方互換性のため）
+    else if (imageUrl === null) {
       // 画像を削除
       await prisma.categoryItemImage.deleteMany({
         where: { categoryItemId: categoryItem.id }
       });
       console.log('画像を削除しました');
     } 
-    // imageUrlが存在する場合は画像を更新
     else if (imageUrl) {
       // 既存の画像を削除
       await prisma.categoryItemImage.deleteMany({
@@ -93,7 +113,6 @@ export async function PUT(
       });
       console.log('画像を更新しました:', imageUrl);
     } 
-    // imageUrlがundefinedの場合は画像を変更しない
     else {
       console.log('画像の変更はありません');
     }
