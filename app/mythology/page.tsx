@@ -12,6 +12,7 @@ import ScrollHandler from "@/components/scroll/ScrollHandler"; // 新しいコ�
 import { Breadcrumb } from "@/components/breadcrumb";
 import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
 import Script from "next/script";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 const ARTICLES_PER_PAGE = 6;
 
@@ -386,6 +387,7 @@ export default async function MythologyPage({
       </section>
 
       <WhiteLine />
+      <BackToHomeBtn/>
       {/* <RedBubble /> */}
     </div>
   );

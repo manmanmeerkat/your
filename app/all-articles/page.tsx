@@ -9,6 +9,7 @@ import { WhiteLine } from "@/components/whiteLine/whiteLine";
 // import Redbubble from "@/components/redBubble/RedBubble";
 import { articleType } from "@/types/types";
 import Link from "next/link";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 // ISR設定 - 30分ごとに再生成
 export const revalidate = 1800;
@@ -223,6 +224,7 @@ export default async function AllArticlesPage({
 
         <WhiteLine />
         {/* <Redbubble /> */}
+        <BackToHomeBtn/>
       </Suspense>
     </div>
   );

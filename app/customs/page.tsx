@@ -10,6 +10,7 @@ import PaginationWrapper from "@/components/pagination-wrapper";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
 import Script from "next/script";
+import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
 
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
@@ -230,8 +231,8 @@ export default async function CustomsPage({
           </div>
         </div>
       </section>
-
       <WhiteLine />
+      <BackToHomeBtn />
       {/* <Redbubble /> */}
     </div>
   );

@@ -3,7 +3,7 @@ import { Button } from "../ui/button"
 
 export const BackToHomeBtn = () => {
   return (
-    <div className="max-w-xs sm:max-w-md mx-auto px-4 text-center">
+    <div className="max-w-xs sm:max-w-md mx-auto px-4 text-center mb-16">
         <Link href="/">
             <Button
               size="lg"
