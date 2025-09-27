@@ -2,54 +2,105 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// GET: 全一口メモの取得（管理者用・統計用）
-export async function GET(request: NextRequest) {
+// POST: 新しい一口メモを作成（記事またはカテゴリ項目用）
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const isActive = searchParams.get('isActive');
-    const limit = searchParams.get('limit');
+    const body = await request.json();
+    const { articleId, categoryItemId, ...triviaData } = body;
 
-    const where = {
-      ...(category && { category }),
-      ...(isActive !== null && { isActive: isActive === 'true' }),
-    };
+    // どちらか一方のIDが必要
+    if (!articleId && !categoryItemId) {
+      return NextResponse.json(
+        { success: false, error: "Either articleId or categoryItemId is required" },
+        { status: 400 }
+      );
+    }
 
-    const triviaList = await prisma.articleTrivia.findMany({
-      where,
-      include: {
-        article: {
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            category: true
-          }
-        }
-      },
-      orderBy: [
-        { article: { updatedAt: 'desc' } },
-        { displayOrder: 'asc' }
-      ],
-      ...(limit && { take: parseInt(limit) }),
-    });
+    if (articleId && categoryItemId) {
+      return NextResponse.json(
+        { success: false, error: "Cannot specify both articleId and categoryItemId" },
+        { status: 400 }
+      );
+    }
 
-    // 統計情報
-    const stats = {
-      total: triviaList.length,
-      active: triviaList.filter(t => t.isActive).length,
-      categories: [...new Set(triviaList.map(t => t.category))],
-    };
+    let newTrivia;
+
+    if (articleId) {
+      // 記事の存在確認
+      const article = await prisma.article.findUnique({
+        where: { id: articleId }
+      });
+
+      if (!article) {
+        return NextResponse.json(
+          { success: false, error: "Article not found" },
+          { status: 404 }
+        );
+      }
+
+      // 表示順序の自動設定
+      const maxOrder = await prisma.articleTrivia.findFirst({
+        where: { articleId },
+        orderBy: { displayOrder: 'desc' }
+      });
+
+      newTrivia = await prisma.articleTrivia.create({
+        data: {
+          articleId,
+          title: triviaData.title,
+          content: triviaData.content,
+          contentEn: triviaData.contentEn,
+          category: triviaData.category || 'default',
+          tags: triviaData.tags || [],
+          iconEmoji: triviaData.iconEmoji,
+          colorTheme: triviaData.colorTheme,
+          displayOrder: triviaData.displayOrder ?? (maxOrder?.displayOrder || 0) + 1,
+          isActive: triviaData.isActive ?? true,
+        },
+      });
+    } else if (categoryItemId) {
+      // カテゴリ項目の存在確認
+      const categoryItem = await prisma.categoryItem.findUnique({
+        where: { id: categoryItemId }
+      });
+
+      if (!categoryItem) {
+        return NextResponse.json(
+          { success: false, error: "Category item not found" },
+          { status: 404 }
+        );
+      }
+
+      // 表示順序の自動設定
+      const maxOrder = await prisma.categoryItemTrivia.findFirst({
+        where: { categoryItemId },
+        orderBy: { displayOrder: 'desc' }
+      });
+
+      newTrivia = await prisma.categoryItemTrivia.create({
+        data: {
+          categoryItemId,
+          title: triviaData.title,
+          content: triviaData.content,
+          contentEn: triviaData.contentEn,
+          category: triviaData.category || 'default',
+          tags: triviaData.tags || [],
+          iconEmoji: triviaData.iconEmoji,
+          colorTheme: triviaData.colorTheme,
+          displayOrder: triviaData.displayOrder ?? (maxOrder?.displayOrder || 0) + 1,
+          isActive: triviaData.isActive ?? true,
+        },
+      });
+    }
 
     return NextResponse.json({ 
       success: true,
-      trivia: triviaList,
-      stats
-    });
+      trivia: newTrivia 
+    }, { status: 201 });
   } catch (error) {
-    console.error("Error fetching all trivia:", error);
+    console.error("Error creating trivia:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch trivia" },
+      { success: false, error: "Failed to create trivia" },
       { status: 500 }
     );
   }

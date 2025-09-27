@@ -25,7 +25,12 @@ export async function GET(request: Request) {
     
     const items = await prisma.categoryItem.findMany({
       where: whereClause,
-      include: { images: true },
+      include: { 
+        images: true,
+        trivia: {
+          orderBy: { displayOrder: 'asc' }
+        }
+      } as any,
       orderBy: { createdAt: 'desc' }
     });
     
@@ -81,7 +86,12 @@ export async function POST(request: Request) {
     // 作成した項目を画像付きで取得
     const itemWithImages = await prisma.categoryItem.findUnique({
       where: { id: categoryItem.id },
-      include: { images: true }
+      include: { 
+        images: true,
+        trivia: {
+          orderBy: { displayOrder: 'asc' }
+        }
+      } as any
     });
     
     return NextResponse.json(itemWithImages);

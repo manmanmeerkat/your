@@ -7,7 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 const categoryOptions = [
   { value: "about-japanese-gods", label: "About Japanese Gods" },
@@ -15,6 +27,23 @@ const categoryOptions = [
   { value: "seasonal-festivals", label: "Seasonal Festivals" },
   { value: "japanese-way-of-life", label: "Japanese Way of Life" },
 ];
+
+// 🆕 Trivia関連の型定義
+export interface CategoryItemTrivia {
+  id: string;
+  title: string;
+  content: string;
+  contentEn?: string | null;
+  category: string;
+  tags: string[];
+  iconEmoji?: string | null;
+  colorTheme?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  categoryItemId: string;
+}
 
 export default function NewCategoryItemPage() {
   const [title, setTitle] = useState("");

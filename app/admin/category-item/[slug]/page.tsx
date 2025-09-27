@@ -8,8 +8,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ExternalLink, Copy, Check } from "lucide-react";
+import {
+  Loader2,
+  ExternalLink,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Edit,
+  Trash2,
+  Save,
+  X,
+} from "lucide-react";
 import Image from "next/image";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 
 const categoryOptions = [
   { value: "about-japanese-gods", label: "About Japanese Gods" },
@@ -32,6 +47,36 @@ interface ImageData {
   isFeatured?: boolean;
 }
 
+// 🆕 Trivia関連の型定義
+export interface CategoryItemTrivia {
+  id: string;
+  title: string;
+  content: string;
+  contentEn?: string | null;
+  category: string;
+  tags: string[];
+  iconEmoji?: string | null;
+  colorTheme?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  categoryItemId: string;
+}
+
+// 🔧 既存のCategoryItem型に一口メモを追加
+interface CategoryItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  content: string;
+  category: string;
+  published: boolean;
+  images?: ImageData[];
+  trivia?: CategoryItemTrivia[];
+}
+
 export default function EditCategoryItemPage({
   params,
 }: CategoryItemEditProps) {
@@ -51,6 +96,22 @@ export default function EditCategoryItemPage({
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // 🆕 Trivia関連の状態
+  const [categoryItem, setCategoryItem] = useState<CategoryItem | null>(null);
+  const [expandedTrivia, setExpandedTrivia] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [editingTrivia, setEditingTrivia] = useState<{
+    [key: string]: string | null;
+  }>({});
+  const [triviaLoading, setTriviaLoading] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [editingTriviaData, setEditingTriviaData] = useState<{
+    [key: string]: Partial<CategoryItemTrivia>;
+  }>({});
+
   const router = useRouter();
 
   // 本番環境URLの生成
@@ -86,6 +147,9 @@ export default function EditCategoryItemPage({
         setDescription(data.description || "");
         setCategory(data.category);
         setPublished(data.published);
+
+        // 🆕 categoryItemを設定（trivia情報を含む）
+        setCategoryItem(data);
 
         if (data.images && data.images.length > 0) {
           const featuredImage =
@@ -239,6 +303,240 @@ export default function EditCategoryItemPage({
     }
   };
 
+  // 🆕 Trivia関連のハンドラー関数
+  const toggleTriviaSection = (categoryItemId: string) => {
+    setExpandedTrivia((prev) => ({
+      ...prev,
+      [categoryItemId]: !prev[categoryItemId],
+    }));
+  };
+
+  const startCreatingTrivia = (categoryItemId: string) => {
+    setEditingTrivia((prev) => ({
+      ...prev,
+      [categoryItemId]: "new",
+    }));
+
+    setEditingTriviaData((prev) => ({
+      ...prev,
+      [categoryItemId]: {
+        title: "",
+        content: "",
+        category: "default",
+        tags: [],
+        iconEmoji: null,
+        colorTheme: null,
+        displayOrder: 0,
+        isActive: true,
+        categoryItemId: categoryItemId,
+      },
+    }));
+  };
+
+  const startEditingTrivia = (categoryItemId: string, triviaId: string) => {
+    const trivia = categoryItem?.trivia?.find((t) => t.id === triviaId);
+    if (!trivia) return;
+
+    setEditingTrivia((prev) => ({
+      ...prev,
+      [categoryItemId]: triviaId,
+    }));
+
+    setEditingTriviaData((prev) => ({
+      ...prev,
+      [categoryItemId]: {
+        title: trivia.title,
+        content: trivia.content,
+        contentEn: trivia.contentEn,
+        category: trivia.category,
+        tags: trivia.tags,
+        iconEmoji: trivia.iconEmoji,
+        colorTheme: trivia.colorTheme,
+        displayOrder: trivia.displayOrder,
+        isActive: trivia.isActive,
+        categoryItemId: trivia.categoryItemId,
+      },
+    }));
+  };
+
+  const cancelEditingTrivia = (categoryItemId: string) => {
+    setEditingTrivia((prev) => ({
+      ...prev,
+      [categoryItemId]: null,
+    }));
+    setEditingTriviaData((prev) => ({
+      ...prev,
+      [categoryItemId]: {},
+    }));
+  };
+
+  const updateTriviaData = (
+    categoryItemId: string,
+    field: string,
+    value: string | boolean | string[]
+  ) => {
+    setEditingTriviaData((prev) => ({
+      ...prev,
+      [categoryItemId]: {
+        ...prev[categoryItemId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveTrivia = async (categoryItemId: string) => {
+    const data = editingTriviaData[categoryItemId];
+    if (!data || !data.title || !data.content) {
+      toast.error("タイトルとコンテンツは必須です");
+      return;
+    }
+
+    setTriviaLoading((prev) => ({ ...prev, [categoryItemId]: true }));
+
+    try {
+      const isEditing = editingTrivia[categoryItemId] !== "new";
+      const url = isEditing
+        ? `/api/trivia/${editingTrivia[categoryItemId]}`
+        : "/api/trivia";
+
+      const method = isEditing ? "PUT" : "POST";
+
+      const triviaData = {
+        ...data,
+        categoryItemId: categoryItemId,
+      };
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(triviaData),
+      });
+
+      if (!response.ok) {
+        throw new Error("一口メモの保存に失敗しました");
+      }
+
+      const savedTrivia = await response.json();
+
+      // ローカル状態を更新
+      if (categoryItem) {
+        const updatedTrivia = isEditing
+          ? categoryItem.trivia?.map((t) =>
+              t.id === savedTrivia.id ? savedTrivia : t
+            ) || []
+          : [...(categoryItem.trivia || []), savedTrivia];
+
+        setCategoryItem((prev) =>
+          prev
+            ? {
+                ...prev,
+                trivia: updatedTrivia,
+              }
+            : null
+        );
+      }
+
+      cancelEditingTrivia(categoryItemId);
+      toast.success("一口メモを保存しました");
+    } catch (error) {
+      console.error("Trivia save error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "一口メモの保存に失敗しました"
+      );
+    } finally {
+      setTriviaLoading((prev) => ({ ...prev, [categoryItemId]: false }));
+    }
+  };
+
+  const deleteTrivia = async (categoryItemId: string, triviaId: string) => {
+    if (!confirm("この一口メモを削除しますか？")) return;
+
+    setTriviaLoading((prev) => ({ ...prev, [categoryItemId]: true }));
+
+    try {
+      const response = await fetch(`/api/trivia/${triviaId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("一口メモの削除に失敗しました");
+      }
+
+      // ローカル状態を更新
+      if (categoryItem) {
+        setCategoryItem((prev) =>
+          prev
+            ? {
+                ...prev,
+                trivia: prev.trivia?.filter((t) => t.id !== triviaId) || [],
+              }
+            : null
+        );
+      }
+
+      toast.success("一口メモを削除しました");
+    } catch (error) {
+      console.error("Trivia delete error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "一口メモの削除に失敗しました"
+      );
+    } finally {
+      setTriviaLoading((prev) => ({ ...prev, [categoryItemId]: false }));
+    }
+  };
+
+  const toggleTriviaActive = async (
+    categoryItemId: string,
+    triviaId: string,
+    isActive: boolean
+  ) => {
+    setTriviaLoading((prev) => ({ ...prev, [categoryItemId]: true }));
+
+    try {
+      const response = await fetch(`/api/trivia/${triviaId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isActive }),
+      });
+
+      if (!response.ok) {
+        throw new Error("一口メモの状態変更に失敗しました");
+      }
+
+      const updatedTrivia = await response.json();
+
+      // ローカル状態を更新
+      if (categoryItem) {
+        setCategoryItem((prev) =>
+          prev
+            ? {
+                ...prev,
+                trivia:
+                  prev.trivia?.map((t) =>
+                    t.id === triviaId ? updatedTrivia : t
+                  ) || [],
+              }
+            : null
+        );
+      }
+
+      toast.success(`一口メモを${isActive ? "有効" : "無効"}にしました`);
+    } catch (error) {
+      console.error("Trivia toggle error:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "一口メモの状態変更に失敗しました"
+      );
+    } finally {
+      setTriviaLoading((prev) => ({ ...prev, [categoryItemId]: false }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -369,6 +667,564 @@ export default function EditCategoryItemPage({
     } finally {
       setLoading(false);
     }
+  };
+
+  // 🆕 TriviaSectionコンポーネント
+  const TriviaSection = ({
+    categoryItem,
+    expandedTrivia,
+    editingTrivia,
+    triviaLoading,
+    toggleTriviaSection,
+    startCreatingTrivia,
+  }: {
+    categoryItem: CategoryItem;
+    expandedTrivia: { [key: string]: boolean };
+    editingTrivia: { [key: string]: string | null };
+    triviaLoading: { [key: string]: boolean };
+    toggleTriviaSection: (categoryItemId: string) => void;
+    startCreatingTrivia: (categoryItemId: string) => void;
+  }) => {
+    const isExpanded = expandedTrivia[categoryItem.id];
+    const isEditing = editingTrivia[categoryItem.id];
+
+    // 一口メモの数を正確にカウント
+    const activeTriviaCount =
+      categoryItem.trivia?.filter((t) => t.isActive).length || 0;
+    const totalTriviaCount = categoryItem.trivia?.length || 0;
+
+    return (
+      <div className="mt-6 border-t pt-4">
+        <div className="flex items-center justify-between mb-2">
+          <Button
+            onClick={() => toggleTriviaSection(categoryItem.id)}
+            variant="ghost"
+            size="sm"
+            className="flex items-center gap-2 text-sm font-medium hover:bg-blue-100"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+            一口メモ
+            {totalTriviaCount > 0 && (
+              <div className="flex gap-1">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                  {activeTriviaCount}件アクティブ
+                </span>
+                {totalTriviaCount > activeTriviaCount && (
+                  <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+                    +{totalTriviaCount - activeTriviaCount}件非アクティブ
+                  </span>
+                )}
+              </div>
+            )}
+          </Button>
+
+          {isExpanded && !isEditing && (
+            <Button
+              onClick={() => startCreatingTrivia(categoryItem.id)}
+              disabled={triviaLoading[categoryItem.id]}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 hover:bg-green-50 hover:border-green-300"
+            >
+              <Plus className="h-3 w-3" />
+              追加
+            </Button>
+          )}
+        </div>
+
+        {isExpanded && (
+          <div className="space-y-3">
+            {/* 編集フォーム */}
+            {isEditing && (
+              <TriviaEditForm
+                key={`trivia-edit-${categoryItem.id}-${
+                  editingTrivia[categoryItem.id]
+                }`}
+                categoryItemId={categoryItem.id}
+              />
+            )}
+
+            {/* 一口メモリスト */}
+            {categoryItem.trivia && categoryItem.trivia.length > 0 ? (
+              <div className="space-y-3">
+                {/* アクティブな一口メモ */}
+                {categoryItem.trivia
+                  .filter((trivia) => trivia.isActive)
+                  .sort((a, b) => a.displayOrder - b.displayOrder)
+                  .map((trivia) => (
+                    <TriviaDisplay
+                      key={`active-${trivia.id}`}
+                      categoryItemId={categoryItem.id}
+                      trivia={trivia}
+                      categoryItem={categoryItem}
+                    />
+                  ))}
+
+                {/* 非アクティブな一口メモ（折りたたみ可能） */}
+                {categoryItem.trivia.filter((trivia) => !trivia.isActive)
+                  .length > 0 && (
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2">
+                      <span>
+                        非アクティブな一口メモ (
+                        {
+                          categoryItem.trivia.filter(
+                            (trivia) => !trivia.isActive
+                          ).length
+                        }
+                        件)
+                      </span>
+                    </summary>
+                    <div className="mt-2 space-y-2">
+                      {categoryItem.trivia
+                        .filter((trivia) => !trivia.isActive)
+                        .sort((a, b) => a.displayOrder - b.displayOrder)
+                        .map((trivia) => (
+                          <div
+                            key={`inactive-${trivia.id}`}
+                            className="opacity-60"
+                          >
+                            <TriviaDisplay
+                              categoryItemId={categoryItem.id}
+                              trivia={trivia}
+                              categoryItem={categoryItem}
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ) : (
+              !isEditing && (
+                <div className="text-center py-6 text-gray-500 text-sm border-2 border-dashed border-gray-200 rounded-lg bg-white">
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-2xl">📝</span>
+                    <div>
+                      <p className="font-medium">まだ一口メモがありません</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        カテゴリ項目に関連する豆知識や補足情報を追加できます
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => startCreatingTrivia(categoryItem.id)}
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 hover:bg-blue-50 hover:border-blue-300"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      最初の一口メモを追加
+                    </Button>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* ローディング表示 */}
+            {triviaLoading[categoryItem.id] && (
+              <div className="text-center py-3 bg-blue-50 rounded-lg">
+                <div className="inline-flex items-center gap-2">
+                  <div className="inline-block animate-spin w-4 h-4 border-2 border-blue-200 border-t-blue-600 rounded-full"></div>
+                  <span className="text-sm text-blue-700">処理中...</span>
+                </div>
+              </div>
+            )}
+
+            {/* 一口メモの統計情報 */}
+            {totalTriviaCount > 0 && (
+              <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700 border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <span>
+                    📊 合計 {totalTriviaCount}件 (アクティブ:{" "}
+                    {activeTriviaCount}件, 非アクティブ:{" "}
+                    {totalTriviaCount - activeTriviaCount}件)
+                  </span>
+                  {totalTriviaCount > 1 && (
+                    <span className="text-blue-600">
+                      順序は上下矢印で変更可能
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // 🆕 TriviaEditFormコンポーネント
+  const TriviaEditForm = ({ categoryItemId }: { categoryItemId: string }) => {
+    const data = editingTriviaData[categoryItemId];
+    const [showPreview, setShowPreview] = useState(false);
+
+    if (!data) return null;
+
+    // マークダウンプレビューコンポーネント
+    const MarkdownPreview = ({ content }: { content: string }) => {
+      if (!content.trim()) {
+        return (
+          <div className="bg-gray-100 p-4 rounded text-gray-500 text-sm">
+            プレビュー内容がありません
+          </div>
+        );
+      }
+
+      return (
+        <div className="bg-gray-900 text-gray-100 p-4 rounded border max-h-60 overflow-y-auto">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[rehypeRaw]}
+            components={{
+              p: ({ children, ...props }) => (
+                <p className="text-gray-200 mb-2 last:mb-0" {...props}>
+                  {children}
+                </p>
+              ),
+              strong: ({ children, ...props }) => (
+                <strong className="text-yellow-400 font-bold" {...props}>
+                  {children}
+                </strong>
+              ),
+              em: ({ children, ...props }) => (
+                <em className="text-gray-300 italic" {...props}>
+                  {children}
+                </em>
+              ),
+              code: (props) => {
+                const { children, className, ...restProps } =
+                  props as React.ComponentProps<"code"> & {
+                    className?: string;
+                  };
+                const match = /language-(\w+)/.exec(className || "");
+
+                if (!match) {
+                  // インラインコード
+                  return (
+                    <code
+                      className="bg-gray-700 text-yellow-300 px-1 rounded text-sm"
+                      {...restProps}
+                    >
+                      {children}
+                    </code>
+                  );
+                }
+
+                // コードブロック
+                return (
+                  <code
+                    className="block bg-gray-700 text-yellow-300 p-2 rounded text-sm overflow-x-auto my-2"
+                    {...restProps}
+                  >
+                    {children}
+                  </code>
+                );
+              },
+              pre: ({ children, ...props }) => (
+                <pre
+                  className="bg-gray-700 border border-gray-600 rounded p-2 my-2 overflow-x-auto text-sm"
+                  {...props}
+                >
+                  {children}
+                </pre>
+              ),
+              a: ({ children, href, ...props }) => (
+                <a
+                  href={href}
+                  className="text-blue-400 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  {...props}
+                >
+                  {children}
+                </a>
+              ),
+              ul: ({ children, ...props }) => (
+                <ul className="list-disc list-inside my-2" {...props}>
+                  {children}
+                </ul>
+              ),
+              ol: ({ children, ...props }) => (
+                <ol className="list-decimal list-inside my-2" {...props}>
+                  {children}
+                </ol>
+              ),
+              li: ({ children, ...props }) => (
+                <li className="text-gray-200 mb-1" {...props}>
+                  {children}
+                </li>
+              ),
+              blockquote: ({ children, ...props }) => (
+                <blockquote
+                  className="border-l-4 border-yellow-400 pl-3 my-2 italic text-gray-300"
+                  {...props}
+                >
+                  {children}
+                </blockquote>
+              ),
+              h1: ({ children, ...props }) => (
+                <h1
+                  className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0"
+                  {...props}
+                >
+                  {children}
+                </h1>
+              ),
+              h2: ({ children, ...props }) => (
+                <h2
+                  className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0"
+                  {...props}
+                >
+                  {children}
+                </h2>
+              ),
+              h3: ({ children, ...props }) => (
+                <h3
+                  className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0"
+                  {...props}
+                >
+                  {children}
+                </h3>
+              ),
+              hr: (props) => <hr className="border-gray-600 my-3" {...props} />,
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </div>
+      );
+    };
+
+    return (
+      <div className="bg-white border rounded-lg p-4 mb-3 shadow-sm">
+        <div className="grid grid-cols-1 gap-4">
+          {/* タイトル入力フィールド */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              タイトル <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={data.title || ""}
+              onChange={(e) =>
+                updateTriviaData(categoryItemId, "title", e.target.value)
+              }
+              placeholder="一口メモのタイトルを入力してください"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              maxLength={100}
+              autoFocus
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              例: 「蝉丸の由来」「能楽との関係」「歴史的背景」など
+            </p>
+          </div>
+
+          {/* カテゴリー */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              カテゴリー
+            </label>
+            <select
+              value={data.category}
+              onChange={(e) =>
+                updateTriviaData(categoryItemId, "category", e.target.value)
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="default">デフォルト</option>
+              <option value="shrine">神社</option>
+              <option value="anime">アニメ・文化</option>
+              <option value="food">食べ物</option>
+              <option value="culture">文化</option>
+              <option value="history">歴史</option>
+              <option value="nature">自然</option>
+              <option value="festival">祭り</option>
+              <option value="mythology">神話</option>
+              <option value="customs">風習</option>
+            </select>
+          </div>
+
+          {/* コンテンツ */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                コンテンツ（マークダウン記法対応）{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPreview(!showPreview)}
+                  className="hover:bg-blue-50"
+                >
+                  {showPreview ? "編集" : "プレビュー"}
+                </Button>
+              </div>
+            </div>
+
+            {showPreview ? (
+              <MarkdownPreview content={data.content || ""} />
+            ) : (
+              <textarea
+                value={data.content}
+                onChange={(e) =>
+                  updateTriviaData(categoryItemId, "content", e.target.value)
+                }
+                placeholder="一口メモの内容をマークダウン記法で入力してください。&#10;&#10;例：&#10;**蝉丸神社**は滋賀県大津市にある神社で、*音楽の神様*として知られています。&#10;&#10;- 能楽の祖とされる蝉丸を祀る&#10;- 音楽・芸能関係者の参拝が多い&#10;- 逢坂の関の近くに位置する"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={8}
+                maxLength={2000}
+              />
+            )}
+
+            <div className="mt-2 text-sm text-gray-600">
+              <p className="mb-1">マークダウン記法が使用できます：</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <code>**太字**</code> → <strong>太字</strong>
+                </div>
+                <div>
+                  <code>*斜体*</code> → <em>斜体</em>
+                </div>
+                <div>
+                  <code># 見出し1</code> →{" "}
+                  <span className="text-lg font-bold">見出し1</span>
+                </div>
+                <div>
+                  <code>## 見出し2</code> →{" "}
+                  <span className="text-base font-semibold">見出し2</span>
+                </div>
+                <div>
+                  <code>- リスト項目</code> → <span>• リスト項目</span>
+                </div>
+                <div>
+                  <code>[リンク](URL)</code> →{" "}
+                  <span className="text-blue-600 underline">リンク</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* アクション */}
+          <div className="flex justify-end gap-2 pt-2 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => cancelEditingTrivia(categoryItemId)}
+              className="hover:bg-gray-50"
+            >
+              <X className="h-3 w-3 mr-1" />
+              キャンセル
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => saveTrivia(categoryItemId)}
+              disabled={triviaLoading[categoryItemId]}
+              className="hover:bg-green-600"
+            >
+              {triviaLoading[categoryItemId] ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <Save className="h-3 w-3 mr-1" />
+              )}
+              保存
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // 🆕 TriviaDisplayコンポーネント
+  const TriviaDisplay = ({
+    categoryItemId,
+    trivia,
+    categoryItem,
+  }: {
+    categoryItemId: string;
+    trivia: CategoryItemTrivia;
+    categoryItem: CategoryItem;
+  }) => {
+    return (
+      <div className="bg-gray-50 border rounded-lg p-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="font-medium text-gray-900">{trivia.title}</h4>
+              <span
+                className={`px-2 py-1 text-xs rounded-full ${
+                  trivia.isActive
+                    ? "bg-green-100 text-green-800"
+                    : categoryItem.trivia && categoryItem.trivia.length === 1
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {trivia.isActive
+                  ? "アクティブ"
+                  : categoryItem.trivia && categoryItem.trivia.length === 1
+                  ? "唯一の一口メモ"
+                  : "非アクティブ"}
+              </span>
+              <span className="text-xs text-gray-500">
+                カテゴリ: {trivia.category}
+              </span>
+            </div>
+            <div className="text-sm text-gray-700 mb-2">
+              <div className="max-h-20 overflow-hidden">
+                {trivia.content.length > 150
+                  ? `${trivia.content.substring(0, 150)}...`
+                  : trivia.content}
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-1 ml-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => startEditingTrivia(categoryItemId, trivia.id)}
+              disabled={triviaLoading[categoryItemId]}
+              className="hover:bg-blue-50"
+            >
+              <Edit className="h-3 w-3" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                toggleTriviaActive(categoryItemId, trivia.id, !trivia.isActive)
+              }
+              disabled={triviaLoading[categoryItemId]}
+              className={`hover:bg-yellow-50 ${
+                trivia.isActive ? "text-yellow-600" : "text-green-600"
+              }`}
+            >
+              {trivia.isActive ? "無効" : "有効"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => deleteTrivia(categoryItemId, trivia.id)}
+              disabled={triviaLoading[categoryItemId]}
+              className="hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (initialLoading) {
@@ -598,6 +1454,18 @@ The creator god who, with Izanami, birthed the Japanese islands...
               公開する
             </label>
           </div>
+
+          {/* 🆕 Trivia機能セクション */}
+          {categoryItem && (
+            <TriviaSection
+              categoryItem={categoryItem}
+              expandedTrivia={expandedTrivia}
+              editingTrivia={editingTrivia}
+              triviaLoading={triviaLoading}
+              toggleTriviaSection={toggleTriviaSection}
+              startCreatingTrivia={startCreatingTrivia}
+            />
+          )}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button

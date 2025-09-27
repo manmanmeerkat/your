@@ -8,7 +8,12 @@ export async function GET(
   try {
     const categoryItem = await prisma.categoryItem.findUnique({
       where: { slug: params.slug },
-      include: { images: true }
+      include: { 
+        images: true,
+        trivia: {
+          orderBy: { displayOrder: 'asc' }
+        }
+      } as any
     });
 
     if (!categoryItem) {
@@ -64,8 +69,13 @@ export async function PUT(
         content: content || '',
         category,
         published,
-      },
-      include: { images: true }
+      } as any,
+      include: { 
+        images: true,
+        trivia: {
+          orderBy: { displayOrder: 'asc' }
+        }
+      } as any
     });
 
     // 画像の処理（新しい画像管理システム対応）
@@ -73,7 +83,7 @@ export async function PUT(
       // 既存の画像を削除
       await prisma.categoryItemImage.deleteMany({
         where: { categoryItemId: categoryItem.id }
-      });
+      } as any);
 
       // 新しい画像を作成
       for (const imageData of images) {
@@ -93,14 +103,14 @@ export async function PUT(
       // 画像を削除
       await prisma.categoryItemImage.deleteMany({
         where: { categoryItemId: categoryItem.id }
-      });
+      } as any);
       console.log('画像を削除しました');
     } 
     else if (imageUrl) {
       // 既存の画像を削除
       await prisma.categoryItemImage.deleteMany({
         where: { categoryItemId: categoryItem.id }
-      });
+      } as any);
 
       // 新しい画像を作成
       await prisma.categoryItemImage.create({
@@ -110,7 +120,7 @@ export async function PUT(
           altText: imageAltText || '',
           isFeatured: true
         }
-      });
+      } as any);
       console.log('画像を更新しました:', imageUrl);
     } 
     else {
@@ -120,7 +130,12 @@ export async function PUT(
     // 更新後のデータを取得
     const updatedItem = await prisma.categoryItem.findUnique({
       where: { id: categoryItem.id },
-      include: { images: true }
+      include: { 
+        images: true,
+        trivia: {
+          orderBy: { displayOrder: 'asc' }
+        }
+      } as any
     });
 
     return NextResponse.json(updatedItem);

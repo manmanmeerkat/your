@@ -7,7 +7,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORY_LABELS } from "@/constants/constants";
-import { MarkdownRenderer } from "@/lib/simpleMarkdownRenderer";
+import { ContentWithTrivia } from "@/components/trivia/ContentWithTrivia";
+import type { ArticleTrivia } from "@/types/types";
 
 import "@/app/styles/japanese-style-modern.css";
 
@@ -26,6 +27,22 @@ interface CategoryItemImage {
   categoryItemId: string;
 }
 
+interface CategoryItemTrivia {
+  id: string;
+  title: string;
+  content: string;
+  contentEn?: string | null;
+  category: string;
+  tags: string[];
+  iconEmoji?: string | null;
+  colorTheme?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  categoryItemId: string;
+}
+
 interface CategoryItem {
   id: string;
   title: string;
@@ -37,6 +54,7 @@ interface CategoryItem {
   createdAt: string;
   updatedAt: string;
   images?: CategoryItemImage[];
+  trivia?: CategoryItemTrivia[];
 }
 
 interface CategoryItemClientProps {
@@ -484,8 +502,25 @@ export default function CategoryItemClient({ item }: CategoryItemClientProps) {
   };
 
   const renderedContent = useMemo(() => {
-    return <MarkdownRenderer content={item.content} />;
-  }, [item.content]);
+    // CategoryItemTriviaをArticleTriviaに変換
+    const triviaList: ArticleTrivia[] = (item.trivia || []).map((trivia) => ({
+      id: trivia.id,
+      title: trivia.title,
+      content: trivia.content,
+      contentEn: trivia.contentEn,
+      category: trivia.category as any,
+      tags: trivia.tags,
+      iconEmoji: trivia.iconEmoji,
+      colorTheme: trivia.colorTheme as any,
+      displayOrder: trivia.displayOrder,
+      isActive: trivia.isActive,
+      createdAt: new Date(trivia.createdAt),
+      updatedAt: new Date(trivia.updatedAt),
+      articleId: trivia.categoryItemId, // categoryItemIdをarticleIdとして使用
+    }));
+
+    return <ContentWithTrivia content={item.content} triviaList={triviaList} />;
+  }, [item.content, item.trivia]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

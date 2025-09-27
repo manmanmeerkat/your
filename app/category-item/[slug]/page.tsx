@@ -2,6 +2,24 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import type { CategoryItemImage } from "@prisma/client";
+
+// 手動で型を定義（Prismaクライアントが更新されるまで）
+interface CategoryItemTrivia {
+  id: string;
+  title: string;
+  content: string;
+  contentEn?: string | null;
+  category: string;
+  tags: string[];
+  iconEmoji?: string | null;
+  colorTheme?: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  categoryItemId: string;
+}
 import CategoryItemClient from "./CategoryItemClient";
 import Script from "next/script";
 import { unstable_cache } from "next/cache";
@@ -36,7 +54,30 @@ const getCategoryItemData = async (slug: string) => {
             categoryItemId: true,
           },
         },
-      },
+        trivia: {
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            displayOrder: "asc",
+          },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            contentEn: true,
+            category: true,
+            tags: true,
+            iconEmoji: true,
+            colorTheme: true,
+            displayOrder: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            categoryItemId: true,
+          },
+        },
+      } as any,
     });
 
     if (!item) {
@@ -62,7 +103,7 @@ const getCategoryItemData = async (slug: string) => {
       description: item.description || undefined,
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
-      images: (item.images || []).map((img) => ({
+      images: ((item as any).images || []).map((img: CategoryItemImage) => ({
         id: img.id || "",
         url: img.url || "",
         altText: img.altText || undefined,
@@ -70,6 +111,23 @@ const getCategoryItemData = async (slug: string) => {
         createdAt: img.createdAt.toISOString(),
         categoryItemId: img.categoryItemId || "",
       })),
+      trivia: ((item as any).trivia || []).map(
+        (trivia: CategoryItemTrivia) => ({
+          id: trivia.id || "",
+          title: trivia.title || "",
+          content: trivia.content || "",
+          contentEn: trivia.contentEn || undefined,
+          category: trivia.category || "",
+          tags: trivia.tags || [],
+          iconEmoji: trivia.iconEmoji || undefined,
+          colorTheme: trivia.colorTheme || undefined,
+          displayOrder: trivia.displayOrder || 0,
+          isActive: Boolean(trivia.isActive),
+          createdAt: trivia.createdAt.toISOString(),
+          updatedAt: trivia.updatedAt.toISOString(),
+          categoryItemId: trivia.categoryItemId || "",
+        })
+      ),
     };
 
     return formattedItem;
@@ -143,7 +201,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
-    const featuredImage = item.images?.find((img) => img.isFeatured);
+    const featuredImage = (item as any).images?.find(
+      (img: CategoryItemImage) => img.isFeatured
+    );
     const imageUrl = featuredImage?.url || "/ogp-image.png";
 
     const baseDescription =
@@ -236,7 +296,9 @@ export default async function Page({ params }: Props) {
       },
     ];
 
-    const featuredImage = item.images?.find((img) => img.isFeatured);
+    const featuredImage = (item as any).images?.find(
+      (img: CategoryItemImage) => img.isFeatured
+    );
     const imageUrl = featuredImage?.url || "/ogp-image.png";
 
     // 構造化データ生成（記事と同じ構造）

@@ -64,6 +64,7 @@ model CategoryItem {
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
   images      CategoryItemImage[]
+  trivia      CategoryItemTrivia[]
 
   @@index([published, createdAt(sort: Desc)], map: "category_items_published_created_idx")
   @@index([category, published, createdAt(sort: Desc)], map: "category_items_category_published_idx")
@@ -81,6 +82,29 @@ model CategoryItemImage {
 
   @@index([categoryItemId, isFeatured, createdAt(sort: Desc)], map: "category_item_images_featured_idx")
   @@map("category_item_images")
+}
+
+model CategoryItemTrivia {
+  id             String       @id @default(uuid()) @db.Uuid
+  categoryItemId String       @map("category_item_id") @db.Uuid
+  title          String       @db.VarChar(200)
+  content        String
+  contentEn      String?      @map("content_en")
+  category       String       @db.VarChar(50)
+  tags           String[]     @default([])
+  iconEmoji      String?      @map("icon_emoji") @db.VarChar(10)
+  colorTheme     String?      @map("color_theme") @db.VarChar(30)
+  displayOrder   Int          @default(0) @map("display_order")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @default(now()) @map("updated_at") @db.Timestamptz(6)
+  categoryItem   CategoryItem @relation(fields: [categoryItemId], references: [id], onDelete: Cascade)
+
+  @@index([categoryItemId, displayOrder], map: "category_item_trivia_order_idx")
+  @@index([categoryItemId, isActive, displayOrder], map: "category_item_trivia_active_idx")
+  @@index([category, isActive], map: "category_item_trivia_category_active_idx")
+  @@index([tags], map: "category_item_trivia_tags_idx")
+  @@map("category_item_trivia")
 }
 
 model ContactMessage {
