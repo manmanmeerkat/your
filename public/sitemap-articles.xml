@@ -493,7 +493,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-three-sacred-treasures</loc>
-    <lastmod>2025-09-10T10:12:56.686Z</lastmod>
+    <lastmod>2025-10-04T05:29:51.439Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -576,15 +576,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/enka</loc>
-    <lastmod>2025-06-30T01:25:23.326Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/new-year-greeting-card</loc>
+    <lastmod>2025-10-04T08:33:50.962Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/new-year's-greeting-cards</loc>
-    <lastmod>2025-06-07T06:38:15.416Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/enka</loc>
+    <lastmod>2025-06-30T01:25:23.326Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -940,13 +940,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-white-hare-of-inaba</loc>
-    <lastmod>2025-08-30T01:12:42.807Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/aristocrats</loc>
     <lastmod>2025-10-02T11:22:02.016Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -968,15 +961,22 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/yaso-gami</loc>
-    <lastmod>2025-10-04T04:37:59.441Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/onmyoji-and-onmyodo</loc>
+    <lastmod>2025-09-07T11:53:51.440Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/onmyoji-and-onmyodo</loc>
-    <lastmod>2025-09-07T11:53:51.440Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/yaso-gami</loc>
+    <lastmod>2025-10-04T05:05:50.460Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/the-white-hare-of-inaba</loc>
+    <lastmod>2025-10-04T05:31:18.926Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1039,14 +1039,14 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/nihon-shoki</loc>
-    <lastmod>2025-09-10T10:10:59.969Z</lastmod>
+    <lastmod>2025-10-04T05:29:02.782Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/kojiki</loc>
-    <lastmod>2025-09-10T10:11:34.912Z</lastmod>
+    <lastmod>2025-10-04T05:29:28.034Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1108,6 +1108,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/category-item/susanoo-no-mikoto</loc>
+    <lastmod>2025-05-04T00:01:18.371Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/category-item/izanagi-no-mikoto</loc>
     <lastmod>2025-05-03T11:58:24.780Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -1117,13 +1124,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/category-item/kagutsuchi-no-mikoto</loc>
     <lastmod>2025-05-05T06:57:53.546Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/category-item/susanoo-no-mikoto</loc>
-    <lastmod>2025-05-04T00:01:18.371Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
