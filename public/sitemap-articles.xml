@@ -23,13 +23,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/fujin-and-raijin</loc>
-    <lastmod>2025-08-13T00:15:25.048Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/mount-fuji</loc>
     <lastmod>2025-08-29T12:43:04.137Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -38,7 +31,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/kitsune</loc>
-    <lastmod>2025-10-25T03:28:01.042Z</lastmod>
+    <lastmod>2025-10-25T05:05:57.209Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -58,6 +51,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/fujin-and-raijin</loc>
+    <lastmod>2025-10-27T12:21:49.532Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/bushido</loc>
     <lastmod>2025-09-04T11:12:37.361Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -65,8 +65,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-tradition-of-kites-in-japan</loc>
-    <lastmod>2025-07-12T02:37:17.304Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/kites-in-japan</loc>
+    <lastmod>2025-11-08T06:12:06.189Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -493,7 +493,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-three-sacred-treasures</loc>
-    <lastmod>2025-10-04T05:29:51.439Z</lastmod>
+    <lastmod>2025-11-01T07:30:34.493Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -527,13 +527,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/bowing-in-japan</loc>
-    <lastmod>2025-08-11T01:32:03.075Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/ninjas</loc>
     <lastmod>2025-06-07T12:12:07.425Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -550,6 +543,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/judo</loc>
     <lastmod>2025-06-21T01:52:04.450Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/bowing-in-japan</loc>
+    <lastmod>2025-11-04T11:09:48.728Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -688,13 +688,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/shikigami</loc>
-    <lastmod>2025-09-10T10:11:54.162Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/the-emperor</loc>
     <lastmod>2025-09-10T10:14:09.443Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -704,6 +697,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/semimaru</loc>
     <lastmod>2025-07-06T12:09:28.285Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/shikigami</loc>
+    <lastmod>2025-10-27T12:24:53.287Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -940,6 +940,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/konohanasakuya-iwanaga-myth-mortality</loc>
+    <lastmod>2025-11-08T05:51:50.306Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/aristocrats</loc>
     <lastmod>2025-10-02T11:22:02.016Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -998,13 +1005,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/miyadaiku</loc>
     <lastmod>2025-09-19T12:12:42.029Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/konohanasakuya-iwanaga-myth-mortality</loc>
-    <lastmod>2025-09-20T07:07:42.491Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
