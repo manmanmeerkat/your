@@ -37,13 +37,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/abe-no-seimei</loc>
-    <lastmod>2025-08-03T07:18:12.311Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/kokeshi</loc>
     <lastmod>2025-08-06T11:47:26.092Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -66,7 +59,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/kites-in-japan</loc>
-    <lastmod>2025-11-08T06:12:06.189Z</lastmod>
+    <lastmod>2025-11-09T22:12:16.600Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -74,6 +67,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/nagoya-matsuri</loc>
     <lastmod>2025-06-07T11:46:10.988Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/abe-no-seimei</loc>
+    <lastmod>2025-11-14T11:51:04.629Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -240,6 +240,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/ukiyo-e</loc>
+    <lastmod>2025-11-15T01:24:35.634Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/wadaiko</loc>
     <lastmod>2025-06-30T08:51:03.502Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -270,13 +277,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-tale-of-the-bamboo-cutter</loc>
     <lastmod>2025-09-21T11:44:20.998Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/ukiyo-e</loc>
-    <lastmod>2025-08-23T07:19:45.662Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -961,8 +961,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-spirit-of-omotenashi</loc>
-    <lastmod>2025-07-11T12:33:53.771Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/omotenashi</loc>
+    <lastmod>2025-11-15T06:11:25.316Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
