@@ -506,13 +506,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/gagaku</loc>
-    <lastmod>2025-06-29T11:37:14.588Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/wagashi</loc>
     <lastmod>2025-06-30T12:23:05.235Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -564,6 +557,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-soul-of-the-samurai</loc>
     <lastmod>2025-07-20T12:17:24.008Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/gagaku</loc>
+    <lastmod>2025-11-30T07:30:00.880Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -689,7 +689,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-emperor</loc>
-    <lastmod>2025-09-10T10:14:09.443Z</lastmod>
+    <lastmod>2025-12-02T11:30:30.830Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -947,22 +947,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/aristocrats</loc>
-    <lastmod>2025-10-02T11:22:02.016Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/inari-shrines</loc>
     <lastmod>2025-07-24T12:25:06.099Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/omotenashi</loc>
-    <lastmod>2025-11-15T06:11:25.316Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1003,8 +989,22 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/omotenashi</loc>
+    <lastmod>2025-11-16T22:47:42.178Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/miyadaiku</loc>
     <lastmod>2025-09-19T12:12:42.029Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/aristocrats</loc>
+    <lastmod>2025-11-22T07:27:51.885Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
