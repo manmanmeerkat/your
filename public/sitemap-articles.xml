@@ -261,6 +261,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/sensu</loc>
+    <lastmod>2025-12-17T11:07:38.174Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/hakata-gion-yamakasa</loc>
     <lastmod>2025-08-21T02:31:04.237Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -277,13 +284,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-tale-of-the-bamboo-cutter</loc>
     <lastmod>2025-09-21T11:44:20.998Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-art-of-japanese-folding-fans</loc>
-    <lastmod>2025-08-13T05:47:00.549Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -339,7 +339,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/amakusa-shiro</loc>
-    <lastmod>2025-08-27T12:15:03.291Z</lastmod>
+    <lastmod>2025-12-14T11:15:31.628Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -688,13 +688,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-emperor</loc>
-    <lastmod>2025-12-02T11:30:30.830Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/semimaru</loc>
     <lastmod>2025-07-06T12:09:28.285Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -718,6 +711,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/dango</loc>
     <lastmod>2025-07-04T12:03:21.978Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/the-emperor</loc>
+    <lastmod>2025-12-06T07:35:29.958Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -1143,6 +1143,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/category-item/takemikazuchi-no-kami</loc>
+    <lastmod>2025-05-10T08:54:47.234Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/category-item/konohanasakuya-hime</loc>
     <lastmod>2025-05-04T02:23:24.865Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -1152,13 +1159,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/category-item/yagami-hime</loc>
     <lastmod>2025-05-10T11:52:14.308Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/category-item/takemikazuchi-no-kami</loc>
-    <lastmod>2025-05-10T08:54:47.234Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
