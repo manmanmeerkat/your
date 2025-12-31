@@ -75,7 +75,6 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
   ) => {
     event.preventDefault();
     event.stopPropagation();
-    console.log("×ボタンがクリックされました - closeMobileToc実行");
     closeMobileToc();
   };
 
@@ -87,16 +86,12 @@ export const TableOfContents: React.FC<TableOfContentsProps> = ({
 
   // 🚨 重要修正: 見出しクリック時は scrollToHeading のみを呼び出し
   const handleHeadingClick = (item: TocItem) => {
-    console.log("目次項目がクリックされました:", item.id, item.text);
-    console.log("scrollToHeading のみ実行 - スクロール位置復元なし");
-
     // 🚨 重要: scrollToHeading のみ呼び出し
     scrollToHeading(item.id);
   };
 
   // 🚨 オーバーレイクリック処理
   const handleOverlayClick = () => {
-    console.log("オーバーレイがクリックされました - closeMobileToc実行");
     closeMobileToc();
   };
 

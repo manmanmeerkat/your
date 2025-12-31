@@ -43,8 +43,6 @@ export const GetGodsItem = ({
     };
 
     sessionStorage.setItem("gods-return-data", JSON.stringify(returnData));
-
-    console.log("神々クリック - 詳細位置保存:", returnData);
   }, []);
 
   return (
