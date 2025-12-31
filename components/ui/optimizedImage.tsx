@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Props = {
   src: string;
@@ -16,17 +16,32 @@ export function OptimizedImage({
   src,
   alt,
   className = "",
-  priority = false,
+  priority = true,
   width = 800,
   height = 400,
 }: Props) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
 
-  // src が変わったら状態リセット
+  // src が変わったら状態リセット + 保険タイマー
   useEffect(() => {
     setIsLoaded(false);
     setHasError(false);
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      setIsLoaded(true); // ← 最終保険
+    }, 1200);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [src]);
 
   const handleError = useCallback(() => {
@@ -37,7 +52,7 @@ export function OptimizedImage({
   if (hasError) {
     return (
       <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 text-center text-gray-500 flex items-center justify-center min-h-[200px]">
-        <div>Failed to load image.</div>
+        <div>This image is taking a little rest.</div>
       </div>
     );
   }
@@ -63,6 +78,7 @@ export function OptimizedImage({
           isLoaded ? "opacity-100" : "opacity-0",
           className,
         ].join(" ")}
+        onLoad={() => setIsLoaded(true)}
         onLoadingComplete={() => setIsLoaded(true)}
         onError={handleError}
       />
