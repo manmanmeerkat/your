@@ -108,7 +108,7 @@ const label = CATEGORY_LABELS[c] ?? currentCategory;
         ].join(" ")}
       >
         <h3 className="m-0 text-center text-[1.25rem] font-semibold tracking-wider text-[#f3f3f2]">
-          More Japanese {label}
+          More {label}
         </h3>
         <div className="mx-auto mt-3 h-px w-24 bg-gradient-to-r from-transparent via-[rgba(201,106,93,0.9)] to-transparent" />
       </div>

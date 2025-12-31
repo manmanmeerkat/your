@@ -17,6 +17,8 @@ import {
   buildArticleMetadata,
 } from "@/components/articlePageComponents/articleSeo/articleSeo";
 
+export const dynamic = "force-dynamic";
+
 type Props = { params: { slug: string } };
 
 export async function generateStaticParams() {

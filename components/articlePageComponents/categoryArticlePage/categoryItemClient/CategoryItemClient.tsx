@@ -65,14 +65,15 @@ export default function CategoryItemClient({ item, relatedItems }: Props) {
   const isJapaneseGods = c === "about-japanese-gods" || c === "japanese-gods";
 
   const backHref = isJapaneseGods ? "/mythology#japanese-gods" : `/${item.category}`;
-  const backLabel = isJapaneseGods ? "Back to Japanese Gods" : `Back to ${item.category}`;
+  const backLabel = isJapaneseGods ? "Back to Japanese Gods" : `Back to ${item.category}`
 
   return (
     <ArticleDetailLayout
+      key={item.slug}
       doc={doc}
       sidebar={
         <RelatedArticles
-          items={relatedItems}
+          items={relatedItems ?? []}
           currentCategory={doc.category}
         />
       }

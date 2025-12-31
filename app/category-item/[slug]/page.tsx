@@ -8,9 +8,10 @@ import { Breadcrumb } from "@/components/breadcrumb";
 import { generateBreadcrumbStructuredData,
 } from "@/components/breadcrumb/config";
 import { BREADCRUMB_CONFIG, type CategoryKey } from "@/components/breadcrumb/config";
-
 import CategoryItemClient from "../../../components/articlePageComponents/categoryArticlePage/categoryItemClient/CategoryItemClient";
 import type { CategoryItemDTO } from "../../../components/articlePageComponents/categoryArticlePage/categoryItemClient/CategoryItemClient";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   params: { slug: string };
