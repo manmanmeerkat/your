@@ -1,66 +1,106 @@
-import Image from "next/image";
+// import Image from "next/image";
 import Link from "next/link";
-import { SNS_LINKS } from "@/constants/constants";
+// import { SNS_LINKS } from "@/constants/constants";
 
 export function ContactCard({
   title,
   content,
   detail,
-  link,   // ← new!
+  link,
 }: {
   title: string;
   content?: string;
   detail?: string;
   link?: { href: string; label: string };
 }) {
-
-  const filteredSNSLinks = SNS_LINKS.filter((sns) => sns.img !== "/images/icon/x-white.png");
+  // const filteredSNSLinks = SNS_LINKS.filter(
+  //   (sns) => sns.img !== "/images/icon/x-white.png"
+  // );
 
   return (
-    <div className="bg-[#f3f3f2] text-[#180614] p-8 rounded-xl shadow-lg w-full max-w-lg mx-auto text-center">
-      <h3 className="text-xl font-bold mb-3">{title}</h3>
-      {content && <p className="mb-2">{content}</p>}
+    <div
+      className="
+        relative overflow-hidden
+        rounded-2xl
+        shadow-[0_18px_60px_rgba(0,0,0,.35)]
+        bg-white/10 backdrop-blur-x
+      "
+    >
+      {/* subtle gradient overlay */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/12 via-white/6 to-white/10" />
 
-      {detail && <p className="text-[#df7163] mb-4">{detail}</p>}
+      <div className="relative p-8 md:p-10 text-[#f3f3f2]">
+        <h3 className="text-xl font-semibold tracking-tight">
+          {title}
+        </h3>
 
-      {link && (
-        <p className="mb-4 mt-8">
-          <Link
-            href={link.href}
-            className="text-[#df7163] hover:underline text-lg font-bold"
-          >
-            {link.label}
-          </Link>
-        </p>
-      )}
-      <p className="text-xl font-bold mb-3 mt-8">Follow us:</p>
-      <div className="flex justify-center items-center flex-wrap gap-2">
-        {filteredSNSLinks.map((sns, index) => (
-          <div key={sns.label} className="flex items-center">
+        {content && (
+          <p className="mt-3 text-[#f3f3f2]/80 leading-relaxed">
+            {content}
+          </p>
+        )}
+
+        {detail && (
+          <p className="mt-3 text-[#df7163]">
+            {detail}
+          </p>
+        )}
+
+        {link && (
+          <div className="mt-7 flex justify-end">
             <Link
-              href={sns.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-1 text-slate-600 hover:text-[#df7163] group"
+              href={link.href}
+              className="
+                inline-flex items-center justify-center gap-2
+                rounded-full px-6 py-2.5
+                bg-[#c96a5d]/90 text-[#f3f3f2]
+                shadow-sm
+                ring-1 ring-white/10
+                hover:bg-[#f3f3f2]/90 hover:text-[#c96a5d]
+                transition-all duration-200
+                hover:-translate-y-[1px] hover:shadow-md
+              "
             >
-              <Image
-                src={sns.img}
-                alt={`${sns.label} icon`}
-                width={20}
-                height={20}
-                className="object-contain"
-                unoptimized
-              />
-              <span className="relative block font-bold">
-                {sns.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#df7163] transition-all duration-300 group-hover:w-full"></span>
-              </span>
+              {link.label}
+              <span className="text-lg leading-none">→</span>
             </Link>
-            {index < filteredSNSLinks.length - 1 && (
-              <span className="mx-2">|</span>
-            )}
           </div>
-        ))}
+        )}
+
+        {/* <div className="mt-10">
+          <p className="text-lg font-semibold">Follow us</p>
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            {filteredSNSLinks.map((sns) => (
+              <Link
+                key={sns.label}
+                href={sns.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="
+                  inline-flex items-center gap-2
+                  rounded-full px-4 py-2
+                  bg-white/8
+                  ring-1 ring-white/10
+                  text-[#f3f3f2]/85
+                  hover:text-[#f3f3f2]
+                  hover:bg-white/12
+                  transition-all duration-200
+                "
+              >
+                <Image
+                  src={sns.img}
+                  alt={`${sns.label} icon`}
+                  width={18}
+                  height={18}
+                  className="object-contain"
+                  unoptimized
+                />
+                <span className="font-semibold">{sns.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div> */}
       </div>
     </div>
   );

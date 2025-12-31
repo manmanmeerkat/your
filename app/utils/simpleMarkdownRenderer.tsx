@@ -1,13 +1,23 @@
 "use client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useState, useEffect } from "react";
 import React from "react";
+import { makeHeadingId } from "@/app/utils/headingId";
+import Image from "next/image";
+// import rehypeUnwrapImages from "rehype-unwrap-images";
 
 interface MarkdownRendererProps {
   content: string;
   triviaList?: ArticleTrivia[];
 }
+
+type SimpleImageProps = {
+  src?: string;
+  alt?: string;
+  title?: string;
+  width?: number;
+  height?: number;
+};
 
 // 一口メモの型定義
 type ArticleTrivia = {
@@ -40,49 +50,11 @@ function preprocessImageSyntax(content: string): string {
 }
 
 // 🔧 完全独立版インライン一口メモコンポーネント（Hydration対応）
-const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
-  trivia,
-  index,
-}) => {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const kanjiNumbers = [
-    "一",
-    "二",
-    "三",
-    "四",
-    "五",
-    "六",
-    "七",
-    "八",
-    "九",
-    "十",
-  ];
-
-  // サーバーサイドでは最小限のプレースホルダー
-  if (!isClient) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          height: "200px",
-          backgroundColor: "#f3f4f6",
-          borderRadius: "1rem",
-          margin: "2rem 0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#6b7280",
-        }}
-      >
-        読み込み中...
-      </div>
-    );
-  }
+const InlineTrivia: React.FC<{
+  trivia: ArticleTrivia;
+  index: number;
+}> = ({ trivia, index }) => {
+  void index;
 
   return (
     <div
@@ -131,39 +103,39 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
             }}
           />
 
-          {/* ヘッダー */}
+          {/* ヘッダー：左は “Trivia” ラベルに（スクショ寄せ） */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "center",
               marginBottom: "2rem",
               width: "100%",
             }}
           >
             <div
               style={{
-                width: "3rem",
-                height: "3rem",
-                borderRadius: "50%",
-                background: "#1f2937",
-                border: "1px solid #374151",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "1rem",
-                fontWeight: "bold",
-                color: "#d1d5db",
+                padding: "0.7rem 3rem",
+                borderRadius: "0.15rem",
+                background: "rgba(165,154,202,0.18)",
+                border: "1px solid rgba(165,154,202,0.35)",
+                color: "#f9fafb",
                 fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
-                flexShrink: 0,
+                fontWeight: 700,
+                fontSize: "2rem",
+                letterSpacing: "0.08em",
               }}
             >
-              {kanjiNumbers[index] || index + 1}
+              Trivia
             </div>
 
+            {/* 右上アイコンが必要なら残す（任意） */}
             {trivia.iconEmoji && (
               <div
                 style={{
+                  position: "absolute",
+                  top: "1.5rem",
+                  right: "1.5rem",
                   width: "3.5rem",
                   height: "3.5rem",
                   borderRadius: "0.75rem",
@@ -173,7 +145,6 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  flexShrink: 0,
                 }}
               >
                 <img
@@ -194,56 +165,29 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
           </div>
 
           {/* タイトル */}
-          <div
+          <h3
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              margin: 0,
               marginBottom: "1.5rem",
-              flexWrap: "wrap",
-              gap: "1rem",
+              fontSize: "1.35rem",
+              fontWeight: "bold",
+              color: "#a59aca",
+              fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
+              lineHeight: 1.4,
+              textAlign: "center",
             }}
           >
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                color: "#f9fafb",
-                fontFamily: '"Noto Serif JP", "Yu Mincho", serif',
-                lineHeight: 1.4,
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {trivia.title}
-            </h3>
+            {trivia.title}
+          </h3>
 
-            {trivia.colorTheme && (
-              <div
-                style={{
-                  padding: "0.5rem 1rem",
-                  borderRadius: "2rem",
-                  fontSize: "0.875rem",
-                  fontWeight: "600",
-                  color: "#ffffff",
-                  background: trivia.colorTheme,
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
-              >
-                {trivia.category}
-              </div>
-            )}
-          </div>
-
-          {/* コンテンツ */}
+          {/* コンテンツ：Markdown対応させるならここを TriviaMarkdown に変える */}
           <div
             style={{
               color: "#d1d5db",
               lineHeight: 1.8,
               fontSize: "1rem",
               fontFamily: '"Noto Sans JP", "Hiragino Sans", sans-serif',
+              whiteSpace: "pre-wrap",
             }}
           >
             {trivia.content}
@@ -297,98 +241,36 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({
   );
 };
 
-// 🔧 画像表示用コンポーネント（Supabase Storage対応）
-function SimpleImage({
-  src,
-  alt,
-  title,
-  width,
-  height,
-}: {
-  src?: string;
-  alt?: string;
-  title?: string;
-  width?: number;
-  height?: number;
-}) {
-  const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // 初期状態をfalseに変更
-
-  // 画像URLの正規化
-  let normalizedSrc = src;
-
-  // Supabase StorageのURLかどうかチェック
-  if (src && src.includes("supabase.co")) {
-    // Supabase StorageのURLはそのまま使用
-    normalizedSrc = src;
-  } else if (src && src.startsWith("//")) {
-    normalizedSrc = "https:" + src;
-  } else if (src && (src.startsWith("http://") || src.startsWith("https://"))) {
-    normalizedSrc = src;
-  } else if (src && !src.startsWith("/")) {
-    normalizedSrc = "/" + src;
-  }
-
-  console.log("🔍 SimpleImage URL処理:", {
-    original: src,
-    normalized: normalizedSrc,
-    isSupabase: src && src.includes("supabase.co"),
-    width,
-    height,
-  });
-
-  if (!normalizedSrc || hasError) {
+// 画像表示用コンポーネント（Supabase Storage対応）
+export function SimpleImage({ src, alt, width, height }: SimpleImageProps) {
+  if (!src) {
     return <div className="simple-image-error">画像読み込みエラー</div>;
   }
 
+  const ratio = width && height ? `${width}/${height}` : "16/9";
+
   return (
-    <span className="simple-image-container">
-      {/* ローディング表示 */}
-      {isLoading && (
-        <span className="simple-image-loading">
-          <span className="simple-image-spinner" />
-          <span className="simple-image-loading-text">読み込み中...</span>
-        </span>
-      )}
-
-      {/* 画像要素 */}
-      <img
-        src={normalizedSrc}
-        alt={alt || ""}
-        title={title}
-        className={`simple-image ${isLoading ? "simple-image-loading" : ""}`}
-        loading="lazy"
-        decoding="async"
-        width={width}
-        height={height}
-        style={{
-          width: width ? `${width}px !important` : undefined,
-          height: height ? `${height}px !important` : undefined,
-          maxWidth: "100%",
-          maxHeight: "100%",
-          display: "block",
-        }}
-        onLoad={() => {
-          console.log("✅ 画像読み込み完了:", normalizedSrc);
-          setIsLoading(false);
-          setHasError(false);
-        }}
-        onError={(e) => {
-          console.error("❌ 画像読み込みエラー:", normalizedSrc, e);
-          setHasError(true);
-          setIsLoading(false);
-        }}
-        onLoadStart={() => {
-          console.log("🔄 画像読み込み開始:", normalizedSrc);
-          setIsLoading(true);
-          setHasError(false);
-        }}
+    <span
+      className="simple-image-wrap"
+      style={{
+        display: "block",
+        width: "100%",
+        aspectRatio: ratio,
+        minHeight: 220,
+        height: "auto",
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: "12px",
+      }}
+    >
+      <Image
+        src={src}
+        alt={alt ?? ""}
+        width={1600}
+        height={900}
+        sizes="(max-width: 768px) 100vw, 800px"
+        style={{ width: "100%", height: "auto" }}
       />
-
-      {/* キャプション */}
-      {title && !isLoading && !hasError && (
-        <span className="simple-image-caption">{title}</span>
-      )}
     </span>
   );
 }
@@ -398,28 +280,17 @@ const separateTriviaFromMarkdown = (
   content: string,
   triviaList: ArticleTrivia[]
 ): { markdownContent: string; triviaElements: React.ReactNode[] } => {
-  let markdownContent = content;
-  const triviaElements: React.ReactNode[] = [];
+  const triviaElements = triviaList.map((trivia, index) => (
+    <InlineTrivia key={trivia.id} trivia={trivia} index={index} />
+  ));
 
-  triviaList.forEach((trivia, index) => {
-    const triviaPlaceholder = `<!-- TRIVIA_${index} -->`;
-    markdownContent = markdownContent.replace(
-      new RegExp(`\\[一口メモ\\s*${index + 1}\\]`, "g"),
-      triviaPlaceholder
-    );
-    triviaElements.push(
-      <InlineTrivia key={trivia.id} trivia={trivia} index={index} />
-    );
-  });
-
-  return { markdownContent, triviaElements };
+  return { markdownContent: content, triviaElements };
 };
 
 // 🔧 分離されたコンテンツをレンダリングする関数
 const renderSeparatedContent = (
   markdownContent: string,
   triviaElements: React.ReactNode[],
-  triviaList: ArticleTrivia[]
 ): React.ReactNode[] => {
   const elements: React.ReactNode[] = [];
   const parts = markdownContent.split(/(<!-- TRIVIA_\d+ -->)/);
@@ -436,31 +307,9 @@ const renderSeparatedContent = (
           <div className="markdown-container">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              // rehypePlugins={[rehypeUnwrapImages]} 
               components={{
                 p({ children }) {
-                  // 子要素に画像があるかチェック
-                  const hasImage = React.Children.toArray(children).some(
-                    (child) => {
-                      if (React.isValidElement(child)) {
-                        return (
-                          child.type === "img" ||
-                          (child.type &&
-                            typeof child.type === "function" &&
-                            child.type.name === "SimpleImage")
-                        );
-                      }
-                      return false;
-                    }
-                  );
-
-                  if (hasImage) {
-                    // 画像がある場合はdivを使用
-                    return (
-                      <div className="japanese-style-modern-p">{children}</div>
-                    );
-                  }
-
-                  // 通常の段落
                   return <p className="japanese-style-modern-p">{children}</p>;
                 },
 
@@ -470,60 +319,64 @@ const renderSeparatedContent = (
                   let width: number | undefined;
                   let height: number | undefined;
 
-                  // altに {width=400 height=250} のような指定があればパース
                   const sizeMatch = alt.match(/\{([^}]+)\}/);
                   if (sizeMatch) {
                     const sizeStr = sizeMatch[1];
                     const widthMatch = sizeStr.match(/width\s*=\s*(\d+)/);
                     const heightMatch = sizeStr.match(/height\s*=\s*(\d+)/);
-                    width = widthMatch
-                      ? parseInt(widthMatch[1], 10)
-                      : undefined;
-                    height = heightMatch
-                      ? parseInt(heightMatch[1], 10)
-                      : undefined;
-                    // altテキストからサイズ指定部分を除去
+                    width = widthMatch ? parseInt(widthMatch[1], 10) : undefined;
+                    height = heightMatch ? parseInt(heightMatch[1], 10) : undefined;
                     alt = alt.replace(/\{[^}]+\}/, "").trim();
                   }
 
-                  // 画像URLの正規化（既存の処理を流用）
                   let normalizedSrc = src;
-                  if (src && src.includes("supabase.co")) {
-                    normalizedSrc = src;
-                  } else if (src && src.startsWith("//")) {
-                    normalizedSrc = "https:" + src;
-                  } else if (
-                    src &&
-                    (src.startsWith("http://") || src.startsWith("https://"))
-                  ) {
-                    normalizedSrc = src;
-                  } else if (src && !src.startsWith("/")) {
-                    normalizedSrc = "/" + src;
-                  }
+                  if (src && src.includes("supabase.co")) normalizedSrc = src;
+                  else if (src && src.startsWith("//")) normalizedSrc = "https:" + src;
+                  else if (src && (src.startsWith("http://") || src.startsWith("https://"))) normalizedSrc = src;
+                  else if (src && !src.startsWith("/")) normalizedSrc = "/" + src;
 
                   return (
-                    <SimpleImage
-                      src={normalizedSrc}
-                      alt={alt}
-                      title={title}
-                      width={width}
-                      height={height}
-                    />
+                    <span className="my-6 block">
+                      <SimpleImage
+                        src={normalizedSrc}
+                        alt={alt}
+                        title={title}
+                        width={width}
+                        height={height}
+                      />
+                    </span>
                   );
                 },
 
-                h1(props) {
+                iframe: (props) => (
+                  <div className="my-6" style={{ width: "100%", aspectRatio: "16/9" }}>
+                    <iframe
+                      {...props}
+                      style={{ width: "100%", height: "100%", border: 0 }}
+                      loading="lazy"
+                      allowFullScreen
+                    />
+                  </div>
+                ),
+
+                h1({ children }) {
+                  const text = React.Children.toArray(children).join("").trim();
+                  const id = makeHeadingId(text);
+
                   return (
-                    <h1 className="japanese-style-modern-h1">
-                      {props.children}
+                    <h1 id={id} className="japanese-style-modern-h1">
+                      {children}
                     </h1>
                   );
                 },
 
-                h2(props) {
+                h2({ children }) {
+                  const text = React.Children.toArray(children).join("").trim();
+                  const id = makeHeadingId(text);
+
                   return (
-                    <h2 className="japanese-style-modern-h2">
-                      {props.children}
+                    <h2 id={id} className="japanese-style-modern-h2">
+                      {children}
                     </h2>
                   );
                 },
@@ -553,28 +406,12 @@ const renderSeparatedContent = (
                 },
 
                 strong(props) {
-                  const text = Array.isArray(props.children)
-                    ? props.children.join("")
-                    : String(props.children || "");
-
-                  // 一口メモの記法をチェック
-                  const triviaMatch = text.match(/^一口メモ[：:]\s*(.+)$/);
-                  if (triviaMatch) {
-                    const triviaTitle = triviaMatch[1];
-                    const trivia = triviaList?.find(
-                      (t) => t.title === triviaTitle
-                    );
-                    if (trivia) {
-                      return <InlineTrivia trivia={trivia} index={0} />;
-                    }
-                  }
-
-                  return (
-                    <strong className="japanese-style-modern-strong">
-                      {props.children}
-                    </strong>
-                  );
-                },
+                return (
+                  <strong className="japanese-style-modern-strong">
+                    {props.children}
+                  </strong>
+                );
+              },
 
                 em(props) {
                   return (
@@ -710,24 +547,23 @@ const renderSeparatedContent = (
   return elements;
 };
 
-export function MarkdownRenderer({
-  content,
-  triviaList,
-}: MarkdownRendererProps) {
-  // 🔧 画像記法の前処理を実行
-  const preprocessedContent = preprocessImageSyntax(content);
+function preprocessTriviaSyntax(content: string): string {
+  // 行単位で :::trivia[0] を <!-- TRIVIA_0 --> に変換
+  return content.replace(/^:::\s*trivia\[(\d+)\]\s*$/gm, "<!-- TRIVIA_$1 -->");
+}
 
-  // 🔧 一口メモをMarkdown処理から分離
+export function MarkdownRenderer({ content, triviaList }: MarkdownRendererProps) {
+  const pre1 = preprocessImageSyntax(content);
+  const pre2 = preprocessTriviaSyntax(pre1);
+
   const { markdownContent, triviaElements } = separateTriviaFromMarkdown(
-    preprocessedContent,
+    pre2,
     triviaList || []
   );
 
-  // 🔧 分離されたコンテンツをレンダリング
   const renderedElements = renderSeparatedContent(
     markdownContent,
     triviaElements,
-    triviaList || []
   );
 
   return <>{renderedElements}</>;

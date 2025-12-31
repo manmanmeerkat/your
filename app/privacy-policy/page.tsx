@@ -1,155 +1,225 @@
 import Image from "next/image";
+import Script from "next/script";
+import { Suspense } from "react";
+
 import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
+import { BackToContactLink } from "@/components/privacyPolicyComponents/BackToContactLink";
+
+import { Breadcrumb } from "@/components/breadcrumb";
+import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
 
 export default function PrivacyPolicyPage() {
+
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    { label: "Privacy Policy", href: "/privacy-policy", isCurrentPage: true },
+  ];
+  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
+
   return (
     <div className="mb-24">
-      <section className="relative bg-slate-950 text-white pt-24 pb-24">
-        <div className="absolute inset-0 z-0 opacity-30">
+
+      <Script
+        id="breadcrumb-structured-data"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-4">
+        <Breadcrumb customItems={breadcrumbItems} />
+      </div>
+
+      {/* Hero */}
+      <section className="relative min-h-[220px] md:min-h-[280px] pt-24 pb-20 text-white overflow-hidden">
+        {/* background layer */}
+        <div className="absolute inset-0 z-0">
           <Image
             src="/images/category-top/privacy-policy.jpg"
-            alt="Japanese Customs"
+            alt="Privacy Policy background"
             fill
-            style={{ objectFit: "cover" }}
-            unoptimized
+            priority
+            className="object-cover -z-10 brightness-75"
           />
+          {/* overlay */}
+          <div className="absolute inset-0 bg-black/70 z-10" />
         </div>
-        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto">
-            Our commitment to your privacy
+
+        {/* content layer */}
+        <div className="relative z-10 container mx-auto px-6 md:px-16 text-center">
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            Privacy Policy
+          </h1>
+          <p className="mt-2 text-sm md:text-base text-white/75">
+            How we handle information with care
           </p>
         </div>
       </section>
 
-      {/* プライバシーポリシーコンテンツ */}
-      <div className="container mx-auto px-4 pt-32 pb-8">
-        <div className="max-w-4xl mx-auto bg-[#16160e] rounded-lg p-8 text-white text-left">
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              Introduction
-            </h2>
-            <p className="mb-4 text-gray-300">
-              Welcome to our website dedicated to introducing Japanese culture,
-              traditions, and customs to a global audience. This Privacy Policy
-              explains how we handle information when you visit our website.
-            </p>
-            <p className="text-gray-300">
-              Our website is primarily an informational resource, and we do not
-              require user registration or actively collect personal
-              information.
-            </p>
-          </section>
-
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              Information We Collect
-            </h2>
-            <p className="mb-4 text-gray-300">
-              When you visit our website, we collect minimal information:
-            </p>
-            <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-300">
-              <li>
-                <strong className="text-white">Log Data</strong>: Our web
-                servers automatically collect standard log information,
-                including your IP address, browser type, pages visited, and time
-                spent on the site. This information is used only for website
-                operation and improvement purposes.
-              </li>
-              <li>
-                <strong className="text-white">Cookies</strong>: We use
-                essential cookies to ensure the website functions properly. We
-                may also use analytics cookies to understand how visitors use
-                our site, but these do not collect personally identifiable
-                information.
-              </li>
-            </ul>
-          </section>
-
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              How We Use Information
-            </h2>
-            <p className="mb-4 text-gray-300">
-              The limited information we collect is used for:
-            </p>
-            <ul className="list-disc pl-6 mb-4 space-y-2 text-gray-300">
-              <li>Maintaining and improving our website</li>
-              <li>
-                Analyzing how visitors use our site to enhance content and user
-                experience
-              </li>
-              <li>Detecting and preventing technical issues</li>
-            </ul>
-            <p className="text-gray-300">
-              We do not sell, rent, or share any information with third parties
-              except as required by law or to protect our rights.
-            </p>
-          </section>
-
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              Analytics
-            </h2>
-            <p className="mb-4 text-gray-300">
-              We may use third-party analytics services (like Google Analytics)
-              to help us understand how visitors use our site. These services
-              collect anonymous information about your visits to our website,
-              such as the pages you view and how long you spend on the site.
-            </p>
-            <p className="text-gray-300">
-              The information is used to compile reports and help us improve the
-              site. These third-party services have their own privacy policies
-              regarding how they use such information.
-            </p>
-          </section>
-
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              External Links
-            </h2>
-            <p className="mb-4 text-gray-300">
-              Our website may contain links to external sites that are not
-              operated by us. Please be aware that we have no control over the
-              content and practices of these sites, and cannot accept
-              responsibility or liability for their respective privacy policies.
-            </p>
-            <p className="text-gray-300">
-              We encourage you to review the privacy policies of any site you
-              visit from our website.
-            </p>
-          </section>
-
-          <section className="mb-10">
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              Changes to This Privacy Policy
-            </h2>
-            <p className="mb-4 text-gray-300">
-              We may update our Privacy Policy from time to time. We will notify
-              you of any changes by posting the new Privacy Policy on this page
-              and updating the &quot;last updated&quot; date.
-            </p>
-            <p className="text-gray-300">
-              You are advised to review this Privacy Policy periodically for any
-              changes.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-4 text-[#f19072]">
-              Contact Us
-            </h2>
-            <p className="mb-4 text-gray-300">
-              If you have any questions about this Privacy Policy, please
-              contact us through our provided contact methods on the website.
-            </p>
-            <p className="text-sm text-gray-400 italic">
-              Last updated: April 13, 2025
-            </p>
-          </section>
+      {/* Back to Contact */}
+      <div className="container mx-auto px-4 mt-6">
+        <div className="mx-auto max-w-4xl">
+          <Suspense fallback={null}>
+            <BackToContactLink />
+          </Suspense>
         </div>
       </div>
-      <BackToHomeBtn/>
+
+      {/* Content */}
+      <div className="container mx-auto px-4 pt-10 md:pt-14 pb-10">
+        <div className="mx-auto max-w-4xl">
+          <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur-md p-6 sm:p-8 md:p-10">
+            {/* Optional: small intro note */}
+            <p className="text-white/80 leading-7">
+              This Privacy Policy explains how we handle information when you visit our website.
+              We focus on sharing cultural content and do not require user registration.
+            </p>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* Introduction */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                Introduction
+              </h2>
+              <p className="text-white/75 leading-7">
+                Welcome to our website, which introduces Japanese culture, traditions, and customs
+                to a global audience. This page explains how we respect your privacy when you browse
+                our content.
+              </p>
+              <p className="text-white/75 leading-7">
+                Our website is primarily an informational resource. We do not require user
+                registration and do not actively collect personal information.
+              </p>
+            </section>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* Information We Collect */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                Information We Collect
+              </h2>
+              <p className="text-white/75 leading-7">
+                When you visit our website, we may collect limited information:
+              </p>
+
+              <ul className="space-y-3 pl-5 list-disc text-white/75 leading-7">
+                <li>
+                  <span className="text-white font-semibold">Log Data</span>: Our web servers may
+                  collect standard log information such as your IP address, browser type, pages
+                  visited, and time spent on the site. This information is used only for website
+                  operation, security, and improvement.
+                </li>
+                <li>
+                  <span className="text-white font-semibold">Cookies</span>: We use essential cookies
+                  for basic functionality. We may also use analytics cookies to understand how
+                  visitors use our site, but these do not collect personally identifiable information.
+                </li>
+              </ul>
+            </section>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* How We Use Information */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                How We Use Information
+              </h2>
+              <p className="text-white/75 leading-7">
+                The limited information we collect is used to:
+              </p>
+              <ul className="space-y-2 pl-5 list-disc text-white/75 leading-7">
+                <li>Maintain and improve our website</li>
+                <li>Better understand how visitors use our content</li>
+                <li>Detect and prevent technical or security issues</li>
+              </ul>
+              <p className="text-white/75 leading-7">
+                We do not sell, rent, or share information with third parties except as required by
+                law or to protect our rights and the safety of our website.
+              </p>
+            </section>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* Analytics */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                Analytics
+              </h2>
+              <p className="text-white/75 leading-7">
+                We may use third-party analytics services (such as Google Analytics) to understand
+                how visitors use our site. These services may collect anonymous information, such as
+                pages viewed and time spent on the site.
+              </p>
+              <p className="text-white/75 leading-7">
+                This information helps us improve the website and content. These services operate
+                under their own privacy policies.
+              </p>
+            </section>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* External Links */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                External Links
+              </h2>
+              <p className="text-white/75 leading-7">
+                Our website may contain links to external sites that are not operated by us. We have
+                no control over their content or practices and cannot accept responsibility for their
+                privacy policies.
+              </p>
+              <p className="text-white/75 leading-7">
+                We encourage you to review the privacy policies of any site you visit.
+              </p>
+            </section>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* Changes to This Privacy Policy */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                Changes to This Privacy Policy
+              </h2>
+              <p className="text-white/75 leading-7">
+                We may update this Privacy Policy from time to time. Any changes will be posted on
+                this page and the “Last updated” date will be revised.
+              </p>
+              <p className="text-white/75 leading-7">
+                Please review this page periodically for updates.
+              </p>
+            </section>
+
+            <div className="my-8 h-px bg-white/10" />
+
+            {/* Contact Us */}
+            <section className="space-y-4">
+              <h2 className="text-xl md:text-2xl font-semibold text-[#f19072]">
+                Contact Us
+              </h2>
+              <p className="text-white/75 leading-7">
+                If you have any questions about this Privacy Policy, please contact us through the
+                methods provided on the website.
+              </p>
+              <p className="text-sm text-white/50 italic">
+                Last updated: December 29, 2025
+              </p>
+            </section>
+          </div>
+
+          <div className="container mx-auto px-4 mt-6">
+            <div className="mx-auto max-w-4xl">
+              <Suspense fallback={null}>
+                <BackToContactLink className="justify-center w-full" />
+              </Suspense>
+            </div>
+          </div>
+
+          <div className="mt-10 flex justify-center">
+            <BackToHomeBtn />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

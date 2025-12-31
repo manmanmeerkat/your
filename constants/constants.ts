@@ -18,6 +18,15 @@ export const NAVI_LINKS: linksType[] = [
     { href: '/about', label: 'About' }
 ];
 
+export const MOBILE_NAVI_LINKS: linksType[]  = [
+   { label: "Home", href: "/" },
+    { href: '/mythology', label: 'Mythology' },
+    { href: '/culture', label: 'Culture' },
+    { href: '/festivals', label: 'Festivals' },
+    { href: '/customs', label: 'Customs' },
+    { href: '/about', label: 'About' }
+];
+
 export const CATEGORY_LINKS: linksType[] = [
     { href: '/mythology', label: 'Mythology' },
     { href: '/culture', label: 'Culture' },
@@ -52,25 +61,25 @@ export const CATEGORY_ITEMS: categoryItemType[] = [
       href: "/mythology",
       title: "Japanese Mythology",
       img: "/images/category-img/mythology.jpg",
-      description: "Stories and gods from Japanese mythology, such as Amaterasu Omikami, Susanoo, and Yamata no Orochi.",
+      description: "Meet the gods, legends, and sacred stories that shaped Japan’s imagination.",
   },
   {
     href: "/culture",
     title: "Japanese Culture",
     img: "/images/category-img/culture.jpg",
-    description: "Unique Japanese culture and its background, such as tea ceremony, flower arranging, and kimono.",
+    description: "Discover traditions and everyday beauty—from tea ceremony to kimono and crafts.",
   },
   {
       href: "/festivals",
       title: "Japanese Festivals",
       img: "/images/category-img/festival.jpg",
-      description: "Traditional festivals across the country, such as the Gion Festival and the Nebuta Festival, and their origins.",
+      description: "Step into seasonal celebrations, local rituals, and moments filled with light, sound, and tradition.",
     },
   {
     href: "/customs",
     title: "Japanese Customs",
     img: "/images/category-img/custom.jpg",
-    description: "Simple customs and everyday manners in Japan, like bowing, removing shoes, and saying “itadakimasu.”",
+    description: "Learn simple manners and gestures that reveal Japan’s quiet kindness—like bowing and “itadakimasu.”",
   }
 ];
 

@@ -5,8 +5,8 @@ import { articleType } from "@/types/types";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { CATEGORIES } from "@/constants/constants";
 // import Redbubble from "@/components/redBubble/RedBubble";
-import AllArticlesPaginationWrapper from "@/components/AllArticlesPaginationWrapper";
-import AllArticlesCategoryFilter from "@/components/AllArticlesCategoryFilter";
+import AllArticlesPaginationWrapper from "@/components/allArticlesComponents/AllArticlesPaginationWrapper";
+import AllArticlesCategoryFilter from "@/components/allArticlesComponents/allArticlesCategoryFilter/AllArticlesCategoryFilter";
 
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;

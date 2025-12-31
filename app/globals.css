@@ -155,6 +155,11 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  overflow-anchor: none;
+}
+body {
+  overflow-anchor: none;
 }
 
 /* スクロールバーのカスタムスタイル */

@@ -115,9 +115,6 @@ function ArticlesLoadingFallback() {
           <div
             key={i}
             className="bg-[#1a1a1a] rounded-lg overflow-hidden animate-pulse"
-            style={{
-              contain: "layout style paint",
-            }}
           >
             <div className="h-48 bg-gray-700" />
             <div className="p-6">
@@ -139,9 +136,6 @@ async function LatestArticlesAsync() {
   return (
     <div
       className="container mx-auto px-4 text-center"
-      style={{
-        contain: "layout style",
-      }}
     >
       <LatestArticlesSection articles={articles} />
     </div>
@@ -159,7 +153,7 @@ function LightweightSuspense({
   className?: string;
 }) {
   return (
-    <div className={className} style={{ contain: "layout style" }}>
+    <div className={className}>
       <Suspense fallback={fallback}>{children}</Suspense>
     </div>
   );
@@ -167,40 +161,39 @@ function LightweightSuspense({
 
 // 🚀 静的メタデータ（関数ではなく定数で高速化）
 export const metadata = {
-  title: "Your Secret Japan - Explore Japan's Hidden Charms",
+  title: "Your Secret Japan — Stories of Myth, Culture, and Quiet Beauty",
   description:
-    "Discover the mystical world of Japanese mythology, vibrant festivals, rich culture, and timeless traditions. Your gateway to Japan's authentic spirit.",
+    "Explore Japanese mythology, festivals, culture, and everyday customs—told with clarity, warmth, and a sense of quiet wonder.",
   keywords: [
     "Japan",
     "Japanese culture",
-    "mythology",
+    "Japanese mythology",
     "festivals",
+    "customs",
     "traditions",
-    "travel",
-    "hidden gems",
+    "folklore",
   ],
   openGraph: {
-    title: "Your Secret Japan - Explore Japan's Hidden Charms",
+    title: "Your Secret Japan — Myth, Culture, and Quiet Beauty",
     description:
-      "Discover the mystical world of Japanese mythology, vibrant festivals, rich culture, and timeless traditions.",
+      "Japanese mythology, festivals, culture, and everyday customs—stories told with clarity, warmth, and quiet wonder.",
     images: ["/ogp-image.png"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Your Secret Japan - Explore Japan's Hidden Charms",
+    title: "Your Secret Japan — Myth, Culture, and Quiet Beauty",
     description:
-      "Discover the mystical world of Japanese mythology, vibrant festivals, rich culture, and timeless traditions.",
+      "Japanese mythology, festivals, culture, and everyday customs—stories told with clarity, warmth, and quiet wonder.",
     images: ["/ogp-image.png"],
   },
-  // 🚀 構造化データ
   other: {
     "application/ld+json": JSON.stringify({
       "@context": "https://schema.org",
       "@type": "WebSite",
       name: "Your Secret Japan",
       description:
-        "Explore Japan's hidden charms through mythology, festivals, culture, and traditions",
+        "Japanese mythology, festivals, culture, and everyday customs—stories told with clarity, warmth, and quiet wonder.",
       url: "https://your-secret-japan.com",
       potentialAction: {
         "@type": "SearchAction",
@@ -214,14 +207,7 @@ export const metadata = {
 // 🚀 Server Component（超最適化版）
 export default async function HomePage() {
   return (
-    <div
-      className="scroll-smooth mb-24"
-      style={{
-        contain: "layout style",
-        willChange: "contents",
-        transform: "translateZ(0)", // GPU層強制
-      }}
-    >
+    <div className="scroll-smooth mb-24">
       {/* 🚀 Hero セクション - 最優先表示（即座レンダリング） */}
       <HeroSection />
 
@@ -233,11 +219,6 @@ export default async function HomePage() {
       {/* 🚀 最新記事セクション - 超高速Suspense */}
       <section
         id="latest-articles"
-        className="py-16 md:px-16"
-        style={{
-          contain: "layout style",
-          willChange: "contents",
-        }}
       >
         <LightweightSuspense
           fallback={<ArticlesLoadingFallback />}
@@ -249,26 +230,11 @@ export default async function HomePage() {
 
       <WhiteLine />
 
-      {/* 🚀 Below the fold コンテンツ - 軽量遅延読み込み */}
-      {/* <LightweightSuspense
-        fallback={
-          <div
-            className="h-48 bg-[#1a1a1a] animate-pulse rounded-lg mx-4"
-            style={{ contain: "layout style paint" }}
-          />
-        }
-      >
-        <Redbubble />
-      </LightweightSuspense> */}
-
-      {/* <WhiteLine /> */}
-
       {/* 🚀 お問い合わせ - 最後に読み込み */}
       <LightweightSuspense
         fallback={
           <div
             className="h-32 bg-[#1a1a1a] animate-pulse rounded-lg mx-4"
-            style={{ contain: "layout style paint" }}
           />
         }
       >
