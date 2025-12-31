@@ -1,6 +1,5 @@
 import type { TocItem } from "../../app/hooks/useToc";
 import React from "react";
-import { useEffect } from "react";
 
 type Props = {
   items: TocItem[];
@@ -9,24 +8,8 @@ type Props = {
 };
 
 export function TableOfContents({ items, activeId, onClickItem }: Props) {
-
-useEffect(() => {
-  console.log("TOC mounted");
-  return () => console.log("TOC unmounted");
-}, []);
-
-useEffect(() => {
-  console.log("TOC items length:", items.length);
-}, [items.length]);
-
-
   const initialVisibleItems = 5;
   const [expanded, setExpanded] = React.useState(false);
-
-  useEffect(() => {
-  console.log("TOC expanded:", expanded);
-}, [expanded]);
-
   const shouldShowViewMore = items.length > initialVisibleItems;
   const visible = expanded ? items : items.slice(0, initialVisibleItems);
 

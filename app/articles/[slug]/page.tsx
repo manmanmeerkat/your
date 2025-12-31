@@ -16,6 +16,7 @@ import {
   buildArticleJsonLd,
   buildArticleMetadata,
 } from "@/components/articlePageComponents/articleSeo/articleSeo";
+import { getRandomRelatedArticles } from "@/lib/sidebar/getRelatedArticles";
 
 export const dynamic = "force-dynamic";
 
@@ -56,35 +57,17 @@ export default async function Page({ params }: Props) {
 
   if (!article || !article.published) return notFound();
 
-  //  related を Server 側で取得
-  // - 画像は「featured優先 → なければ先頭」を1枚だけ取る
+  //  related を Server 側で取得（カテゴリ全体の "直近POOL" からランダム抽出
+
   const relatedArticles = isBuild
-    ? []
-    : (await prisma.article.findMany({
-        where: {
-          published: true,
-          category: article.category,
-          NOT: { id: article.id },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          images: {
-            take: 1,
-            orderBy: [{ isFeatured: "desc" }, { id: "asc" }],
-            select: { url: true, altText: true },
-          },
-        },
-      })).map((a) => ({
-        id: a.id,
-        slug: a.slug,
-        title: a.title,
-        imageUrl: a.images?.[0]?.url ?? null,
-        imageAlt: a.images?.[0]?.altText ?? a.title,
-      }));
+  ? []
+  : await getRandomRelatedArticles({
+      category: article.category,
+      currentSlug: article.slug,
+      take: 6,
+      pool: 300,
+    });
+
 
 const isCategoryKey = (v: string): v is CategoryKey =>
   Object.prototype.hasOwnProperty.call(BREADCRUMB_CONFIG.categories, v);

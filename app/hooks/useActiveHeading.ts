@@ -88,11 +88,7 @@ export function useActiveHeading(
       const last = headings[headings.length - 1] as HTMLElement;
       nextId = last?.id || nextId;
     }
-    if (currentScrollY < 200) {
-      const first = headings[0] as HTMLElement;
-      nextId = first?.id || nextId;
-    }
-
+    
     setActiveId((prev) => (prev === nextId ? prev : nextId));
   }, [containerSelector, getHeaderOffset]);
 
@@ -120,57 +116,29 @@ export function useActiveHeading(
     }, [computeActive, containerSelector, depsKey]);
 
 
-  const scrollToHeading = useCallback((id: string) => {
-    document.body.classList.remove("toc-open");
+const scrollToHeading = useCallback((id: string) => {
+  document.body.classList.remove("toc-open");
 
-    const el = document.getElementById(id);
-    if (!el) return;
+  const el = document.getElementById(id);
+  if (!el) return;
 
-    setActiveId(id);
+  setActiveId(id);
 
-    const scrollRoot = getScrollRoot(containerSelector);
+  const scrollRoot = getScrollRoot(containerSelector);
+  const header = document.querySelector("header") as HTMLElement | null;
+  const offset = header ? Math.ceil(header.getBoundingClientRect().bottom) : 120;
 
-    const header = document.querySelector("header") as HTMLElement | null;
-    const offset = header ? Math.ceil(header.getBoundingClientRect().bottom) : 120;
+  const currentY = getScrollTop(scrollRoot);
+  const rect = el.getBoundingClientRect();
+  const rootRect = (scrollRoot === document.scrollingElement)
+    ? { top: 0 }
+    : scrollRoot.getBoundingClientRect();
 
-    const currentY = getScrollTop(scrollRoot);
+  const elTopInRootDoc = rect.top - rootRect.top + currentY;
+  const target = Math.max(0, elTopInRootDoc - offset);
 
-    const rect = el.getBoundingClientRect();
-    const rootRect = (scrollRoot === document.scrollingElement)
-      ? { top: 0 }
-      : scrollRoot.getBoundingClientRect();
-
-    const elTopInRootDoc = rect.top - rootRect.top + currentY;
-    const target = Math.max(0, elTopInRootDoc - offset);
-
-    // ① smooth
-    scrollToTop(scrollRoot, target, "smooth");
-
-    // ② 停止後に1回補正（auto）
-    let lastY = getScrollTop(scrollRoot);
-    let stableCount = 0;
-
-    const settle = () => {
-      const y = getScrollTop(scrollRoot);
-      if (Math.abs(y - lastY) < 0.5) stableCount++;
-      else stableCount = 0;
-      lastY = y;
-
-      if (stableCount >= 8) {
-        const header2 = document.querySelector("header") as HTMLElement | null;
-        const offset2 = header2 ? Math.ceil(header2.getBoundingClientRect().bottom) : offset;
-
-        const delta = el.getBoundingClientRect().top - (scrollRoot === document.scrollingElement ? 0 : scrollRoot.getBoundingClientRect().top) - offset2;
-        if (Math.abs(delta) > 1) {
-          scrollToTop(scrollRoot, Math.max(0, getScrollTop(scrollRoot) + delta), "auto");
-        }
-        return;
-      }
-      requestAnimationFrame(settle);
-    };
-
-    requestAnimationFrame(settle);
-  }, [containerSelector]);
+  scrollToTop(scrollRoot, target, "smooth");
+}, [containerSelector]);
 
   return { activeId, scrollToHeading };
 }
