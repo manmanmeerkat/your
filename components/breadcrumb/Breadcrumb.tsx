@@ -5,9 +5,9 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { BREADCRUMB_CONFIG, CategoryKey, PageKey } from "./config";
+import { BREADCRUMB_CONFIG, type CategoryKey, type PageKey } from "./config";
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
   label: string;
   href: string;
   isCurrentPage?: boolean;
@@ -47,13 +47,13 @@ const generateBreadcrumbItems = (pathname: string): BreadcrumbItem[] => {
 
     if (index === 0) {
       if (isCategoryKey(segment)) {
-        label = BREADCRUMB_CONFIG.categories[segment];
+        label = BREADCRUMB_CONFIG.categories[segment].label;
       } else if (isPageKey(segment)) {
         label = BREADCRUMB_CONFIG.pages[segment];
       }
     } else if (segments[0] === "category-item" && index === 1) {
       if (isCategoryKey(segment)) {
-        label = BREADCRUMB_CONFIG.categories[segment];
+        label = BREADCRUMB_CONFIG.categories[segment].label;
       }
     } else {
       label = segment
@@ -137,7 +137,3 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 };
 
 export { Breadcrumb };
-
-// ForcedBreadcrumbコンポーネントはファイル内に存在しないため、
-// エクスポートから削除しました。
-// もし必要であれば、このファイルに追加するか、別のファイルからインポートしてください。

@@ -6,33 +6,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 
-// Type definitions
-type CategoryKey = "culture" | "customs" | "festivals" | "mythology";
-type PageKey =
-  | "about"
-  | "contact"
-  | "all-articles"
-  | "privacy-policy"
-  | "category-item"
-  | "articles";
-
-// Breadcrumb configuration
-const BREADCRUMB_CONFIG = {
-  categories: {
-    culture: "Culture",
-    customs: "Customs",
-    festivals: "Festivals",
-    mythology: "Mythology",
-  } satisfies Record<CategoryKey, string>,
-  pages: {
-    about: "About",
-    contact: "Contact",
-    "all-articles": "All Articles",
-    "privacy-policy": "Privacy Policy",
-    "category-item": "Category",
-    articles: "Articles",
-  } satisfies Record<PageKey, string>,
-} as const;
+import {
+  BREADCRUMB_CONFIG,
+  type CategoryKey,
+  type PageKey,
+} from "@/components/breadcrumb/config";
 
 interface BreadcrumbItem {
   label: string;
@@ -45,80 +23,63 @@ interface BreadcrumbProps {
   className?: string;
 }
 
-// Type guard functions
-const isCategoryKey = (key: string): key is CategoryKey => {
-  return key in BREADCRUMB_CONFIG.categories;
-};
+// type guards
+const isCategoryKey = (key: string): key is CategoryKey =>
+  key in BREADCRUMB_CONFIG.categories;
 
-const isPageKey = (key: string): key is PageKey => {
-  return key in BREADCRUMB_CONFIG.pages;
-};
+const isPageKey = (key: string): key is PageKey =>
+  key in BREADCRUMB_CONFIG.pages;
 
-// Function to generate breadcrumb items from the path
+// pathname から自動生成（fallback 用）
 const generateBreadcrumbItems = (pathname: string): BreadcrumbItem[] => {
   const segments = pathname.split("/").filter(Boolean);
-  const items: BreadcrumbItem[] = [
-    {
-      label: "Home",
-      href: "/",
-    },
-  ];
+  const items: BreadcrumbItem[] = [{ label: "Home", href: "/" }];
 
   let currentPath = "";
 
   segments.forEach((segment, index) => {
     currentPath += `/${segment}`;
-    const isLastSegment = index === segments.length - 1;
+    const isLast = index === segments.length - 1;
 
     let label = segment;
 
-    if (index === 0) {
-      if (isCategoryKey(segment)) {
-        label = BREADCRUMB_CONFIG.categories[segment];
-      } else if (isPageKey(segment)) {
-        label = BREADCRUMB_CONFIG.pages[segment];
-      }
-    } else if (segments[0] === "category-item" && index === 1) {
-      if (isCategoryKey(segment)) {
-        label = BREADCRUMB_CONFIG.categories[segment];
-      }
+    if (isCategoryKey(segment)) {
+      label = BREADCRUMB_CONFIG.categories[segment].label;
+    } else if (isPageKey(segment)) {
+      label = BREADCRUMB_CONFIG.pages[segment];
     } else {
       label = segment
         .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ");
     }
 
     items.push({
       label,
       href: currentPath,
-      isCurrentPage: isLastSegment,
+      isCurrentPage: isLast,
     });
   });
 
   return items;
 };
 
-// Main Breadcrumb component
 const Breadcrumb: React.FC<BreadcrumbProps> = ({
   customItems,
   className = "",
 }) => {
   const pathname = usePathname();
 
-  const breadcrumbItems = customItems || generateBreadcrumbItems(pathname);
-
   if (pathname === "/" || pathname.startsWith("/admin")) {
     return null;
   }
 
+  const breadcrumbItems = customItems ?? generateBreadcrumbItems(pathname);
+
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className={`bg-black/20 border-b border-white/10 backdrop-blur-sm ${className}`}
-    >
+    <nav aria-label="Breadcrumb" className={className}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ol className="flex items-center space-x-2 py-3 text-sm text-gray-300">
+        <ol className="flex items-center space-x-2 pt-4 pb-2 text-sm text-[#e8ddd4]">
           {breadcrumbItems.map((item, index) => (
             <li key={item.href} className="flex items-center">
               {index > 0 && (
@@ -154,7 +115,3 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
 };
 
 export { Breadcrumb };
-
-// ForcedBreadcrumbコンポーネントはファイル内に存在しないため、
-// エクスポートから削除しました。
-// もし必要であれば、このファイルに追加するか、別のファイルからインポートしてください。

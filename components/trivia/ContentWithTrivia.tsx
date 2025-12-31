@@ -1,11 +1,20 @@
 // components/trivia/ContentWithTrivia.tsx
+import React from "react";
 import { MarkdownRenderer } from "@/app/utils/simpleMarkdownRenderer";
-import { TriviaCardClient } from "./TriviaCardClient";
-import type { ArticleTrivia } from "@/types/types";
+import TriviaCard from "./TriviaCard";
+
+export interface DisplayTrivia {
+  id: string;
+  title: string;
+  content: string;
+  contentEn: string | null;
+  tags: string[];
+  isActive: boolean;
+}
 
 interface ContentWithTriviaProps {
   content: string;
-  triviaList?: ArticleTrivia[];
+  triviaList: DisplayTrivia[];
 }
 
 export const ContentWithTrivia: React.FC<ContentWithTriviaProps> = ({
@@ -38,7 +47,8 @@ export const ContentWithTrivia: React.FC<ContentWithTriviaProps> = ({
     const identifier = identifierMatch?.[1];
     if (!identifier) return;
 
-    let trivia: ArticleTrivia | undefined;
+    // ✅ ArticleTrivia ではなく DTO 側の型で扱う
+    let trivia: DisplayTrivia | undefined;
     let triviaIndex = 0;
 
     if (isNaN(Number(identifier))) {
@@ -54,7 +64,7 @@ export const ContentWithTrivia: React.FC<ContentWithTriviaProps> = ({
       usedTrivia.add(trivia.id);
 
       elements.push(
-        <TriviaCardClient
+        <TriviaCard
           key={`trivia-${trivia.id}-${index}`}
           trivia={trivia}
           index={triviaIndex}

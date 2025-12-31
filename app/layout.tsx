@@ -5,7 +5,7 @@ import "highlight.js/styles/github-dark.css";
 import type { Metadata } from "next";
 import { Noto_Serif_JP } from "next/font/google";
 import { Toaster } from "sonner";
-import Header from "../components/layout/header";
+import Header from "../components/layout/header/header";
 import Footer from "../components/layout/footer";
 import BackToTopButton from "@/components/backToTopBtn/BackToTopBtn";
 import Script from "next/script";
@@ -93,7 +93,7 @@ export default function RootLayout({
         </noscript>
         <div className="flex flex-col min-h-screen bg-[#2b1e1c] text-[#f3f3f2]">
           <Header />
-          <main className="flex-grow pt-20">{children}</main>
+          <main className="flex-grow pt-18">{children}</main>
           <BackToTopButton />
           <Footer />
         </div>

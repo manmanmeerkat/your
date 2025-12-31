@@ -1,4 +1,3 @@
-//components/articleCard/articleCard.tsx
 "use client";
 
 import { articleType } from "@/types/types";
@@ -19,18 +18,16 @@ export default function ArticleCard({ article }: { article: articleType }) {
       customs: "Customs",
     }[category] || "Article";
 
-  // 画像状態管理
+  // --- image state ---
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [imageKey, setImageKey] = useState(0);
 
-  // 画像URL取得
   const imageUrl = images?.[0]?.url;
   const imageAlt = images?.[0]?.altText || title;
   const hasValidImage =
     imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== "";
 
-  // 記事が変更された時に状態をリセット
   useEffect(() => {
     setImageLoaded(false);
     setImageError(false);
@@ -47,120 +44,129 @@ export default function ArticleCard({ article }: { article: articleType }) {
     setImageLoaded(true);
   }, []);
 
-  // 画像読み込みの再試行
   const retryImageLoad = useCallback(() => {
     setImageLoaded(false);
     setImageError(false);
     setImageKey((prev) => prev + 1);
   }, []);
 
+  const bodyText =
+    summary || (content ? content.slice(0, 120) + "..." : "No content available.");
+
   return (
     <Link
       href={`/articles/${slug}`}
       data-gtm="post-read"
       data-title={title}
-      prefetch={true}
+      prefetch
+      className="block h-full"
     >
       <Card
         key={id}
-        className="flex flex-col md:flex-row h-full 
-                   min-h-[260px] sm:min-h-[280px] md:min-h-[280px] 
-                   rounded-xl shadow-md overflow-hidden bg-[#f3f3f2]
-                   transition-transform duration-300 ease-in-out hover:scale-[1.03] text-[#180614]"
+        className="
+          h-full flex flex-col
+          group
+          rounded-2xl overflow-hidden
+          text-[#180614]
+          shadow-[0_16px_50px_rgba(0,0,0,.25)]
+          ring-1 ring-white/10
+          transition-all duration-300
+          hover:-translate-y-[2px]
+          hover:shadow-[0_22px_70px_rgba(0,0,0,.35)]
+          bg-[#d8d3ce]
+        "
       >
-        {/* Image area - 元のまま */}
-        <div
-          className="w-full md:w-[220px] min-h-[208px] bg-slate-100 flex items-center justify-center 
-                p-4 md:p-0 md:pl-4 md:pt-0 overflow-hidden rounded-[5px] md:rounded-none relative"
-        >
-          {hasValidImage ? (
-            <>
-              {/* スケルトンローダー */}
-              {!imageLoaded && !imageError && (
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 animate-pulse rounded-[5px] md:rounded-none flex items-center justify-center">
-                  <div className="text-slate-400 text-sm flex flex-col items-center gap-2">
-                    <div className="w-6 h-6 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></div>
-                    <div>Loading...</div>
-                  </div>
+      {/* Image area */}
+      <div className="w-full lg:w-full bg-[#d8d3ce]">
+        {hasValidImage ? (
+          <div className="relative w-full h-56 sm:h-44 lg:h-52 overflow-hidden">
+            {/* skeleton */}
+            {!imageLoaded && !imageError && (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 animate-pulse flex items-center justify-center">
+                <div className="text-slate-400 text-sm flex flex-col items-center gap-2">
+                  <div className="w-6 h-6 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                  <div>Loading...</div>
                 </div>
-              )}
-
-              {/* エラー表示 */}
-              {imageError && (
-                <div className="w-full h-52 bg-gradient-to-br from-slate-200 to-slate-300 rounded-[5px] md:rounded-none flex items-center justify-center">
-                  <div className="text-center text-slate-500">
-                    <div className="text-xs mb-2">Failed to load</div>
-                    <Button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        retryImageLoad();
-                      }}
-                      className="text-xs px-2 py-1 bg-slate-400 text-white rounded hover:bg-slate-500 transition-colors"
-                    >
-                      Retry
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* 実際の画像 */}
-              {!imageError && (
-                <Image
-                  key={`img-${id}-${imageKey}`}
-                  src={imageUrl}
-                  alt={imageAlt}
-                  className={`w-full h-52 object-contain md:object-cover transition-opacity duration-500 ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                  }`}
-                  width={800}
-                  height={208}
-                  loading="eager"
-                  decoding="async"
-                  onLoad={handleImageLoad}
-                  onError={handleImageError}
-                  unoptimized
-                />
-              )}
-            </>
-          ) : (
-            <div className="text-slate-400 h-52 w-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-sm">No image</div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* Content area - はみ出し修正のみ */}
-        <div className="md:w-3/5 px-6 sm:px-16 md:px-4 py-4 flex flex-col justify-between flex-grow bg-[#f3f3f2] text-left">
-          <span className="text-xs inline-flex w-auto max-w-max bg-slate-800 px-2 py-0.5 rounded mb-2 text-[#f3f3f2]">
+            {/* error */}
+            {imageError ? (
+              <div className="absolute inset-0 bg-white/30 flex items-center justify-center">
+                <div className="text-center text-slate-500">
+                  <div className="text-xs mb-2">Failed to load</div>
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      retryImageLoad();
+                    }}
+                    className="text-xs px-2 py-1 bg-slate-400 text-white rounded hover:bg-slate-500 transition-colors"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Image
+                key={`img-${id}-${imageKey}`}
+                src={imageUrl}
+                alt={imageAlt}
+                fill
+                className={`
+                  object-cover
+                  transition-all duration-500
+                  ${imageLoaded ? "opacity-100" : "opacity-0"}
+                  group-hover:scale-[1.04]
+                `}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 200px, 33vw"
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+                unoptimized
+              />
+            )}
+          </div>
+        ) : (
+          <div className="text-slate-400 w-full h-56 sm:h-44 lg:h-52 rounded-xl bg-slate-100 flex items-center justify-center">
+            <div className="text-sm">No image</div>
+          </div>
+        )}
+</div>
+        {/* Content area */}
+        <div className="flex-1 px-6 py-5 flex flex-col text-left">
+          <span className="text-xs inline-flex w-max bg-[#2b1e1c] px-2.5 py-1 rounded-md text-[#f3f3f2] mb-3">
             {categoryLabel}
           </span>
 
-          {/* タイトル - はみ出し防止のみ追加 */}
-          <h3
-            className="text-lg font-semibold mb-1 leading-tight 
-                         overflow-hidden break-words"
-          >
+          <h3 className="text-[1.1rem] md:text-lg font-semibold leading-snug mb-2 break-words">
             {title}
           </h3>
 
-          <p className="text-sm text-gray-700 line-clamp-3 flex-grow">
-            {summary ||
-              content?.slice(0, 100) + "..." ||
-              "No content available."}
+          <p className="text-sm md:text-[0.95rem] text-gray-700 leading-relaxed line-clamp-3 flex-1">
+            {bodyText}
           </p>
 
-          <div className="mt-4">
+          <div className="mt-5 flex justify-end">
             <Button
-              size="sm"
-              className="w-[120px] font-normal
-                        border border-[#df7163] bg-[#df7163] text-[#f3f3f2] rounded-full
-                        hover:bg-[#f3f3f2] hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
-                        shadow hover:shadow-lg transition-all duration-300"
+              className="
+                rounded-full
+                px-6 py-2
+                bg-[#c96a5d]/90
+                text-[#f3f3f2]
+                backdrop-blur-sm
+                shadow-sm
+                hover:bg-[#f3f3f2]/90
+                hover:text-[#c96a5d]
+                transition-all
+                duration-200
+                hover:-translate-y-[1px]
+                hover:shadow-md
+              "
             >
-              Read more ≫
+              Read more
+              <span className="ml-2 inline-block transition-transform duration-200 group-hover/btn:translate-x-1">
+                →
+              </span>
             </Button>
           </div>
         </div>

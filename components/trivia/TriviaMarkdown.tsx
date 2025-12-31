@@ -1,18 +1,9 @@
+"use client";
+
 import React from "react";
-import dynamic from "next/dynamic";
+import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-
-// Dynamic import to avoid SSR mismatch
-const DynamicMarkdown = dynamic(() => import("react-markdown"), {
-  ssr: false,
-  loading: () => (
-    <div className="animate-pulse space-y-2 px-10">
-      <div className="h-4 bg-gray-300 rounded w-3/4" />
-      <div className="h-4 bg-gray-300 rounded w-1/2" />
-    </div>
-  ),
-});
 
 interface TriviaMarkdownProps {
   content: string;
@@ -20,7 +11,7 @@ interface TriviaMarkdownProps {
 
 export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
   return (
-    <DynamicMarkdown
+    <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       rehypePlugins={[rehypeRaw]}
       components={{
@@ -171,6 +162,6 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
       }}
     >
       {content}
-    </DynamicMarkdown>
+    </ReactMarkdown>
   );
 };

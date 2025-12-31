@@ -1,27 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { TriviaMarkdown } from "./TriviaMarkdown";
-import type { ArticleTrivia } from "@/types/types";
+import type { DisplayTrivia } from "./ContentWithTrivia";
 
 interface TriviaCardProps {
-  trivia: ArticleTrivia;
+  trivia: DisplayTrivia;
   index: number;
 }
 
 const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const displayContent = trivia.contentEn || trivia.content;
 
   return (
     <div className="my-2 mx-auto max-w-4xl flex justify-center">
       <div className="relative bg-gradient-to-br from-[#000b00] via-[#302833] to-[#000b00] border border-[#a59aca] rounded-lg shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden group w-full max-w-2xl">
-
         {/* 四隅の角飾り */}
         <div className="absolute top-3 left-3 w-2 h-2 border-l border-t border-[#f1bf99] rounded-sm opacity-70" />
         <div className="absolute top-3 right-3 w-2 h-2 border-r border-t border-[#f1bf99] rounded-sm opacity-70" />
@@ -44,21 +37,19 @@ const TriviaCard: React.FC<TriviaCardProps> = ({ trivia }) => {
           </div>
 
           {/* 補足（日本語版の表示） */}
-          {trivia.contentEn &&
-            trivia.content !== trivia.contentEn &&
-            isClient && (
-              <details className="mt-3 border-t border-gray-600 pt-3 text-center">
-                <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-300">
-                  日本語版を表示
-                </summary>
-                <div className="mt-2 text-xs text-gray-400 border-l-2 border-gray-600 pl-3 text-center">
-                  <TriviaMarkdown content={trivia.content} />
-                </div>
-              </details>
-            )}
+          {trivia.contentEn && trivia.content !== trivia.contentEn && (
+            <details className="mt-3 border-t border-gray-600 pt-3 text-center">
+              <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-300">
+                日本語版を表示
+              </summary>
+              <div className="mt-2 text-xs text-gray-400 border-l-2 border-gray-600 pl-3 text-center">
+                <TriviaMarkdown content={trivia.content} />
+              </div>
+            </details>
+          )}
 
           {/* タグ表示 */}
-          {trivia.tags && trivia.tags.length > 0 && isClient && (
+          {trivia.tags && trivia.tags.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-1 justify-center">
               {trivia.tags.slice(0, 3).map((tag, tagIndex) => (
                 <span

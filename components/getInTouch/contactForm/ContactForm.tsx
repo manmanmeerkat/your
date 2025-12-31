@@ -197,104 +197,121 @@ export function ContactForm() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-[#1b1b1b] rounded-lg shadow-lg p-8 space-y-6"
-        noValidate // 🎯 ブラウザのデフォルトバリデーションを無効化
-      >
-        <FormGroup
-          id="name"
-          label="Name"
-          value={formData.name}
-          onChange={handleChange}
-          placeholder="John Smith"
-          error={validationErrors.name} // 🚀 エラー表示
-          required
-          showAsterisk={true}
-        />
-        <FormGroup
-          id="email"
-          label="Email Address"
-          type="email" // 🎯 typeをemailに変更
-          value={formData.email}
-          onChange={handleChange}
-          placeholder="your-email@example.com"
-          error={validationErrors.email} // 🚀 エラー表示
-          required
-          showAsterisk={true}
-        />
-        <FormGroup
-          id="subject"
-          label="Subject"
-          value={formData.subject}
-          onChange={handleChange}
-          placeholder="Enter the subject"
-          error={validationErrors.subject} // 🚀 エラー表示
-          required
-          showAsterisk={true}
-        />
-        <div>
-          <label htmlFor="message" className="block text-md font-medium mb-2">
-            Message<span className="text-red-600">*</span>
-          </label>
-          <Textarea
-            id="message"
-            name="message"
-            rows={6}
-            value={formData.message}
-            onChange={handleChange}
-            placeholder="Please enter your message (minimum 10 characters)"
-            className={`resize-none ${
-              validationErrors.message
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                : ""
-            }`}
-            required
-          />
-          {/* 🚀 メッセージ用エラー表示 */}
-          {validationErrors.message && (
-            <p className="mt-1 text-sm text-red-600">
-              {validationErrors.message}
-            </p>
-          )}
-        </div>
+  <div className="max-w-2xl mx-auto">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="
+        rounded-2xl
+        shadow-lg
+        p-6 md:p-8
+        space-y-6
+        text-white
+      "
+    >
+      <FormGroup
+        id="name"
+        label="Name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="John Smith"
+        error={validationErrors.name}
+        required
+        showAsterisk={true}
+        // ↓ FormGroup側が className を受け取れるなら入れたい（受け取れないなら無視OK）
+        // labelClassName="text-white/90"
+        // inputClassName="bg-black/20 ring-1 ring-white/10 text-white placeholder:text-white/40 focus:ring-white/20"
+      />
 
-        {feedback.visible && (
-          <div
-            className={`mb-6 p-4 rounded-md ${
-              feedback.success
-                ? "bg-cyan-100 border-l-4 border-cyan-600 text-cyan-800"
-                : "bg-[#f6bfbc] border-l-4 border-[#df7163] text-[#a22041]"
-            }`}
-          >
-            {feedback.message}
-          </div>
+      <FormGroup
+        id="email"
+        label="Email Address"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="your-email@example.com"
+        error={validationErrors.email}
+        required
+        showAsterisk={true}
+      />
+
+      <FormGroup
+        id="subject"
+        label="Subject"
+        value={formData.subject}
+        onChange={handleChange}
+        placeholder="Enter the subject"
+        error={validationErrors.subject}
+        required
+        showAsterisk={true}
+      />
+
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium mb-2 text-white/90">
+          Message<span className="text-[#df7163]">*</span>
+        </label>
+
+        <Textarea
+          id="message"
+          name="message"
+          rows={6}
+          value={formData.message}
+          onChange={handleChange}
+          placeholder="Please enter your message (minimum 10 characters)"
+          className={[
+            "resize-none",
+            "bg-black/20 text-white placeholder:text-white/40",
+            "ring-1 ring-white/10",
+            "focus-visible:ring-2 focus-visible:ring-white/20",
+            "rounded-lg",
+            validationErrors.message
+              ? "ring-[#df7163]/60 focus-visible:ring-[#df7163]/70"
+              : "",
+          ].join(" ")}
+          required
+        />
+
+        {validationErrors.message && (
+          <p className="mt-1 text-sm text-[#df7163]">
+            {validationErrors.message}
+          </p>
         )}
+      </div>
 
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="
-          font-normal
-          border border-[#df7163] bg-[#df7163] text-white
-          hover:bg-white hover:text-[#df7163] hover:border-[#df7163] hover:font-bold
-          shadow hover:shadow-lg
-          whitespace-nowrap
-          w-full
-          px-6
-          disabled:opacity-50 disabled:cursor-not-allowed
-          "
+      {feedback.visible && (
+        <div
+          className={[
+            "rounded-xl p-4 text-sm ring-1",
+            feedback.success
+              ? "bg-emerald-500/10 text-emerald-200 ring-emerald-400/20"
+              : "bg-[#df7163]/10 text-[#ffd1cb] ring-[#df7163]/25",
+          ].join(" ")}
         >
-          {isSubmitting ? "Sending..." : "Send　≫"}
-        </Button>
+          {feedback.message}
+        </div>
+      )}
 
-        {/* 🎯 フォーム説明 */}
-        <p className="text-sm text-gray-400 text-center">
-          All fields marked with <span className="text-red-600">*</span> are
-          required. Please ensure your email address is valid.
-        </p>
-      </form>
-    </div>
-  );
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="
+          w-full
+          rounded-xl
+          bg-[#df7163] text-white
+          hover:bg-[#d85f52]
+          active:bg-[#c95549]
+          shadow
+          disabled:opacity-50 disabled:cursor-not-allowed
+        "
+      >
+        {isSubmitting ? "Sending..." : "Send →"}
+      </Button>
+
+      <p className="text-xs md:text-sm text-white/60 text-center">
+        All fields marked with <span className="text-[#df7163]">*</span> are required.
+        Please ensure your email address is valid.
+      </p>
+    </form>
+  </div>
+);
 }

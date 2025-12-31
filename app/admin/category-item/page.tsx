@@ -1042,18 +1042,23 @@ export default function CategoryItemsPage() {
               />
             </div>
           </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md"
-          >
-            <option value="">すべてのカテゴリ</option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
+            <label htmlFor="category-select" className="sr-only">
+              Select category
+            </label>
+
+            <select
+              id="category-select"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="">すべてのカテゴリ</option>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
         </div>
       </div>
 

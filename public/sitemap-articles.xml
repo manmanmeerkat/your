@@ -261,13 +261,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/sensu</loc>
-    <lastmod>2025-12-17T11:07:38.174Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/hakata-gion-yamakasa</loc>
     <lastmod>2025-08-21T02:31:04.237Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -305,6 +298,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/origami</loc>
     <lastmod>2025-07-10T05:38:20.303Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/sensu</loc>
+    <lastmod>2025-12-27T02:11:33.274Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -492,6 +492,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/gagaku</loc>
+    <lastmod>2025-12-30T06:11:38.390Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/the-three-sacred-treasures</loc>
     <lastmod>2025-11-01T07:30:34.493Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -557,13 +564,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/the-soul-of-the-samurai</loc>
     <lastmod>2025-07-20T12:17:24.008Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/gagaku</loc>
-    <lastmod>2025-11-30T07:30:00.880Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>

@@ -122,6 +122,12 @@ export type redbubbleType = {
     link: string;
 }
 
+export type GodData = {
+  name: string;
+  img: string;
+  gender: "male" | "female";
+}
+
 // 🆕 ========== 一口メモ関連の型定義 ==========
 
 // 📝 一口メモの基本型
