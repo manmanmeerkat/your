@@ -1,18 +1,19 @@
 // app/customs/page.tsx
-import Script from "next/script";
-import { Suspense } from "react";
+import { CategoryPageLayout } from "@/components/categoryPageComponents/categoryPageLayout/CategoryPageLayout";
+import { CategoryHeroSection } from "@/components/categoryPageComponents/categoryHeroSection/CategoryHeroSection";
+import { CategoryArticlesSection } from "@/components/categoryPageComponents/categoryArticlesSection/CategoryArticleSection";
+import { CategoryArticlesSkeleton } from "@/components/categoryPageComponents/categoryArticlesSkeleton/CategoryArticlesSkeleton";
 
-import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import ScrollHandler from "@/components/scroll/ScrollHandler";
-import { Breadcrumb } from "@/components/breadcrumb";
-import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
-import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
+import {
+  parsePage,
+  getCustomsArticles,
+} from "@/components/customsComponents/getCustomsData/GetCustomsData";
 
-import { parsePage } from "@/components/customsComponents/getCustomsData/GetCustomsData";
-import { CustomsHeroSection } from "@/components/customsComponents/customsHeroSection/CustomsHeroSection";
-import { CustomsArticlesSection } from "@/components/customsComponents/customsArticlesSection/CustomsArticlesSection";
-import { CustomsArticlesSkeleton } from "@/components/customsComponents/customsArticlesSection/CustomsArticlesSkeleton";
+import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
+
 // import { WayOfLifeSection } from "@/components/customsComponents/wayOfLifeSection/WayOfLifeSection";
+
+const copy = ARTICLES_COPY.customs;
 
 export default async function CustomsPage({
   searchParams,
@@ -25,34 +26,33 @@ export default async function CustomsPage({
     { label: "Home", href: "/" },
     { label: "Customs", href: "/customs", isCurrentPage: true },
   ];
-  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
 
   return (
-    <div>
-      <Script
-        id="breadcrumb-structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+    <CategoryPageLayout
+      breadcrumbItems={breadcrumbItems}
+      hero={<CategoryHeroSection category="customs" />}
 
-      <div className="container mx-auto px-4">
-        <Breadcrumb customItems={breadcrumbItems} />
-      </div>
+      articles={
+        <CategoryArticlesSection
+          currentPage={currentPage}
+          getArticles={getCustomsArticles}
+          sectionId={copy.sectionId}
+          title={copy.sectionTitle}
+          descriptionLines={copy.descriptionLines}
+          emptyText={copy.emptyText}
+          basePath={copy.basePath}
+        />
+      }
 
-      <ScrollHandler />
+      articlesFallback={
+        <CategoryArticlesSkeleton
+          sectionId={copy.sectionId}
+          title={copy.sectionTitle}
+          loadingText={copy.loadingText}
+        />
+      }
 
-      <CustomsHeroSection />
-
-      <Suspense fallback={<CustomsArticlesSkeleton />}>
-        <CustomsArticlesSection currentPage={currentPage} />
-      </Suspense>
-
-      <WhiteLine />
-
-      {/* <WayOfLifeSection />
-
-      <WhiteLine /> */}
-      <BackToHomeBtn />
-    </div>
+      // afterArticles={<WayOfLifeSection />} // 公開準備できたらON
+    />
   );
 }

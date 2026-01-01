@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect, useCallback, useRef } from "react";
 
 type MobileMenuOverlayProps = {
   isOpen: boolean;
@@ -10,6 +10,8 @@ type MobileMenuOverlayProps = {
 };
 
 export default function MobileMenuOverlay({ isOpen, onClose, children }: MobileMenuOverlayProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
   // スクロールロック
   useEffect(() => {
     if (!isOpen) return;
@@ -24,6 +26,20 @@ export default function MobileMenuOverlay({ isOpen, onClose, children }: MobileM
       document.body.style.overflow = prevOverflow;
       document.body.style.touchAction = prevTouchAction;
     };
+  }, [isOpen]);
+
+  // ✅ inert を DOM 属性として付け外し
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (!isOpen) {
+      el.setAttribute("inert", "");
+      el.setAttribute("aria-hidden", "true");
+    } else {
+      el.removeAttribute("inert");
+      el.removeAttribute("aria-hidden");
+    }
   }, [isOpen]);
 
   // ✅ 閉じる前に focus を逃がす
@@ -50,14 +66,14 @@ export default function MobileMenuOverlay({ isOpen, onClose, children }: MobileM
   }, [isOpen, safeClose]);
 
   return (
-      <div
-        data-mobile-menu="overlay"
-        className={[
-          "fixed inset-0 z-[999] lg:hidden transition-opacity duration-200",
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
-        ].join(" ")}
-        inert={!isOpen}
-      >
+    <div
+      ref={ref}
+      data-mobile-menu="overlay"
+      className={[
+        "fixed inset-0 z-[999] lg:hidden transition-opacity duration-200",
+        isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+      ].join(" ")}
+    >
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={safeClose} />
 

@@ -122,12 +122,11 @@ const scrollToHeading = useCallback((id: string) => {
   const el = document.getElementById(id);
   if (!el) return;
 
-  setActiveId(id);
-
   const scrollRoot = getScrollRoot(containerSelector);
   const header = document.querySelector("header") as HTMLElement | null;
-  const offset = header ? Math.ceil(header.getBoundingClientRect().bottom) : 120;
+  const offset = header ? header.offsetHeight : 120;
 
+  // 1) まず通常スクロール
   const currentY = getScrollTop(scrollRoot);
   const rect = el.getBoundingClientRect();
   const rootRect = (scrollRoot === document.scrollingElement)
@@ -138,7 +137,35 @@ const scrollToHeading = useCallback((id: string) => {
   const target = Math.max(0, elTopInRootDoc - offset);
 
   scrollToTop(scrollRoot, target, "smooth");
+
+  // 2) 「1回だけ」補正（遅延レンダリング対策）
+  //    画像ロードやフォント描画でレイアウトが動いたら差分だけ合わせる
+  const settleOnce = () => {
+    const yNow = getScrollTop(scrollRoot);
+
+    const rect2 = el.getBoundingClientRect();
+    const rootRect2 = (scrollRoot === document.scrollingElement)
+      ? { top: 0 }
+      : scrollRoot.getBoundingClientRect();
+
+    const elTop2 = rect2.top - rootRect2.top + yNow;
+    const target2 = Math.max(0, elTop2 - offset);
+
+    // “差が十分あるときだけ” 1回補正（小さい差は無視して震え防止）
+    if (Math.abs(target2 - yNow) >= 2) {
+      scrollToTop(scrollRoot, target2, "auto"); // 1回だけ
+    }
+  };
+
+  // requestAnimationFrameを2回 + 少し遅延で、画像の後追いレイアウトに強くする
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.setTimeout(settleOnce, 120);
+    });
+  });
+
 }, [containerSelector]);
+
 
   return { activeId, scrollToHeading };
 }
