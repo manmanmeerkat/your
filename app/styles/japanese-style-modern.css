@@ -295,16 +295,16 @@
 }
 
 .japanese-style-modern-a {
-  color: #83ccd2;
+  color: #9aa7b7;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
   padding: 0 4px 1px;
-  border-bottom: 1px solid #84b9cb;
+  border-bottom: 2px solid rgba(154, 167, 183, 0.55);
 }
 
 .japanese-style-modern-a:hover {
-  border-bottom: 1px solid #a0d8ef;
-  background: rgba(245, 158, 11, 0.1);
+  border-bottom-color: rgba(186, 197, 212, 0.85);
+  background-color: rgba(154, 167, 183, 0.10);
   color: var(--japanese-text-primary);
 }
 
