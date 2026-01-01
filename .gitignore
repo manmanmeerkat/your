@@ -35,6 +35,8 @@ next-env.d.ts
 
 # Prisma
 /prisma/migrations/
+/prisma/node_modules/
+/prisma/node_modules
 
 # Supabase
 .supabase
