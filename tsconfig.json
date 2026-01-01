@@ -19,9 +19,10 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
   },
   "ts-node": {
     "esm": true
