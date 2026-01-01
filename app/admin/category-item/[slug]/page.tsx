@@ -1,7 +1,7 @@
-// app/admin/category-item/[slug]/page.tsx - 修正版
+// app/admin/category-item/[slug]/page.tsx - 完全修正版
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,11 +20,13 @@ import {
   Trash2,
   Save,
   X,
+  Image as ImageIcon,
 } from "lucide-react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import { CategoryItemImageManager } from "../../CategoryItemImageManager";
 
 const categoryOptions = [
   { value: "about-japanese-gods", label: "About Japanese Gods" },
@@ -39,7 +41,6 @@ interface CategoryItemEditProps {
   };
 }
 
-// 🔧 画像データのインターface
 interface ImageData {
   id?: string;
   url: string;
@@ -47,7 +48,6 @@ interface ImageData {
   isFeatured?: boolean;
 }
 
-// 🆕 Trivia関連の型定義
 export interface CategoryItemTrivia {
   id: string;
   title: string;
@@ -64,7 +64,6 @@ export interface CategoryItemTrivia {
   categoryItemId: string;
 }
 
-// 🔧 既存のCategoryItem型に一口メモを追加
 interface CategoryItem {
   id: string;
   title: string;
@@ -89,7 +88,7 @@ export default function EditCategoryItemPage({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
-  const [currentImageId, setCurrentImageId] = useState<string | null>(null); // 🆕 画像IDを追跡
+  const [currentImageId, setCurrentImageId] = useState<string | null>(null);
   const [altText, setAltText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -97,7 +96,6 @@ export default function EditCategoryItemPage({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // 🆕 Trivia関連の状態
   const [categoryItem, setCategoryItem] = useState<CategoryItem | null>(null);
   const [expandedTrivia, setExpandedTrivia] = useState<{
     [key: string]: boolean;
@@ -112,12 +110,12 @@ export default function EditCategoryItemPage({
     [key: string]: Partial<CategoryItemTrivia>;
   }>({});
 
+  const [imageManagerExpanded, setImageManagerExpanded] = useState(false);
+
   const router = useRouter();
 
-  // 本番環境URLの生成
   const productionUrl = `https://www.yoursecretjapan.com/category-item/${slug}`;
 
-  // URLコピー機能
   const copyUrl = async () => {
     try {
       await navigator.clipboard.writeText(productionUrl);
@@ -129,10 +127,11 @@ export default function EditCategoryItemPage({
     }
   };
 
-  // 既存データの読み込み
   useEffect(() => {
     const fetchCategoryItem = async () => {
       try {
+        console.log("🔄 カテゴリーアイテムデータ取得開始:", params.slug);
+
         const response = await fetch(`/api/category-items/${params.slug}`);
 
         if (!response.ok) {
@@ -141,6 +140,14 @@ export default function EditCategoryItemPage({
 
         const data = await response.json();
 
+        console.log("📦 取得したカテゴリーアイテムデータ:", {
+          id: data.id,
+          slug: data.slug,
+          title: data.title,
+          imagesCount: data.images?.length || 0,
+          triviaCount: data.trivia?.length || 0,
+        });
+
         setTitle(data.title);
         setSlug(data.slug);
         setContent(data.content || "");
@@ -148,7 +155,6 @@ export default function EditCategoryItemPage({
         setCategory(data.category);
         setPublished(data.published);
 
-        // 🆕 categoryItemを設定（trivia情報を含む）
         setCategoryItem(data);
 
         if (data.images && data.images.length > 0) {
@@ -156,11 +162,16 @@ export default function EditCategoryItemPage({
             data.images.find((img: ImageData) => img.isFeatured) ||
             data.images[0];
           setCurrentImageUrl(featuredImage.url);
-          setCurrentImageId(featuredImage.id); // 🆕 画像IDを保存
+          setCurrentImageId(featuredImage.id);
           setAltText(featuredImage.altText || "");
+
+          console.log("🖼️ フィーチャー画像設定:", {
+            id: featuredImage.id,
+            url: featuredImage.url,
+          });
         }
       } catch (error) {
-        console.error("Error fetching category item:", error);
+        console.error("❌ カテゴリーアイテム取得エラー:", error);
         setError(
           error instanceof Error ? error.message : "読み込みに失敗しました"
         );
@@ -172,7 +183,6 @@ export default function EditCategoryItemPage({
     fetchCategoryItem();
   }, [params.slug]);
 
-  // スラッグの自動生成
   const generateSlug = (titleText: string) => {
     return titleText
       .toLowerCase()
@@ -191,21 +201,15 @@ export default function EditCategoryItemPage({
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
 
-      // プレビュー用のURLを作成
       const objectUrl = URL.createObjectURL(selectedFile);
       setPreviewUrl(objectUrl);
 
-      // デフォルトの代替テキストとしてファイル名を使用
       if (!altText) {
         setAltText(selectedFile.name.split(".")[0]);
       }
-
-      // 🔧 ファイル選択時のリセット処理
-      // （新しいファイルが選択されたので、プレビューを更新）
     }
   };
 
-  // 🔧 画像アップロード関数（画像管理システム対応）
   const uploadImage = async (): Promise<ImageData | null> => {
     if (!file) return null;
 
@@ -213,13 +217,11 @@ export default function EditCategoryItemPage({
     console.log("🖼️ 画像アップロード開始...");
 
     try {
-      // FormDataオブジェクトを作成
       const formData = new FormData();
       formData.append("file", file);
 
       console.log("📁 FormDataを作成:", file.name, file.type, file.size);
 
-      // 🆕 カテゴリ項目専用の画像アップロードAPIを使用
       const uploadResponse = await fetch(
         `/api/category-items/${params.slug}/images`,
         {
@@ -230,7 +232,6 @@ export default function EditCategoryItemPage({
       );
 
       if (!uploadResponse.ok) {
-        // 🔄 フォールバック: 従来のアップロードAPIを使用
         console.log("🔄 カテゴリ項目専用APIが失敗、従来APIにフォールバック");
 
         const fallbackResponse = await fetch("/api/upload", {
@@ -279,7 +280,6 @@ export default function EditCategoryItemPage({
     }
   };
 
-  // キャッシュ無効化関数
   const revalidateCache = async () => {
     try {
       const response = await fetch("/api/revalidate", {
@@ -303,7 +303,6 @@ export default function EditCategoryItemPage({
     }
   };
 
-  // 🆕 Trivia関連のハンドラー関数
   const toggleTriviaSection = (categoryItemId: string) => {
     setExpandedTrivia((prev) => ({
       ...prev,
@@ -378,7 +377,7 @@ export default function EditCategoryItemPage({
     setEditingTriviaData((prev) => ({
       ...prev,
       [categoryItemId]: {
-        ...prev[categoryItemId],
+        ...(prev[categoryItemId] || {}),
         [field]: value,
       },
     }));
@@ -420,7 +419,6 @@ export default function EditCategoryItemPage({
 
       const savedTrivia = await response.json();
 
-      // ローカル状態を更新
       if (categoryItem) {
         const updatedTrivia = isEditing
           ? categoryItem.trivia?.map((t) =>
@@ -464,7 +462,6 @@ export default function EditCategoryItemPage({
         throw new Error("一口メモの削除に失敗しました");
       }
 
-      // ローカル状態を更新
       if (categoryItem) {
         setCategoryItem((prev) =>
           prev
@@ -509,7 +506,6 @@ export default function EditCategoryItemPage({
 
       const updatedTrivia = await response.json();
 
-      // ローカル状態を更新
       if (categoryItem) {
         setCategoryItem((prev) =>
           prev
@@ -546,12 +542,10 @@ export default function EditCategoryItemPage({
     setError(null);
 
     try {
-      // 必須フィールドの検証
       if (!title || !slug || !category) {
         throw new Error("タイトル、スラッグ、カテゴリーは必須です");
       }
 
-      // 🔧 画像をアップロード（新しいファイルがある場合のみ）
       let newImageData: ImageData | null = null;
       if (file) {
         console.log("🆕 新しい画像ファイルあり、アップロード処理を開始");
@@ -566,7 +560,6 @@ export default function EditCategoryItemPage({
         }
       }
 
-      // 🔧 カテゴリ項目データを準備（画像管理システム対応）
       const categoryItemData: {
         title: string;
         slug: string;
@@ -574,7 +567,7 @@ export default function EditCategoryItemPage({
         content: string;
         category: string;
         published: boolean;
-        updateImages: boolean;
+        updateImages?: boolean;
         images?: ImageData[];
       } = {
         title,
@@ -583,31 +576,19 @@ export default function EditCategoryItemPage({
         content,
         category,
         published,
-        updateImages: false, // 🔧 デフォルトは false（既存画像を保持）
       };
 
-      // 🔧 画像更新の判定
+      // 🔧 画像更新の判定を厳密化
       if (newImageData) {
-        // 新しい画像がアップロードされた場合
+        // 新しい画像がアップロードされた場合のみ
         categoryItemData.updateImages = true;
         categoryItemData.images = [newImageData];
         console.log("🆕 新しい画像をフィーチャー画像として設定");
-      } else if (currentImageId && altText !== (currentImageUrl ? "" : "")) {
-        // 既存画像の代替テキストが変更された場合
-        if (currentImageUrl) {
-          categoryItemData.updateImages = true;
-          categoryItemData.images = [
-            {
-              id: currentImageId,
-              url: currentImageUrl,
-              altText: altText,
-              isFeatured: true,
-            },
-          ];
-          console.log("🔧 既存画像の代替テキストを更新");
-        }
       } else {
+        // 新しいファイルがない場合は画像を更新しない
         console.log("📷 画像に変更なし（既存画像を保持）");
+        // updateImagesをfalseに設定するか、プロパティ自体を送信しない
+        categoryItemData.updateImages = false;
       }
 
       console.log(
@@ -615,7 +596,6 @@ export default function EditCategoryItemPage({
         JSON.stringify(categoryItemData, null, 2)
       );
 
-      // カテゴリ項目更新APIを呼び出し
       const response = await fetch(`/api/category-items/${params.slug}`, {
         method: "PUT",
         headers: {
@@ -630,7 +610,6 @@ export default function EditCategoryItemPage({
         response.status
       );
 
-      // レスポンスがJSONかどうかを確認
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
@@ -648,14 +627,11 @@ export default function EditCategoryItemPage({
       console.log("✅ カテゴリ項目更新成功:", data);
       toast.success("カテゴリ項目を更新しました");
 
-      // 🔧 アップロード済み画像データをリセット
       setFile(null);
       setPreviewUrl(null);
 
-      // キャッシュを無効化
       await revalidateCache();
 
-      // カテゴリ項目管理ページに戻る
       router.push("/admin/category-item");
       router.refresh();
     } catch (error: unknown) {
@@ -669,7 +645,6 @@ export default function EditCategoryItemPage({
     }
   };
 
-  // 🆕 TriviaSectionコンポーネント
   const TriviaSection = ({
     categoryItem,
     expandedTrivia,
@@ -688,7 +663,6 @@ export default function EditCategoryItemPage({
     const isExpanded = expandedTrivia[categoryItem.id];
     const isEditing = editingTrivia[categoryItem.id];
 
-    // 一口メモの数を正確にカウント
     const activeTriviaCount =
       categoryItem.trivia?.filter((t) => t.isActive).length || 0;
     const totalTriviaCount = categoryItem.trivia?.length || 0;
@@ -738,20 +712,15 @@ export default function EditCategoryItemPage({
 
         {isExpanded && (
           <div className="space-y-3">
-            {/* 編集フォーム */}
             {isEditing && (
               <TriviaEditForm
-                key={`trivia-edit-${categoryItem.id}-${
-                  editingTrivia[categoryItem.id]
-                }`}
+                key={categoryItem.id}
                 categoryItemId={categoryItem.id}
               />
             )}
 
-            {/* 一口メモリスト */}
             {categoryItem.trivia && categoryItem.trivia.length > 0 ? (
               <div className="space-y-3">
-                {/* アクティブな一口メモ */}
                 {categoryItem.trivia
                   .filter((trivia) => trivia.isActive)
                   .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -764,7 +733,6 @@ export default function EditCategoryItemPage({
                     />
                   ))}
 
-                {/* 非アクティブな一口メモ（折りたたみ可能） */}
                 {categoryItem.trivia.filter((trivia) => !trivia.isActive)
                   .length > 0 && (
                   <details className="mt-4">
@@ -824,7 +792,6 @@ export default function EditCategoryItemPage({
               )
             )}
 
-            {/* ローディング表示 */}
             {triviaLoading[categoryItem.id] && (
               <div className="text-center py-3 bg-blue-50 rounded-lg">
                 <div className="inline-flex items-center gap-2">
@@ -834,7 +801,6 @@ export default function EditCategoryItemPage({
               </div>
             )}
 
-            {/* 一口メモの統計情報 */}
             {totalTriviaCount > 0 && (
               <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700 border border-blue-200">
                 <div className="flex items-center justify-between">
@@ -857,293 +823,326 @@ export default function EditCategoryItemPage({
     );
   };
 
-  // 🆕 TriviaEditFormコンポーネント
-  const TriviaEditForm = ({ categoryItemId }: { categoryItemId: string }) => {
-    const data = editingTriviaData[categoryItemId];
-    const [showPreview, setShowPreview] = useState(false);
+  const TriviaEditForm = React.memo(
+    ({ categoryItemId }: { categoryItemId: string }) => {
+      const initialData = editingTriviaData[categoryItemId];
+      const [showPreview, setShowPreview] = useState(false);
 
-    if (!data) return null;
+      const [localData, setLocalData] = useState({
+        title: initialData?.title || "",
+        content: initialData?.content || "",
+        category: initialData?.category || "default",
+      });
 
-    // マークダウンプレビューコンポーネント
-    const MarkdownPreview = ({ content }: { content: string }) => {
-      if (!content.trim()) {
+      useEffect(() => {
+        if (initialData) {
+          setLocalData({
+            title: initialData.title || "",
+            content: initialData.content || "",
+            category: initialData.category || "default",
+          });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [categoryItemId]);
+
+      if (!initialData) return null;
+
+      const handleSave = async () => {
+        if (!localData.title || !localData.content) {
+          toast.error("タイトルとコンテンツは必須です");
+          return;
+        }
+
+        updateTriviaData(categoryItemId, "title", localData.title);
+        updateTriviaData(categoryItemId, "content", localData.content);
+        updateTriviaData(categoryItemId, "category", localData.category);
+
+        await saveTrivia(categoryItemId);
+      };
+
+      const MarkdownPreview = ({ content }: { content: string }) => {
+        if (!content.trim()) {
+          return (
+            <div className="bg-gray-100 p-4 rounded text-gray-500 text-sm">
+              プレビュー内容がありません
+            </div>
+          );
+        }
+
         return (
-          <div className="bg-gray-100 p-4 rounded text-gray-500 text-sm">
-            プレビュー内容がありません
-          </div>
-        );
-      }
+          <div className="bg-gray-900 text-gray-100 p-4 rounded border max-h-60 overflow-y-auto">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+              components={{
+                p: ({ children, ...props }) => (
+                  <p className="text-gray-200 mb-2 last:mb-0" {...props}>
+                    {children}
+                  </p>
+                ),
+                strong: ({ children, ...props }) => (
+                  <strong className="text-yellow-400 font-bold" {...props}>
+                    {children}
+                  </strong>
+                ),
+                em: ({ children, ...props }) => (
+                  <em className="text-gray-300 italic" {...props}>
+                    {children}
+                  </em>
+                ),
+                code: (props) => {
+                  const { children, className, ...restProps } =
+                    props as React.ComponentProps<"code"> & {
+                      className?: string;
+                    };
+                  const match = /language-(\w+)/.exec(className || "");
 
-      return (
-        <div className="bg-gray-900 text-gray-100 p-4 rounded border max-h-60 overflow-y-auto">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw]}
-            components={{
-              p: ({ children, ...props }) => (
-                <p className="text-gray-200 mb-2 last:mb-0" {...props}>
-                  {children}
-                </p>
-              ),
-              strong: ({ children, ...props }) => (
-                <strong className="text-yellow-400 font-bold" {...props}>
-                  {children}
-                </strong>
-              ),
-              em: ({ children, ...props }) => (
-                <em className="text-gray-300 italic" {...props}>
-                  {children}
-                </em>
-              ),
-              code: (props) => {
-                const { children, className, ...restProps } =
-                  props as React.ComponentProps<"code"> & {
-                    className?: string;
-                  };
-                const match = /language-(\w+)/.exec(className || "");
+                  if (!match) {
+                    return (
+                      <code
+                        className="bg-gray-700 text-yellow-300 px-1 rounded text-sm"
+                        {...restProps}
+                      >
+                        {children}
+                      </code>
+                    );
+                  }
 
-                if (!match) {
-                  // インラインコード
                   return (
                     <code
-                      className="bg-gray-700 text-yellow-300 px-1 rounded text-sm"
+                      className="block bg-gray-700 text-yellow-300 p-2 rounded text-sm overflow-x-auto my-2"
                       {...restProps}
                     >
                       {children}
                     </code>
                   );
-                }
-
-                // コードブロック
-                return (
-                  <code
-                    className="block bg-gray-700 text-yellow-300 p-2 rounded text-sm overflow-x-auto my-2"
-                    {...restProps}
+                },
+                pre: ({ children, ...props }) => (
+                  <pre
+                    className="bg-gray-700 border border-gray-600 rounded p-2 my-2 overflow-x-auto text-sm"
+                    {...props}
                   >
                     {children}
-                  </code>
-                );
-              },
-              pre: ({ children, ...props }) => (
-                <pre
-                  className="bg-gray-700 border border-gray-600 rounded p-2 my-2 overflow-x-auto text-sm"
-                  {...props}
-                >
-                  {children}
-                </pre>
-              ),
-              a: ({ children, href, ...props }) => (
-                <a
-                  href={href}
-                  className="text-blue-400 underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  {...props}
-                >
-                  {children}
-                </a>
-              ),
-              ul: ({ children, ...props }) => (
-                <ul className="list-disc list-inside my-2" {...props}>
-                  {children}
-                </ul>
-              ),
-              ol: ({ children, ...props }) => (
-                <ol className="list-decimal list-inside my-2" {...props}>
-                  {children}
-                </ol>
-              ),
-              li: ({ children, ...props }) => (
-                <li className="text-gray-200 mb-1" {...props}>
-                  {children}
-                </li>
-              ),
-              blockquote: ({ children, ...props }) => (
-                <blockquote
-                  className="border-l-4 border-yellow-400 pl-3 my-2 italic text-gray-300"
-                  {...props}
-                >
-                  {children}
-                </blockquote>
-              ),
-              h1: ({ children, ...props }) => (
-                <h1
-                  className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0"
-                  {...props}
-                >
-                  {children}
-                </h1>
-              ),
-              h2: ({ children, ...props }) => (
-                <h2
-                  className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0"
-                  {...props}
-                >
-                  {children}
-                </h2>
-              ),
-              h3: ({ children, ...props }) => (
-                <h3
-                  className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0"
-                  {...props}
-                >
-                  {children}
-                </h3>
-              ),
-              hr: (props) => <hr className="border-gray-600 my-3" {...props} />,
-            }}
-          >
-            {content}
-          </ReactMarkdown>
+                  </pre>
+                ),
+                a: ({ children, href, ...props }) => (
+                  <a
+                    href={href}
+                    className="text-blue-400 underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    {...props}
+                  >
+                    {children}
+                  </a>
+                ),
+                ul: ({ children, ...props }) => (
+                  <ul className="list-disc list-inside my-2" {...props}>
+                    {children}
+                  </ul>
+                ),
+                ol: ({ children, ...props }) => (
+                  <ol className="list-decimal list-inside my-2" {...props}>
+                    {children}
+                  </ol>
+                ),
+                li: ({ children, ...props }) => (
+                  <li className="text-gray-200 mb-1" {...props}>
+                    {children}
+                  </li>
+                ),
+                blockquote: ({ children, ...props }) => (
+                  <blockquote
+                    className="border-l-4 border-yellow-400 pl-3 my-2 italic text-gray-300"
+                    {...props}
+                  >
+                    {children}
+                  </blockquote>
+                ),
+                h1: ({ children, ...props }) => (
+                  <h1
+                    className="text-lg font-bold text-yellow-400 mb-2 mt-3 first:mt-0"
+                    {...props}
+                  >
+                    {children}
+                  </h1>
+                ),
+                h2: ({ children, ...props }) => (
+                  <h2
+                    className="text-base font-semibold text-yellow-300 mb-2 mt-2 first:mt-0"
+                    {...props}
+                  >
+                    {children}
+                  </h2>
+                ),
+                h3: ({ children, ...props }) => (
+                  <h3
+                    className="text-sm font-semibold text-gray-200 mb-1 mt-2 first:mt-0"
+                    {...props}
+                  >
+                    {children}
+                  </h3>
+                ),
+                hr: (props) => (
+                  <hr className="border-gray-600 my-3" {...props} />
+                ),
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          </div>
+        );
+      };
+
+      return (
+        <div className="bg-white border rounded-lg p-4 mb-3 shadow-sm">
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">
+                タイトル <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={localData.title}
+                onChange={(e) => {
+                  setLocalData((prev) => ({ ...prev, title: e.target.value }));
+                }}
+                placeholder="一口メモのタイトルを入力してください"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                maxLength={100}
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                例: 「蝉丸の由来」「能楽との関係」「歴史的背景」など
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-700">
+                カテゴリー
+              </label>
+              <select
+                value={localData.category}
+                onChange={(e) => {
+                  setLocalData((prev) => ({
+                    ...prev,
+                    category: e.target.value,
+                  }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="default">デフォルト</option>
+                <option value="shrine">神社</option>
+                <option value="anime">アニメ・文化</option>
+                <option value="food">食べ物</option>
+                <option value="culture">文化</option>
+                <option value="history">歴史</option>
+                <option value="nature">自然</option>
+                <option value="festival">祭り</option>
+                <option value="mythology">神話</option>
+                <option value="customs">風習</option>
+              </select>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  コンテンツ（マークダウン記法対応）{" "}
+                  <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowPreview(!showPreview)}
+                    className="hover:bg-blue-50"
+                  >
+                    {showPreview ? "編集" : "プレビュー"}
+                  </Button>
+                </div>
+              </div>
+
+              {showPreview ? (
+                <MarkdownPreview content={localData.content} />
+              ) : (
+                <textarea
+                  value={localData.content}
+                  onChange={(e) => {
+                    setLocalData((prev) => ({
+                      ...prev,
+                      content: e.target.value,
+                    }));
+                  }}
+                  placeholder="一口メモの内容をマークダウン記法で入力してください。&#10;&#10;例：&#10;**蝉丸神社**は滋賀県大津市にある神社で、*音楽の神様*として知られています。&#10;&#10;- 能楽の祖とされる蝉丸を祀る&#10;- 音楽・芸能関係者の参拝が多い&#10;- 逢坂の関の近くに位置する"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={8}
+                  maxLength={2000}
+                />
+              )}
+
+              <div className="mt-2 text-sm text-gray-600">
+                <p className="mb-1">マークダウン記法が使用できます：</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <code>**太字**</code> → <strong>太字</strong>
+                  </div>
+                  <div>
+                    <code>*斜体*</code> → <em>斜体</em>
+                  </div>
+                  <div>
+                    <code># 見出し1</code> →{" "}
+                    <span className="text-lg font-bold">見出し1</span>
+                  </div>
+                  <div>
+                    <code>## 見出し2</code> →{" "}
+                    <span className="text-base font-semibold">見出し2</span>
+                  </div>
+                  <div>
+                    <code>- リスト項目</code> → <span>• リスト項目</span>
+                  </div>
+                  <div>
+                    <code>[リンク](URL)</code> →{" "}
+                    <span className="text-blue-600 underline">リンク</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => cancelEditingTrivia(categoryItemId)}
+                className="hover:bg-gray-50"
+              >
+                <X className="h-3 w-3 mr-1" />
+                キャンセル
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleSave}
+                disabled={triviaLoading[categoryItemId]}
+                className="hover:bg-green-600"
+              >
+                {triviaLoading[categoryItemId] ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Save className="h-3 w-3 mr-1" />
+                )}
+                保存
+              </Button>
+            </div>
+          </div>
         </div>
       );
-    };
+    }
+  );
 
-    return (
-      <div className="bg-white border rounded-lg p-4 mb-3 shadow-sm">
-        <div className="grid grid-cols-1 gap-4">
-          {/* タイトル入力フィールド */}
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              タイトル <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={data.title || ""}
-              onChange={(e) =>
-                updateTriviaData(categoryItemId, "title", e.target.value)
-              }
-              placeholder="一口メモのタイトルを入力してください"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              maxLength={100}
-              autoFocus
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              例: 「蝉丸の由来」「能楽との関係」「歴史的背景」など
-            </p>
-          </div>
+  TriviaEditForm.displayName = "TriviaEditForm";
 
-          {/* カテゴリー */}
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              カテゴリー
-            </label>
-            <select
-              value={data.category}
-              onChange={(e) =>
-                updateTriviaData(categoryItemId, "category", e.target.value)
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="default">デフォルト</option>
-              <option value="shrine">神社</option>
-              <option value="anime">アニメ・文化</option>
-              <option value="food">食べ物</option>
-              <option value="culture">文化</option>
-              <option value="history">歴史</option>
-              <option value="nature">自然</option>
-              <option value="festival">祭り</option>
-              <option value="mythology">神話</option>
-              <option value="customs">風習</option>
-            </select>
-          </div>
-
-          {/* コンテンツ */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">
-                コンテンツ（マークダウン記法対応）{" "}
-                <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowPreview(!showPreview)}
-                  className="hover:bg-blue-50"
-                >
-                  {showPreview ? "編集" : "プレビュー"}
-                </Button>
-              </div>
-            </div>
-
-            {showPreview ? (
-              <MarkdownPreview content={data.content || ""} />
-            ) : (
-              <textarea
-                value={data.content}
-                onChange={(e) =>
-                  updateTriviaData(categoryItemId, "content", e.target.value)
-                }
-                placeholder="一口メモの内容をマークダウン記法で入力してください。&#10;&#10;例：&#10;**蝉丸神社**は滋賀県大津市にある神社で、*音楽の神様*として知られています。&#10;&#10;- 能楽の祖とされる蝉丸を祀る&#10;- 音楽・芸能関係者の参拝が多い&#10;- 逢坂の関の近くに位置する"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={8}
-                maxLength={2000}
-              />
-            )}
-
-            <div className="mt-2 text-sm text-gray-600">
-              <p className="mb-1">マークダウン記法が使用できます：</p>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <code>**太字**</code> → <strong>太字</strong>
-                </div>
-                <div>
-                  <code>*斜体*</code> → <em>斜体</em>
-                </div>
-                <div>
-                  <code># 見出し1</code> →{" "}
-                  <span className="text-lg font-bold">見出し1</span>
-                </div>
-                <div>
-                  <code>## 見出し2</code> →{" "}
-                  <span className="text-base font-semibold">見出し2</span>
-                </div>
-                <div>
-                  <code>- リスト項目</code> → <span>• リスト項目</span>
-                </div>
-                <div>
-                  <code>[リンク](URL)</code> →{" "}
-                  <span className="text-blue-600 underline">リンク</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* アクション */}
-          <div className="flex justify-end gap-2 pt-2 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => cancelEditingTrivia(categoryItemId)}
-              className="hover:bg-gray-50"
-            >
-              <X className="h-3 w-3 mr-1" />
-              キャンセル
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => saveTrivia(categoryItemId)}
-              disabled={triviaLoading[categoryItemId]}
-              className="hover:bg-green-600"
-            >
-              {triviaLoading[categoryItemId] ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <Save className="h-3 w-3 mr-1" />
-              )}
-              保存
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // 🆕 TriviaDisplayコンポーネント
   const TriviaDisplay = ({
     categoryItemId,
     trivia,
@@ -1180,9 +1179,9 @@ export default function EditCategoryItemPage({
             </div>
             <div className="text-sm text-gray-700 mb-2">
               <div className="max-h-20 overflow-hidden">
-                {trivia.content.length > 150
+                {trivia.content && trivia.content.length > 150
                   ? `${trivia.content.substring(0, 150)}...`
-                  : trivia.content}
+                  : trivia.content || ""}
               </div>
             </div>
           </div>
@@ -1254,7 +1253,6 @@ export default function EditCategoryItemPage({
             </div>
           )}
 
-          {/* 本番環境URL表示 */}
           {slug && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
               <div className="space-y-2">
@@ -1397,8 +1395,12 @@ The creator god who, with Izanami, birthed the Japanese islands...
 
           <div className="space-y-2">
             <label htmlFor="image" className="text-sm font-medium">
-              画像
+              フィーチャー画像（サムネイル用）
             </label>
+            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded mb-2">
+              ℹ️
+              この画像はサムネイルとして使用されます。本文内で使用する複数の画像は、下の「画像管理システム」セクションで管理できます。
+            </div>
             <Input
               id="image"
               type="file"
@@ -1406,7 +1408,6 @@ The creator god who, with Izanami, birthed the Japanese islands...
               onChange={handleFileChange}
             />
 
-            {/* 🔧 画像プレビューの改善 */}
             {(previewUrl || currentImageUrl) && (
               <div className="mt-2">
                 <p className="text-sm font-medium mb-1">
@@ -1455,7 +1456,37 @@ The creator god who, with Izanami, birthed the Japanese islands...
             </label>
           </div>
 
-          {/* 🆕 Trivia機能セクション */}
+          {categoryItem && categoryItem.id && (
+            <div className="mt-6 border-t pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <Button
+                  onClick={() => setImageManagerExpanded(!imageManagerExpanded)}
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  className="flex items-center gap-2 text-sm font-medium hover:bg-green-100"
+                >
+                  {imageManagerExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                  <ImageIcon className="h-4 w-4" />
+                  画像管理システム（本文内で使用する画像）
+                </Button>
+              </div>
+
+              {imageManagerExpanded && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mb-2 p-2 bg-blue-50 rounded text-xs text-blue-700">
+                    カテゴリーアイテムID: {categoryItem.id}
+                  </div>
+                  <CategoryItemImageManager categoryItemId={categoryItem.id} />
+                </div>
+              )}
+            </div>
+          )}
+
           {categoryItem && (
             <TriviaSection
               categoryItem={categoryItem}

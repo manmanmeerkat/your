@@ -41,6 +41,10 @@ export default function ArticleDetailLayout({
     [doc.trivia]
   );
 
+  // すべてのトリビアをContentWithTriviaに渡す（インデックス参照のため）
+  // ContentWithTriviaコンポーネント内でisActiveチェックが行われる
+  const allTrivia = useMemo(() => doc.trivia ?? [], [doc.trivia]);
+
   const tocSourceMarkdown = useMemo(() => {
     const pre = preprocessImageSyntax(doc.content);
     const { markdownContent } = separateTriviaFromMarkdown(pre, activeTrivia);
@@ -55,8 +59,8 @@ export default function ArticleDetailLayout({
   });
 
   const renderedContent = useMemo(() => {
-  return <ContentWithTrivia content={doc.content} triviaList={activeTrivia} />;
-}, [doc.content, activeTrivia]);
+    return <ContentWithTrivia content={doc.content} triviaList={allTrivia} />;
+  }, [doc.content, allTrivia]);
 
   const featuredImage = useMemo(() => {
     return doc.images?.find((img) => img.isFeatured)?.url ?? "/fallback.jpg";
@@ -109,7 +113,7 @@ export default function ArticleDetailLayout({
                   {formatDisplayDate(doc.updatedAt)}
                 </div>
               </div>
-      
+
               {hasFeaturedImage && (
                 <div className="mb-8 px-4">
                   <div className="flex justify-center">
@@ -129,8 +133,8 @@ export default function ArticleDetailLayout({
                 </div>
               )}
 
-              {tableOfContents.length > 0 && (
-                tocMounted ? (
+              {tableOfContents.length > 0 &&
+                (tocMounted ? (
                   <TableOfContents
                     items={tableOfContents}
                     activeId={activeId}
@@ -138,10 +142,11 @@ export default function ArticleDetailLayout({
                   />
                 ) : (
                   // ★ ToCが出る場所に “同じくらいの高さ” を先に確保
-                  <div className="mx-6 mb-8 rounded-2xl border border-white/10 bg-white/5"
-                      style={{ height: 380 }} />
-                )
-              )}
+                  <div
+                    className="mx-6 mb-8 rounded-2xl border border-white/10 bg-white/5"
+                    style={{ height: 380 }}
+                  />
+                ))}
 
               <div className="japanese-style-modern-container">
                 <div className="japanese-style-modern-content max-w-none">

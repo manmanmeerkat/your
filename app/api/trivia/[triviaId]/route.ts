@@ -82,22 +82,37 @@ export async function PUT(
   try {
     const body = await request.json();
     
+    // 送信されたフィールドのみを更新する（部分更新対応）
+    const updateData: {
+      updatedAt: Date;
+      title?: string;
+      content?: string;
+      contentEn?: string | null;
+      category?: string;
+      tags?: string[];
+      iconEmoji?: string | null;
+      colorTheme?: string | null;
+      displayOrder?: number;
+      isActive?: boolean;
+    } = {
+      updatedAt: new Date(),
+    };
+    
+    if (body.title !== undefined) updateData.title = body.title;
+    if (body.content !== undefined) updateData.content = body.content;
+    if (body.contentEn !== undefined) updateData.contentEn = body.contentEn;
+    if (body.category !== undefined) updateData.category = body.category;
+    if (body.tags !== undefined) updateData.tags = body.tags;
+    if (body.iconEmoji !== undefined) updateData.iconEmoji = body.iconEmoji;
+    if (body.colorTheme !== undefined) updateData.colorTheme = body.colorTheme;
+    if (body.displayOrder !== undefined) updateData.displayOrder = body.displayOrder;
+    if (body.isActive !== undefined) updateData.isActive = body.isActive;
+    
     // まず記事のtriviaから検索して更新を試行
     try {
       const updatedTrivia = await prisma.articleTrivia.update({
         where: { id: params.triviaId },
-        data: {
-          title: body.title,
-          content: body.content,
-          contentEn: body.contentEn,
-          category: body.category,
-          tags: body.tags,
-          iconEmoji: body.iconEmoji,
-          colorTheme: body.colorTheme,
-          displayOrder: body.displayOrder,
-          isActive: body.isActive,
-          updatedAt: new Date(),
-        },
+        data: updateData,
       });
 
       return NextResponse.json({ 
@@ -109,18 +124,7 @@ export async function PUT(
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
         const updatedTrivia = await prisma.categoryItemTrivia.update({
           where: { id: params.triviaId },
-          data: {
-            title: body.title,
-            content: body.content,
-            contentEn: body.contentEn,
-            category: body.category,
-            tags: body.tags,
-            iconEmoji: body.iconEmoji,
-            colorTheme: body.colorTheme,
-            displayOrder: body.displayOrder,
-            isActive: body.isActive,
-            updatedAt: new Date(),
-          },
+          data: updateData,
         });
 
         return NextResponse.json({ 

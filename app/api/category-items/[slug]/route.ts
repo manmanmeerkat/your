@@ -1,3 +1,4 @@
+// app/api/category-items/[slug]/route.ts - 完全修正版
 import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -31,7 +32,6 @@ export async function GET(
       { status: 500 }
     );
   } finally {
-    // 開発環境では接続を明示的に切断
     if (process.env.NODE_ENV === 'development') {
       await prisma.$disconnect();
     }
@@ -51,80 +51,90 @@ export async function PUT(
       content,
       category, 
       published,
-      imageUrl, 
-      imageAltText,
       updateImages,
       images
     } = body;
 
-    console.log('リクエストボディ:', body);
+    console.log('📥 カテゴリ項目更新リクエスト:', {
+      slug: params.slug,
+      newSlug: slug,
+      hasImages: !!images,
+      updateImages,
+      imagesArray: images,
+    });
 
-    // カテゴリ項目を更新
+    // カテゴリ項目の基本情報を更新
     const categoryItem = await prisma.categoryItem.update({
       where: { slug: params.slug },
       data: {
         title,
         slug,
-        description: description,
+        description: description || '',
         content: content || '',
         category,
         published,
       } as any,
-      include: { 
-        images: true,
-        trivia: {
-          orderBy: { displayOrder: 'asc' }
-        }
-      } as any
     });
 
-    // 画像の処理（新しい画像管理システム対応）
-    if (updateImages && images && Array.isArray(images)) {
-      // 既存の画像を削除
-      await prisma.categoryItemImage.deleteMany({
-        where: { categoryItemId: categoryItem.id }
-      } as any);
+    console.log('✅ カテゴリ項目基本情報更新完了:', categoryItem.id);
 
-      // 新しい画像を作成
-      for (const imageData of images) {
-        await prisma.categoryItemImage.create({
-          data: {
+    // フィーチャー画像の処理
+    if (updateImages === true && images && Array.isArray(images) && images.length > 0) {
+      console.log('🖼️ フィーチャー画像更新処理開始');
+
+      // フィーチャー画像のみを処理
+      const featuredImage = images[0]; // 最初の画像をフィーチャー画像として扱う
+
+      if (featuredImage) {
+        // 既存のフィーチャー画像を削除
+        await prisma.categoryItemImage.deleteMany({
+          where: { 
             categoryItemId: categoryItem.id,
-            url: imageData.url,
-            altText: imageData.altText || '',
-            isFeatured: imageData.isFeatured || false
+            isFeatured: true,
           }
-        });
-      }
-      console.log('画像管理システムで画像を更新しました:', images);
-    }
-    // 従来の画像処理（後方互換性のため）
-    else if (imageUrl === null) {
-      // 画像を削除
-      await prisma.categoryItemImage.deleteMany({
-        where: { categoryItemId: categoryItem.id }
-      } as any);
-      console.log('画像を削除しました');
-    } 
-    else if (imageUrl) {
-      // 既存の画像を削除
-      await prisma.categoryItemImage.deleteMany({
-        where: { categoryItemId: categoryItem.id }
-      } as any);
+        } as any);
 
-      // 新しい画像を作成
-      await prisma.categoryItemImage.create({
-        data: {
-          categoryItemId: categoryItem.id,
-          url: imageUrl,
-          altText: imageAltText || '',
-          isFeatured: true
+        console.log('🗑️ 既存フィーチャー画像を削除');
+
+        // 新しい画像か既存画像かを判定
+        if (featuredImage.id) {
+          // 既存画像を更新（代替テキストのみ変更）
+          try {
+            await prisma.categoryItemImage.update({
+              where: { id: featuredImage.id },
+              data: {
+                altText: featuredImage.altText || '',
+                isFeatured: true,
+              }
+            } as any);
+            console.log('🔄 既存フィーチャー画像を更新:', featuredImage.id);
+          } catch (updateError) {
+            // 画像が見つからない場合は新規作成
+            console.log('⚠️ 既存画像が見つからないため新規作成');
+            await prisma.categoryItemImage.create({
+              data: {
+                categoryItemId: categoryItem.id,
+                url: featuredImage.url,
+                altText: featuredImage.altText || '',
+                isFeatured: true,
+              }
+            } as any);
+          }
+        } else if (featuredImage.url) {
+          // 新規画像を作成
+          await prisma.categoryItemImage.create({
+            data: {
+              categoryItemId: categoryItem.id,
+              url: featuredImage.url,
+              altText: featuredImage.altText || '',
+              isFeatured: true,
+            }
+          } as any);
+          console.log('➕ 新規フィーチャー画像を作成');
         }
-      } as any);
-      console.log('画像を更新しました:', imageUrl);
-    } 
-    else {
-      console.log('画像の変更はありません');
+      }
+    } else {
+      console.log('📷 フィーチャー画像の変更なし (updateImages:', updateImages, ')');
     }
 
     // 更新後のデータを取得
@@ -138,15 +148,22 @@ export async function PUT(
       } as any
     });
 
+    console.log('✅ カテゴリ項目更新完了:', {
+      id: updatedItem?.id,
+      imagesCount: updatedItem?.images?.length || 0,
+    });
+
     return NextResponse.json(updatedItem);
   } catch (error) {
-    console.error('カテゴリ項目更新エラー:', error);
+    console.error('💥 カテゴリ項目更新エラー:', error);
     return NextResponse.json(
-      { error: 'カテゴリ項目の更新に失敗しました' },
+      { 
+        error: 'カテゴリ項目の更新に失敗しました', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   } finally {
-    // 開発環境では接続を明示的に切断
     if (process.env.NODE_ENV === 'development') {
       await prisma.$disconnect();
     }
