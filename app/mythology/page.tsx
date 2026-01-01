@@ -1,18 +1,18 @@
-// app/mythology/page.tsx
-import Script from "next/script";
-import { Suspense } from "react";
+import { CategoryPageLayout } from "@/components/categoryPageComponents/categoryPageLayout/CategoryPageLayout";
+import { CategoryHeroSection } from "@/components/categoryPageComponents/categoryHeroSection/CategoryHeroSection";
+import { CategoryArticlesSection } from "@/components/categoryPageComponents/categoryArticlesSection/CategoryArticleSection";
+import { CategoryArticlesSkeleton } from "@/components/categoryPageComponents/categoryArticlesSkeleton/CategoryArticlesSkeleton";
 
-import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import ScrollHandler from "@/components/scroll/ScrollHandler";
-import { Breadcrumb } from "@/components/breadcrumb";
-import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
-import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
+import {
+  parsePage,
+  getGodsSlugMap,
+  getMythologyArticles,
+} from "@/components/mythologyComponents/getMythologyData/GetMythologyData";
 
-import { parsePage, getGodsSlugMap } from "@/components/mythologyComponents/getMythologyData/GetMythologyData";
-import { MythologyHeroSection } from "@/components/mythologyComponents/mythologyHeroSection/MythologyHeroSection";
-import { MythologyArticleaSection } from "@/components/mythologyComponents/mythologyAriclesSection/MythologyArticlesSection";
-import { MythologyArticlesSkeleton } from "@/components/mythologyComponents/mythologyAriclesSection/MythologyStoriesSkeleton";
 import { JapaneseGodsSection } from "@/components/mythologyComponents/japaneseGodsSection/JapaneseGodsSection";
+import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
+
+const copy = ARTICLES_COPY.mythology;
 
 export default async function MythologyPage({
   searchParams,
@@ -26,34 +26,35 @@ export default async function MythologyPage({
     { label: "Home", href: "/" },
     { label: "Mythology", href: "/mythology", isCurrentPage: true },
   ];
-  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
 
   return (
-    <div>
-      <Script
-        id="breadcrumb-structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+    <CategoryPageLayout
+      breadcrumbItems={breadcrumbItems}
+      hero={<CategoryHeroSection category="mythology" />}
 
-      <div className="container mx-auto px-4">
-        <Breadcrumb customItems={breadcrumbItems} />
-      </div>
+      articles={
+        <CategoryArticlesSection
+          currentPage={currentPage}
+          getArticles={getMythologyArticles}
+          sectionId={copy.sectionId}
+          title={copy.sectionTitle}
+          descriptionLines={copy.descriptionLines}
+          emptyText={copy.emptyText}
+          basePath={copy.basePath}
+        />
+      }
 
-      <ScrollHandler />
+      articlesFallback={
+        <CategoryArticlesSkeleton
+          sectionId={copy.sectionId}
+          title={copy.sectionTitle}
+          loadingText={copy.loadingText}
+        />
+      }
 
-      <MythologyHeroSection />
-
-      <Suspense fallback={<MythologyArticlesSkeleton />}>
-        <MythologyArticleaSection currentPage={currentPage} />
-      </Suspense>
-
-      <WhiteLine />
-
-      <JapaneseGodsSection godsSlugMapPromise={godsSlugMapPromise} />
-
-      <WhiteLine />
-      <BackToHomeBtn />
-    </div>
+      afterArticles={
+        <JapaneseGodsSection godsSlugMapPromise={godsSlugMapPromise} />
+      }
+    />
   );
 }

@@ -1,22 +1,32 @@
-// app/culture/_components/CultureArticlesSkeleton.tsx
 import { SectionTitle } from "@/components/sectionTitle/SectionTitle";
 
-export function CultureArticlesSkeleton() {
+type Props = {
+  sectionId: string;
+  title: string;
+  loadingText: string;
+  count?: number;
+};
+
+export function CategoryArticlesSkeleton({
+  sectionId,
+  title,
+  loadingText,
+  count = 6,
+}: Props) {
   return (
-    <section className="py-20" id="culture-articles">
+    <section className="py-20" id={sectionId}>
       <div className="container mx-auto max-w-6xl px-6">
         <div className="text-center mb-10">
-          <SectionTitle>The charm of Japanese culture</SectionTitle>
-
+          <SectionTitle>{title}</SectionTitle>
           <p className="mt-4 text-sm md:text-base text-[#f3f3f2]/60 leading-relaxed">
-            Loading articles…
+            {loadingText}
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-          {Array.from({ length: 6 }).map((_, index) => (
+          {Array.from({ length: count }).map((_, index) => (
             <div
-              key={`culture-skel-${index}`}
+              key={`${sectionId}-skel-${index}`}
               className="animate-pulse rounded-xl bg-black/20 p-4 ring-1 ring-white/10"
             >
               <div className="h-40 w-full rounded-md bg-white/10 mb-4" />

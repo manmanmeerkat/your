@@ -1,19 +1,16 @@
 // app/festivals/page.tsx
-import Script from "next/script";
-import { Suspense } from "react";
+import { CategoryPageLayout } from "@/components/categoryPageComponents/categoryPageLayout/CategoryPageLayout";
+import { CategoryHeroSection } from "@/components/categoryPageComponents/categoryHeroSection/CategoryHeroSection";
+import { CategoryArticlesSection } from "@/components/categoryPageComponents/categoryArticlesSection/CategoryArticleSection";
+import { CategoryArticlesSkeleton } from "@/components/categoryPageComponents/categoryArticlesSkeleton/CategoryArticlesSkeleton";
+import { parsePage, getFestivalsArticles } from "@/components/festivalsComponents/getFestivalsData/GetFestivalsData";
 
-import { Breadcrumb } from "@/components/breadcrumb";
-import { generateBreadcrumbStructuredData } from "@/components/breadcrumb/config";
-import { WhiteLine } from "@/components/whiteLine/whiteLine";
-import ScrollHandler from "@/components/scroll/ScrollHandler";
-import { BackToHomeBtn } from "@/components/backToHomeBtn/BackToHomeBtn";
+import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
 
-import { parsePage } from "@/components/festivalsComponents/getFestivalsData/GetFestivalsData";
-import { FestivalsHeroSection } from "@/components/festivalsComponents/festivalsHeroSection/FestivalsHeroSection";
-import { FestivalsArticlesSection } from "@/components/festivalsComponents/festivalsArticlesSection/FestivalsArticlesSection";
-import { FestivalsArticlesSkeleton } from "@/components/festivalsComponents/festivalsArticlesSection/FestivalsArticlesSkeleton";
 // import { SeasonalFestivalsSection } from "@/components/festivalsComponents/seasonalFestivalsSection/SeasonalFestivalsSection";
 // import { ThreeBigFestivalsSection } from "@/components/festivalsComponents/threeBigFestivalsSection/ThreeBigFestivalsSection";
+
+const copy = ARTICLES_COPY.festivals;
 
 export default async function FestivalsPage({
   searchParams,
@@ -26,38 +23,39 @@ export default async function FestivalsPage({
     { label: "Home", href: "/" },
     { label: "Festivals", href: "/festivals", isCurrentPage: true },
   ];
-  const breadcrumbJsonLd = generateBreadcrumbStructuredData(breadcrumbItems);
 
   return (
-    <div>
-      <Script
-        id="breadcrumb-structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+    <CategoryPageLayout
+      breadcrumbItems={breadcrumbItems}
+      hero={<CategoryHeroSection category="festivals" />}
 
-      <div className="container mx-auto px-4">
-        <Breadcrumb customItems={breadcrumbItems} />
-      </div>
+      articles={
+        <CategoryArticlesSection
+          currentPage={currentPage}
+          getArticles={getFestivalsArticles}
+          sectionId={copy.sectionId}
+          title={copy.sectionTitle}
+          descriptionLines={copy.descriptionLines}
+          emptyText={copy.emptyText}
+          basePath={copy.basePath}
+        />
+      }
 
-      <ScrollHandler />
+      articlesFallback={
+        <CategoryArticlesSkeleton
+          sectionId={copy.sectionId}
+          title={copy.sectionTitle}
+          loadingText={copy.loadingText}
+        />
+      }
 
-      <FestivalsHeroSection />
-
-      <Suspense fallback={<FestivalsArticlesSkeleton />}>
-        <FestivalsArticlesSection currentPage={currentPage} />
-      </Suspense>
-
-      <WhiteLine />
-
-      {/* <SeasonalFestivalsSection />
-
-      <WhiteLine />
-
-      <ThreeBigFestivalsSection />
-
-      <WhiteLine /> */}
-      <BackToHomeBtn />
-    </div>
+      // afterArticles は準備できたらここを有効化
+      // afterArticles={
+      //   <>
+      //     <SeasonalFestivalsSection />
+      //     <ThreeBigFestivalsSection />
+      //   </>
+      // }
+    />
   );
 }

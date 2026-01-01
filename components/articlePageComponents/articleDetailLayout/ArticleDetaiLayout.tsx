@@ -109,18 +109,21 @@ export default function ArticleDetailLayout({
                   {formatDisplayDate(doc.updatedAt)}
                 </div>
               </div>
-              
+      
               {hasFeaturedImage && (
-                <div className="w-full mb-6 px-6">
-                  <div className="mx-auto w-full max-w-[420px]">
-                    <div className="relative aspect-square w-full overflow-hidden rounded-md">
-                      <OptimizedImage
-                        src={featuredImage}
-                        alt={doc.title}
-                        priority
-                        width={400}
-                        height={400}
-                      />
+                <div className="mb-8 px-4">
+                  <div className="flex justify-center">
+                    {/* ここが肝：常に “100% か 520px の小さい方” */}
+                    <div className="w-[min(400px,100%)]">
+                      <div className="relative aspect-square overflow-hidden rounded-lg">
+                        <OptimizedImage
+                          src={featuredImage}
+                          alt={doc.title}
+                          priority
+                          width={400}
+                          height={400}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

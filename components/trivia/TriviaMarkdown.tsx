@@ -1,3 +1,4 @@
+// 
 "use client";
 
 import React from "react";
@@ -17,45 +18,27 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
       components={{
         p: ({ children, ...props }) => (
           <p
-            className="text-gray-200 leading-relaxed text-base font-normal mb-4 text-left"
-            style={{
-              fontFamily:
-                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
-              letterSpacing: "0.025em",
-              lineHeight: "1.7",
-            }}
+            className="text-[0.95rem] leading-7 text-white/85 mb-4 text-left"
             {...props}
           >
             {children}
           </p>
         ),
-        strong: ({ children, ...props }) => {
-          const text = Array.isArray(children)
-            ? children.join("")
-            : String(children || "");
-
-          return (
-            <strong
-              className={
-                /^(重要|ポイント|特に|注目|注意|必見|覚えておこう)$/.test(text)
-                  ? "text-yellow-400 font-bold bg-yellow-400/20 px-1 rounded"
-                  : "text-white font-bold"
-              }
-              {...props}
-            >
-              {children}
-            </strong>
-          );
-        },
+        strong: ({ children, ...props }) => (
+          <strong className="text-[#f5ede3] font-semibold" {...props}>
+            {children}
+          </strong>
+        ),
         em: ({ children, ...props }) => (
-          <em className="text-gray-300 italic" {...props}>
+          <em className="text-white/75 italic" {...props}>
             {children}
           </em>
         ),
         a: ({ children, href, ...props }) => (
           <a
             href={href}
-            className="text-[#83ccd2] no-underline transition-all duration-200 ease-in-out px-1 pb-[1px] border-b border-[#84b9cb] hover:border-[#a0d8ef] hover:bg-[rgba(245,158,11,0.1)] hover:text-[#f3f3f2]"
+            className="text-[#83ccd2] no-underline border-b border-[#84b9cb]/70
+                       hover:border-[#a0d8ef] hover:text-[#f5ede3] transition-colors"
             target={href?.startsWith("http") ? "_blank" : undefined}
             rel={href?.startsWith("http") ? "noopener noreferrer" : undefined}
             {...props}
@@ -63,100 +46,82 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
             {children}
           </a>
         ),
-        code: ({ children, className, ...props }) => {
-          const match = /language-(\w+)/.exec(className || "");
-          return match ? (
-            <code
-              className="block bg-gray-800 text-yellow-300 p-3 rounded text-sm font-mono overflow-x-auto whitespace-pre my-2"
-              {...props}
-            >
-              {children}
-            </code>
-          ) : (
-            <code
-              className="bg-gray-700 text-yellow-300 px-2 py-1 rounded text-sm font-mono"
-              {...props}
-            >
-              {children}
-            </code>
-          );
-        },
-        pre: ({ children, ...props }) => (
-          <pre
-            className="bg-gray-800 border border-gray-700 rounded-lg p-3 my-3 overflow-x-auto"
-            {...props}
-          >
-            {children}
-          </pre>
-        ),
         ul: ({ children, ...props }) => (
-          <ul
-            style={{
-              fontFamily:
-                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
-            }}
-            className="list-disc list-inside text-gray-200 space-y-1 my-2 pl-2 text-left"
-            {...props}
-          >
+          <ul className="list-disc list-inside text-white/85 space-y-1 my-3 pl-1 text-left" {...props}>
             {children}
           </ul>
         ),
         ol: ({ children, ...props }) => (
-          <ol
-            className="list-decimal list-inside text-gray-200 space-y-1 my-2 pl-2 text-left"
-            {...props}
-          >
+          <ol className="list-decimal list-inside text-white/85 space-y-1 my-3 pl-1 text-left" {...props}>
             {children}
           </ol>
         ),
         li: ({ children, ...props }) => (
-          <li className="text-gray-200 leading-relaxed text-base text-left tracking-wide leading-relaxed" {...props}>
+          <li className="text-[0.95rem] leading-7 text-white/85" {...props}>
             {children}
           </li>
         ),
         blockquote: ({ children, ...props }) => (
           <blockquote
-            className="border-l-4 border-yellow-400 bg-gray-800/50 pl-3 py-2 my-3 italic text-gray-300 text-sm text-left"
+            className="border-l-2 border-[#c96a5d]/60 bg-black/20 pl-4 py-2 my-4 text-white/75"
             {...props}
           >
             {children}
           </blockquote>
         ),
         h1: ({ children, ...props }) => (
-          <h1 className="text-lg font-bold text-[#a59aca] mb-2 mt-3 first:mt-0 text-left" {...props}>
+          <h1
+            className="text-[1.05rem] font-semibold text-[#e9c58a] mb-2 mt-4 text-left"
+            style={{
+              fontFamily:
+                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+              letterSpacing: "0.02em",
+            }}
+            {...props}
+          >
             {children}
           </h1>
         ),
+
         h2: ({ children, ...props }) => (
-          <h2 className="text-base font-semibold text-[#a59aca] mb-2 mt-2 first:mt-0 text-left" {...props}>
+          <h2
+            className="text-[1rem] font-semibold text-[#e9c58a] mb-2 mt-3 text-left"
+            style={{
+              fontFamily:
+                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+              letterSpacing: "0.02em",
+            }}
+            {...props}
+          >
             {children}
           </h2>
         ),
+
         h3: ({ children, ...props }) => (
-          <h3 className="text-sm font-semibold text-[#a59aca] mb-1 mt-2 first:mt-0 text-left" {...props}>
+          <h3
+            className="text-[0.95rem] font-semibold text-[#e9c58a] mb-1 mt-3 text-left"
+            style={{
+              fontFamily:
+                '"Inter", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif',
+              letterSpacing: "0.02em",
+            }}
+            {...props}
+          >
             {children}
           </h3>
         ),
-        div: ({ children, ...props }) => (
-          <div className="text-lg font-bold text-[#a59aca] text-center mb-8 mt-2 first:mt-0 text-left" {...props}>
-            {children}
-          </div>
-        ),
-        hr: (props) => <hr className="border-gray-600 my-3" {...props} />,
-        br: (props) => <br {...props} />,
+
+        hr: (props) => <hr className="border-white/10 my-4" {...props} />,
         iframe: (props) => (
-          <div className="px-4 mt-0 my-6 flex justify-center">
-            <div className="w-full max-w-2xl aspect-video">
-              <iframe
-                className="w-full h-full rounded-lg shadow-lg"
-                {...props}
-              />
+          <div className="mt-4 flex justify-center">
+            <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
+              <iframe className="w-full h-full" {...props} />
             </div>
           </div>
         ),
         img: (props) => (
-          <div className="flex justify-center my-4">
-            <img className="rounded-lg shadow-lg max-w-full h-auto" {...props} />
+          <div className="my-4 flex justify-center">
+            <img className="rounded-xl border border-white/10 shadow-lg max-w-full h-auto" {...props} />
           </div>
         ),
       }}
