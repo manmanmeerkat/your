@@ -83,7 +83,7 @@ export default function LatestArticlesSection({
                 </span>
               ) : (
                 <>
-                  View all posts
+                  View all Articles
                   <span className="ml-2 inline-block transition-transform duration-200 group-hover:translate-x-1">
                     →
                   </span>
