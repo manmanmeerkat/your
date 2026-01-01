@@ -17,44 +17,44 @@ const notoSerifJP = Noto_Serif_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Your Secret Japan -Explore Japan's hidden charms-",
+  title: "Your Secret Japan — Stories, Culture, and Quiet Traditions",
   description:
-    "Explore the world of Japanese mythology, festivals, culture, traditions, and customs. Your Secret Japan offers authentic insights and timeless stories to help you discover the true spirit of Japan.",
+    "Your Secret Japan is a quiet place to explore Japanese mythology, culture, customs, and seasonal traditions through stories, reflections, and timeless perspectives.",
+  metadataBase: new URL("https://www.yoursecretjapan.com"),
+
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      {
-        url: "/android-chrome-192x192.png",
-        sizes: "192x192",
-        type: "image/png",
-      },
+      { url: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
       { url: "/favicon.ico", type: "image/x-icon" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
+
   openGraph: {
-    title: "Your Secret Japan -Explore Japan's hidden charms-",
+    title: "Your Secret Japan — Stories, Culture, and Quiet Traditions",
     description:
-      "Explore the world of Japanese mythology, festivals, culture, traditions, and customs. Your Secret Japan offers authentic insights and timeless stories to help you discover the true spirit of Japan.",
-    url: "https://your-website.com",
+      "A quiet place to explore Japanese mythology, culture, customs, and seasonal traditions through stories and timeless perspectives.",
+    url: "https://www.yoursecretjapan.com",
     siteName: "Your Secret Japan",
     images: [
       {
         url: "/ogp-image.png",
         width: 1200,
         height: 630,
-        alt: "Your Secret Japan - Torii and Mt. Fuji",
+        alt: "Torii gate and Mount Fuji — Your Secret Japan",
       },
     ],
     locale: "en_US",
     type: "website",
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Your Secret Japan -Explore Japan's hidden charms-",
+    title: "Your Secret Japan — Stories, Culture, and Quiet Traditions",
     description:
-      "Explore the world of Japanese mythology, festivals, culture, traditions, and customs. Your Secret Japan offers authentic insights and timeless stories to help you discover the true spirit of Japan.",
+      "Explore Japanese mythology, culture, customs, and seasonal traditions through stories and gentle reflections.",
     images: ["/ogp-image.png"],
     creator: "@your_twitter_id",
   },
