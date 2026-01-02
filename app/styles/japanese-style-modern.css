@@ -777,3 +777,11 @@
   scrollbar-width: none; 
   -ms-overflow-style: none; 
 }
+
+/* blockquote の中の p に勝つための強い上書き */
+.japanese-style-modern-blockquote > p::before,
+.japanese-style-modern-blockquote > p::after,
+.japanese-style-modern-blockquote > p.japanese-style-modern-p::before,
+.japanese-style-modern-blockquote > p.japanese-style-modern-p::after {
+  content: none !important;
+}
