@@ -9,6 +9,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/mount-fuji</loc>
+    <lastmod>2026-01-02T01:43:54.194Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/mountain-day</loc>
     <lastmod>2025-09-20T07:07:19.245Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -25,13 +32,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/japanese-cuisine</loc>
     <lastmod>2026-01-01T04:42:04.459Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/mount-fuji</loc>
-    <lastmod>2025-08-29T12:43:04.137Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -58,15 +58,22 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/yamata-no-orochi</loc>
-    <lastmod>2025-10-04T04:41:03.759Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/abe-no-seimei</loc>
+    <lastmod>2026-01-02T01:48:12.005Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/abe-no-seimei</loc>
-    <lastmod>2026-01-01T04:44:46.264Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/yamata-no-orochi</loc>
+    <lastmod>2026-01-02T02:05:52.192Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/yomi</loc>
+    <lastmod>2026-01-04T04:53:35.596Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -80,7 +87,7 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/ise-jingu</loc>
-    <lastmod>2025-09-10T10:13:45.140Z</lastmod>
+    <lastmod>2026-01-02T01:35:00.000Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -142,6 +149,20 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/the-tale-of-the-bamboo-cutter</loc>
+    <lastmod>2026-01-02T01:53:17.773Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/amano-iwato-legend</loc>
+    <lastmod>2026-01-02T02:07:00.961Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/wadaiko</loc>
     <lastmod>2025-06-30T08:51:03.502Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -149,22 +170,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/amano-iwato-legend</loc>
-    <lastmod>2025-09-10T10:16:28.343Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/hakata-gion-yamakasa</loc>
     <lastmod>2025-08-21T02:31:04.237Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-tale-of-the-bamboo-cutter</loc>
-    <lastmod>2025-09-21T11:44:20.998Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -184,15 +191,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-imperial-family</loc>
-    <lastmod>2025-09-29T06:36:55.977Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/amakusa-shiro</loc>
+    <lastmod>2026-01-02T01:51:43.311Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/amakusa-shiro</loc>
-    <lastmod>2025-12-14T11:15:31.628Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/the-imperial-family</loc>
+    <lastmod>2025-09-29T06:36:55.977Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -212,15 +219,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-eight-million-gods</loc>
-    <lastmod>2026-01-01T04:45:12.888Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/nine-tailed-fox</loc>
+    <lastmod>2026-01-02T01:30:14.660Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/nine-tailed-fox</loc>
-    <lastmod>2025-09-17T12:30:49.187Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/the-eight-million-gods</loc>
+    <lastmod>2026-01-01T04:45:12.888Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -261,6 +268,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/the-soul-of-the-samurai</loc>
+    <lastmod>2026-01-02T01:37:31.011Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/gagaku</loc>
     <lastmod>2025-12-30T06:11:38.390Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -282,8 +296,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-soul-of-the-samurai</loc>
-    <lastmod>2025-07-20T12:17:24.008Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/the-legend-of-the-celestial-feather-robe</loc>
+    <lastmod>2026-01-02T01:49:25.087Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/setsubun</loc>
+    <lastmod>2026-01-02T01:53:51.907Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -303,20 +324,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-legend-of-the-celestial-feather-robe</loc>
-    <lastmod>2026-01-01T04:56:59.366Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/setsubun</loc>
-    <lastmod>2025-07-10T01:11:46.432Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/hyakunin-isshu</loc>
     <lastmod>2025-07-06T11:58:25.504Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -331,15 +338,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-divine-origin-of-japan</loc>
-    <lastmod>2025-09-10T10:15:58.870Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/sen-nichi-kaiho-gyo</loc>
+    <lastmod>2026-01-02T01:26:49.571Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/sen-nichi-kaiho-gyo</loc>
-    <lastmod>2025-08-14T07:55:26.882Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/yokai</loc>
+    <lastmod>2026-01-02T01:32:07.268Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -352,15 +359,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/creation-myth-of-japan</loc>
-    <lastmod>2025-09-13T04:57:10.098Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/the-divine-origin-of-japan</loc>
+    <lastmod>2026-01-02T01:59:57.827Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/yokai</loc>
-    <lastmod>2025-10-12T08:38:22.497Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/creation-myth-of-japan</loc>
+    <lastmod>2026-01-02T02:04:41.821Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -394,15 +401,22 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/japanese-anime</loc>
-    <lastmod>2026-01-01T04:52:40.943Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/ikebana</loc>
+    <lastmod>2026-01-02T01:36:44.544Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/ikebana</loc>
-    <lastmod>2025-10-11T07:33:03.314Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/awa-odori</loc>
+    <lastmod>2026-01-02T01:44:20.239Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/japanese-anime</loc>
+    <lastmod>2026-01-01T04:52:40.943Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -422,13 +436,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/awa-odori</loc>
-    <lastmod>2025-07-06T07:45:22.497Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/autumnal-equinox-day</loc>
     <lastmod>2025-07-05T07:01:24.898Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -436,8 +443,15 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/natto</loc>
+    <lastmod>2026-01-02T01:35:51.817Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/marine-day</loc>
-    <lastmod>2026-01-01T04:50:03.940Z</lastmod>
+    <lastmod>2026-01-02T01:40:46.735Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -473,13 +487,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/washi</loc>
     <lastmod>2025-07-19T05:35:57.533Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/natto</loc>
-    <lastmod>2025-06-30T05:59:23.855Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -527,13 +534,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/itadakimasu-and-gochisousama</loc>
-    <lastmod>2025-06-07T01:47:18.096Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/inari-shrines</loc>
     <lastmod>2026-01-01T04:43:58.688Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -541,15 +541,22 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/konohanasakuya-iwanaga-myth-mortality</loc>
-    <lastmod>2025-11-08T05:51:50.306Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/onmyoji-and-onmyodo</loc>
+    <lastmod>2026-01-02T01:33:22.413Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/onmyoji-and-onmyodo</loc>
-    <lastmod>2025-09-07T11:53:51.440Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/itadakimasu-and-gochisousama</loc>
+    <lastmod>2026-01-02T01:58:25.982Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/konohanasakuya-iwanaga-myth-mortality</loc>
+    <lastmod>2026-01-02T02:00:46.261Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -584,7 +591,14 @@
 
   <url>
     <loc>https://www.yoursecretjapan.com/articles/izumo-taisha</loc>
-    <lastmod>2026-01-01T04:44:19.558Z</lastmod>
+    <lastmod>2026-01-02T01:33:53.637Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/maneki-neko</loc>
+    <lastmod>2026-01-02T01:41:57.621Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -599,13 +613,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/wagashi</loc>
     <lastmod>2026-01-01T05:18:33.312Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/maneki-neko</loc>
-    <lastmod>2026-01-01T05:19:05.932Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -632,6 +639,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/oni</loc>
+    <lastmod>2026-01-02T01:32:45.880Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/dango</loc>
     <lastmod>2026-01-01T05:16:05.456Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -648,13 +662,6 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/omikuji</loc>
     <lastmod>2026-01-01T05:19:56.232Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/oni</loc>
-    <lastmod>2025-10-18T04:21:05.876Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -730,13 +737,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/yuki-onna</loc>
-    <lastmod>2026-01-01T05:25:14.255Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/coming-of-age-day</loc>
     <lastmod>2026-01-01T05:25:45.381Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -765,8 +765,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/hinamatsuri</loc>
-    <lastmod>2026-01-01T05:26:33.560Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/articles/yuki-onna</loc>
+    <lastmod>2026-01-02T01:45:13.933Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -793,22 +793,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/bowing-in-japan</loc>
-    <lastmod>2026-01-01T05:27:58.461Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/the-way-of-tea</loc>
     <lastmod>2026-01-01T05:28:20.262Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/the-three-sacred-deities</loc>
-    <lastmod>2026-01-01T05:29:50.317Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -823,6 +809,27 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/yaso-gami</loc>
     <lastmod>2026-01-01T05:34:15.294Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/the-three-sacred-deities</loc>
+    <lastmod>2026-01-02T01:28:24.575Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/hinamatsuri</loc>
+    <lastmod>2026-01-02T01:55:31.120Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/bowing-in-japan</loc>
+    <lastmod>2026-01-02T01:59:05.858Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
