@@ -149,11 +149,11 @@ export const JAPANESE_GODS: godType[] = [
       img: "/images/gods/yagami.png",
       gender: "female"
     },
-    {
-      name: "Omoikane no Kami",
-      img: "/images/gods/omoikane.png",
-      gender: "male"
-    },
+    // {
+    //   name: "Omoikane no Kami",
+    //   img: "/images/gods/omoikane.png",
+    //   gender: "male"
+    // },
   ];
   
   export const CULTURE_CATEGORIES: categoryImgType[] = [
