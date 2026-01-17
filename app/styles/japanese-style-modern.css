@@ -378,26 +378,28 @@
   font-weight: 500;
 }
 
-/* 🎌 テーブル・画像・その他 */
-.japanese-style-modern-table-container {
-  overflow-x: auto;
-  margin: 1.5rem 0;
-}
+@media (max-width: 1020px) {
+  /* リスト項目内の br を消して、見出しの下余白で整える */
+  .japanese-style-modern-li .japanese-style-modern-p > br {
+    display: none;
+  }
 
-.japanese-style-modern-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  .japanese-style-modern-li .japanese-style-modern-strong {
+    display: inline-block;
+    margin-bottom: 0.35rem;
+  }
 }
 
 .japanese-style-modern-th {
-  background: rgb(241, 144, 114, 0.1);
-  color: var(--japanese-text-primary);
+  background: rgba(255, 255, 255, 0.03);
+  color: #e1c4a8; /* くすんだ琥珀 */
   font-weight: 500;
   padding: 0.7rem;
   border: 1px solid #383c3c;
   text-align: left;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
 }
 
 .japanese-style-modern-td {
@@ -486,7 +488,7 @@
 @media (max-width: 1023px) {
   .japanese-style-modern-container {
     flex-direction: column;
-    /* padding: 0 28px 28px; */
+    padding: 0 24px;
     margin: 0;
     width: 100%;
     max-width: 100%;
@@ -670,6 +672,11 @@
 }
 
 @media (max-width: 480px) {
+
+  .japanese-style-modern-container {
+    padding: 0 16px;
+  }
+
   .japanese-style-modern-header {
     padding: 1.5rem 35px 1.5rem 1.5rem;
     min-height: 120px;

@@ -94,7 +94,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
       itemType="https://schema.org/BreadcrumbList"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <ol className="flex items-center space-x-2 py-3 text-sm">
+        <ol className="flex items-center gap-2 py-3 text-sm overflow-x-auto whitespace-nowrap -mx-4 px-4">
           {breadcrumbItems.map((item, index) => (
             <li
               key={item.href}

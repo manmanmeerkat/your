@@ -80,7 +80,6 @@ export function OptimizedImage({
           isLoaded ? "opacity-100" : "opacity-0",
         ].join(" ")}
         onLoad={() => setIsLoaded(true)}
-        onLoadingComplete={() => setIsLoaded(true)}
         onError={handleError}
       />
     </div>
