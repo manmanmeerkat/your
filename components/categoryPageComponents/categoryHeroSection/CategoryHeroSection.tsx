@@ -3,31 +3,37 @@ import { HERO_CONFIG, type CategoryKey } from "@/lib/categoryPage/heroSectionCon
 
 type Props = {
   category: CategoryKey;
-  /** 下部の Scroll 表示を消したい時用 */
   showScrollHint?: boolean;
+  priority?: boolean;
 };
 
-export function CategoryHeroSection({ category, showScrollHint = true }: Props) {
+export function CategoryHeroSection({
+  category,
+  showScrollHint = true,
+  priority = true,
+}: Props) {
   const cfg = HERO_CONFIG[category];
+
   const HERO_OVERLAY_GRADIENT =
-  "[background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35))]";
+    "bg-gradient-to-b from-black/10 via-black/35 to-black/45";
 
   return (
     <section className="relative bg-slate-900 min-h-[55vh] md:min-h-[45vh]">
-    <div className="absolute inset-0 z-0">
-    <Image
-        src={cfg.imageSrc}
-        alt={cfg.imageAlt}
-        fill
-        className="object-cover"
-        priority
-        sizes="100vw"
-        {...(cfg.blurDataURL
-        ? { placeholder: "blur" as const, blurDataURL: cfg.blurDataURL }
-        : {})}
-    />
-    <div className={`absolute inset-0 ${HERO_OVERLAY_GRADIENT}`} />
-    </div>
+      {/* 背景レイヤーは装飾扱い */}
+      <div className="absolute inset-0" aria-hidden="true">
+        <Image
+          src={cfg.imageSrc}
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+          priority={priority}
+          fetchPriority={priority ? "high" : "auto"}
+          quality={60}
+        />
+        <div className={`absolute inset-0 ${HERO_OVERLAY_GRADIENT}`} />
+      </div>
+
       <div className="container mx-auto px-6 py-20 md:py-24 relative z-10">
         <div className="mx-auto max-w-3xl text-center">
           <div className="inline-block rounded-2xl px-8 py-4 md:px-8 md:py-4 bg-black/20 backdrop-blur-sm ring-1 ring-white/10 shadow-lg [background:linear-gradient(90deg,rgba(0,0,0,.38),rgba(0,0,0,.16))]">

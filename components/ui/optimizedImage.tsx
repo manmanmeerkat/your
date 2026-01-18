@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type Props = {
   src: string;
@@ -22,23 +22,14 @@ export function OptimizedImage({
 }: Props) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     setIsLoaded(false);
     setHasError(false);
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = window.setTimeout(() => setIsLoaded(true), 1200);
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
   }, [src]);
 
   const handleError = useCallback(() => {
     setHasError(true);
-    setIsLoaded(false);
   }, []);
 
   const ratio = width / height;
@@ -57,12 +48,16 @@ export function OptimizedImage({
     );
   }
 
+  // ✅ LCP候補（priority）は即表示。遅延もフェードも無し。
+  const shouldFade = !priority;
+
   return (
     <div
       className={`relative w-full overflow-hidden rounded-lg shadow-lg ${className}`}
       style={{ aspectRatio: String(ratio) }}
     >
-      {!isLoaded && (
+      {/* ✅ priority のときはスケルトンも出さない（LCPを邪魔しない） */}
+      {!priority && !isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse flex items-center justify-center z-10">
           <div className="text-gray-400 text-xs">Loading…</div>
         </div>
@@ -73,11 +68,13 @@ export function OptimizedImage({
         src={src}
         alt={alt}
         fill
-        sizes="(max-width: 768px) 100vw, 33vw"
+        sizes="(max-width: 768px) 100vw, 900px"
         priority={priority}
+        fetchPriority={priority ? "high" : "auto"}
         className={[
-          "object-cover transition-opacity duration-500",
-          isLoaded ? "opacity-100" : "opacity-0",
+          "object-cover",
+          shouldFade ? "transition-opacity duration-200" : "",
+          shouldFade ? (isLoaded ? "opacity-100" : "opacity-0") : "opacity-100",
         ].join(" ")}
         onLoad={() => setIsLoaded(true)}
         onError={handleError}

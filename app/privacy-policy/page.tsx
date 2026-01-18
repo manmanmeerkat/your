@@ -32,20 +32,25 @@ export default function PrivacyPolicyPage() {
       {/* Hero */}
       <section className="relative min-h-[220px] md:min-h-[280px] pt-24 pb-20 text-white overflow-hidden">
         {/* background layer */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0">
           <Image
             src="/images/category-top/privacy-policy.jpg"
-            alt="Privacy Policy background"
+            alt=""
+            aria-hidden="true"
             fill
             priority
-            className="object-cover -z-10 brightness-75"
+            fetchPriority="high"
+            sizes="100vw"
+            quality={60}
+            className="object-cover"
           />
-          {/* overlay */}
-          <div className="absolute inset-0 bg-black/70 z-10" />
+
+          {/* overlay（読みやすさを自然に） */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/55 to-black/75" />
         </div>
 
         {/* content layer */}
-        <div className="relative z-10 container mx-auto px-6 md:px-16 text-center">
+        <div className="relative container mx-auto px-6 md:px-16 text-center">
           <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
             Privacy Policy
           </h1>

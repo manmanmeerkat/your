@@ -35,20 +35,23 @@ export default function MobileMenuOverlay({ isOpen, onClose, children }: MobileM
 
     if (!isOpen) {
       el.setAttribute("inert", "");
-      el.setAttribute("aria-hidden", "true");
     } else {
       el.removeAttribute("inert");
-      el.removeAttribute("aria-hidden");
     }
   }, [isOpen]);
 
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+
   // ✅ 閉じる前に focus を逃がす
   const safeClose = useCallback(() => {
-    const active = document.activeElement as HTMLElement | null;
-    if (active && active.closest('[data-mobile-menu="overlay"]')) {
-      active.blur();
-    }
     onClose();
+
+    requestAnimationFrame(() => {
+      const btn = closeBtnRef.current;
+      if (btn) {
+        btn.focus();
+      }
+    });
   }, [onClose]);
 
   // ESC で閉じる
@@ -99,6 +102,7 @@ export default function MobileMenuOverlay({ isOpen, onClose, children }: MobileM
             <Button
               type="button"
               variant="ghost"
+              ref={closeBtnRef}
               onClick={safeClose}
               className={[
                 "group p-2 rounded hover:bg-white transition-all duration-150 active:scale-95",
