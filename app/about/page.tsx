@@ -11,53 +11,59 @@ export default function AboutPage() {
   return (
     <div className="bg-[#2b1e1c] text-[#f3f3f2] pb-16">
       {/* ヘッダーセクション */}
-      <section className="relative bg-slate-900 min-h-[55vh] md:min-h-[45vh]">
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/images/category-top/about.jpg"
-              alt="About us"
-              fill
-              className="object-cover"
-              priority
-              sizes="100vw"
-              // About画像にも blur を付けたい場合は下を有効化（あとで実値を入れる）
-              // placeholder="blur"
-              // blurDataURL="data:image/jpeg;base64,/9j/..." // 実値
-            />
-            <div className="absolute inset-0 [background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.35))]" />
-          </div>
+      <section className="relative bg-slate-900 min-h-[55vh] md:min-h-[45vh] text-white overflow-hidden">
+        {/* background layer（装飾） */}
+        <div className="absolute inset-0" aria-hidden="true">
+          <Image
+            src="/images/category-top/about.jpg"
+            alt=""                 // 背景なので空
+            fill
+            priority
+            fetchPriority="high"
+            sizes="100vw"
+            quality={60}
+            className="object-cover"
+            // ヒーローは基本 blur なし（LCP優先）
+            // placeholder="blur"
+            // blurDataURL="..."
+          />
 
-          <div className="container mx-auto px-6 py-20 md:py-24 relative z-10">
-            <div className="mx-auto max-w-3xl text-center">
-              <div className="inline-block rounded-2xl px-8 py-4 md:px-8 md:py-4 bg-black/20 backdrop-blur-sm ring-1 ring-white/10 shadow-lg [background:linear-gradient(90deg,rgba(0,0,0,.38),rgba(0,0,0,.16))]">
-                <h1 className="text-4xl md:text-5xl font-bold mb-5 drop-shadow-lg">
-                  About us
-                </h1>
+          {/* overlay（読みやすさを自然に） */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/45 to-black/60" />
+        </div>
 
-                <p className="italic text-sm md:text-base text-white/85 mb-6 drop-shadow">
-                  A quiet guide to Japan’s deeper beauty.
+        {/* content layer */}
+        <div className="relative container mx-auto px-6 py-20 md:py-24 z-10">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="inline-block rounded-2xl px-8 py-4 md:px-8 md:py-4 bg-black/20 backdrop-blur-sm ring-1 ring-white/10 shadow-lg [background:linear-gradient(90deg,rgba(0,0,0,.38),rgba(0,0,0,.16))]">
+              <h1 className="text-4xl md:text-5xl font-bold mb-5 drop-shadow-lg">
+                About us
+              </h1>
+
+              <p className="italic text-sm md:text-base text-white/85 mb-6 drop-shadow">
+                A quiet guide to Japan’s deeper beauty.
+              </p>
+
+              <div className="text-left text-lg md:text-xl text-white/90 leading-relaxed md:leading-loose space-y-4">
+                <p>
+                  Your Secret Japan offers a gentle journey into the cultural layers of Japan,
+                  where history, belief, and everyday life quietly intertwine.
                 </p>
-
-                <div className="text-left text-lg md:text-xl text-white/90 leading-relaxed md:leading-loose space-y-4">
-                  <p>
-                    Your Secret Japan offers a gentle journey into the cultural layers of Japan,
-                    where history, belief, and everyday life quietly intertwine.
-                  </p>
-                  <p>
-                    Through ancient myths, enduring arts, seasonal customs, and small moments of
-                    beauty, we share stories that reveal how the Japanese people have long lived in
-                    dialogue with nature.
-                  </p>
-                </div>
+                <p>
+                  Through ancient myths, enduring arts, seasonal customs, and small moments of
+                  beauty, we share stories that reveal how the Japanese people have long lived in
+                  dialogue with nature.
+                </p>
               </div>
             </div>
-
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 select-none inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm text-white/85 bg-black/25 backdrop-blur-sm ring-1 ring-white/10 shadow-sm hover:bg-black/30 transition">
-              <span>Scroll</span>
-              <span className="animate-bounce">↓</span>
-            </div>
           </div>
-        </section>
+
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 select-none inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm text-white/85 bg-black/25 backdrop-blur-sm ring-1 ring-white/10 shadow-sm hover:bg-black/30 transition">
+            <span>Scroll</span>
+            <span className="animate-bounce">↓</span>
+          </div>
+        </div>
+      </section>
 
       {/* ミッションセクション */}
       <section className="pt-16 md:px-16">

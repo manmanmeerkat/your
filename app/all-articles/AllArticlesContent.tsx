@@ -133,20 +133,28 @@ export default async function AllArticlesPage({
 
   return (
     <div>
-      <section className="relative bg-slate-950 text-white pt-16 pb-16">
-        <div className="absolute inset-0 z-0 opacity-30">
+      <section className="relative bg-slate-950 text-white pt-16 pb-16 overflow-hidden">
+        {/* background layer（装飾） */}
+        <div className="absolute inset-0" aria-hidden="true">
           <Image
             src="/images/category-top/all-posts.jpg"
-            alt="All Posts"
+            alt=""
             fill
-            style={{ objectFit: "cover" }}
+            className="object-cover opacity-30"
             priority
+            fetchPriority="high"
             sizes="100vw"
+            quality={60}
           />
+          {/* overlay（読みやすさを自然に） */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/45 to-black/65" />
         </div>
-        <div className="container mx-auto px-6 py-24 relative z-10 text-center">
+
+        {/* content layer */}
+        <div className="relative container mx-auto px-6 py-24 z-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">All Posts</h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify">
+
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-justify text-white/85">
             Browse all articles and discover stories from Japanese mythology,
             culture, festivals, and customs.
           </p>
