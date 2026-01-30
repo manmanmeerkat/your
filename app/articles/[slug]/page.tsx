@@ -18,7 +18,8 @@ import {
 } from "@/components/articlePageComponents/articleSeo/articleSeo";
 import { getRandomRelatedArticles } from "@/lib/sidebar/getRelatedArticles";
 
-export const dynamic = "force-dynamic";
+//1時間ごとにキャッシュ
+export const revalidate = 3600; 
 
 type Props = { params: { slug: string } };
 
@@ -131,8 +132,7 @@ const toCategoryHref = (key: CategoryKey) => {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <div className="container mx-auto px-4 bg-gradient-to-r from-[#221a18cc] via-[#15110fcc] to-[#221a18cc]           border-b border-[rgba(241,144,114,0.25)]
-          backdrop-blur-sm">
+      <div className="container mx-auto px-4 bg-gradient-to-r from-[#221a18cc] via-[#15110fcc] to-[#221a18cc] border-b border-[rgba(241,144,114,0.25)]">
         <Breadcrumb customItems={breadcrumbItems} />
       </div>
 

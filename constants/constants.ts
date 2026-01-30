@@ -49,11 +49,11 @@ export const SNS_LINKS: SNSLinkType[] = [
 ];
 
 export const SLIDE_IMAGES: slideImgType[] = [
-    { img: "/images/slide/mythology.jpg"},
-    { img: "/images/slide/fuji.jpg"},
-    { img: "/images/slide/kimono.jpg"},
-    { img: "/images/slide/ninja.jpg"},
-    { img: "/images/slide/carp.jpg"}
+    { img: "/images/slide/mythology.webp"},
+    { img: "/images/slide/fuji.webp"},
+    { img: "/images/slide/kimono.webp"},
+    { img: "/images/slide/ninja.webp"},
+    { img: "/images/slide/carp.webp"}
 ];
 
 export const CATEGORY_ITEMS: categoryItemType[] = [
@@ -100,7 +100,7 @@ export const JAPANESE_GODS: godType[] = [
       gender: "male"
     },
     {
-      name: "Amaterasu Oomikami",
+      name: "Amaterasu Ōmikami",
       img: "/images/gods/amaterasu.png",
       gender: "female"
     },
