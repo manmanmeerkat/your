@@ -1,9 +1,12 @@
 // app/api/category-item-images/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 // サーバー側認証チェック関数
 async function checkAuth() {
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
     console.log('GET /api/category-item-images 呼び出し');
 
     // URLパラメータから categoryItemId を取得
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const categoryItemId = searchParams.get('categoryItemId');
 
     if (!categoryItemId) {
@@ -272,7 +275,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // URLパラメータの確認
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const imageId = searchParams.get('imageId');
     const categoryItemId = searchParams.get('categoryItemId');
 
@@ -405,7 +408,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: authResult.error }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const imageId = searchParams.get('imageId');
     const categoryItemId = searchParams.get('categoryItemId');
 
