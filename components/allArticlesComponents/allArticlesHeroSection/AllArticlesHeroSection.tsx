@@ -5,7 +5,7 @@ export function AllArticlesHeroSection() {
     <section className="relative min-h-[220px] md:min-h-[280px] pt-24 pb-20 text-white overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/category-top/all-posts.jpg"
+          src="/images/category-top/all-posts.webp"
           alt="All Posts background"
           fill
           priority

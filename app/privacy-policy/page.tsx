@@ -34,7 +34,7 @@ export default function PrivacyPolicyPage() {
         {/* background layer */}
         <div className="absolute inset-0">
           <Image
-            src="/images/category-top/privacy-policy.jpg"
+            src="/images/category-top/privacy-policy.webp"
             alt=""
             aria-hidden="true"
             fill

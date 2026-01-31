@@ -158,7 +158,9 @@ html {
   scroll-padding-top: 80px;
   overflow-anchor: none;
   scrollbar-gutter: stable;
+  scroll-padding-top: calc(var(--header-h, 72px) + 16px);
 }
+
 body {
   overflow-anchor: none;
 }

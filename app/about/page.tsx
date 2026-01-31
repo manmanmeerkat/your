@@ -15,7 +15,7 @@ export default function AboutPage() {
         {/* background layer（装飾） */}
         <div className="absolute inset-0" aria-hidden="true">
           <Image
-            src="/images/category-top/about.jpg"
+            src="/images/category-top/about.webp"
             alt=""                 // 背景なので空
             fill
             priority

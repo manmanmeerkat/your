@@ -7,10 +7,9 @@ import type { TocItem } from "@/app/utils/toc";
 type Props = {
   items: TocItem[];
   activeId: string;
-  onClickItem: (id: string) => void;
-};
+}
 
-export function TableOfContents({ items, activeId, onClickItem }: Props) {
+export function TableOfContents({ items, activeId }: Props) {
   const initialVisibleItems = 5;
   const [expanded, setExpanded] = React.useState(false);
   const shouldShowViewMore = items.length > initialVisibleItems;
@@ -53,12 +52,18 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
           const isActive = activeId === item.id;
 
           return (
-            <button
+            <a
               key={item.id}
-              type="button"
-              onClick={() => onClickItem(item.id)}
-              className={[
-                "group relative w-full text-left",
+              href={`#${item.id}`}
+              onClick={() => {
+                // クリック直後は hash が付くので、少し待ってから消す
+                window.setTimeout(() => {
+                  // hash だけ消して、履歴を汚さない
+                  history.replaceState(null, "", window.location.pathname + window.location.search);
+                }, 50);
+              }}
+                className={[
+                "group relative block w-full text-left",
                 "rounded-xl transition-all duration-200",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20",
                 item.level === 1 ? "pl-5 pr-10 py-3" : "pl-8 pr-10 py-2.5",
@@ -93,7 +98,7 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
               >
                 ›
               </span>
-            </button>
+            </a>
           );
         })}
 

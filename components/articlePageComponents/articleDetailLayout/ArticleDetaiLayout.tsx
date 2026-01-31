@@ -8,8 +8,6 @@ import "@/app/styles/japanese-style-modern.css";
 
 import { ContentWithTrivia } from "@/components/trivia/ContentWithTrivia";
 import { preprocessImageSyntax, separateTriviaFromMarkdown } from "@/app/utils/markdownPreprocess";
-import { buildTocFromMarkdown } from "@/app/utils/toc";
-
 import ArticleDetailClient from "../articleDetailClient/ArticleDetailClient";
 
 const HEADER_OFFSET = 120;
@@ -49,8 +47,6 @@ export default function ArticleDetailLayout({
     return markdownContent.replace(/<!--\s*TRIVIA_\d+\s*-->/g, "");
   })();
 
-  const tocItems = buildTocFromMarkdown(tocSourceMarkdown);
-
   const featuredImage =
     doc.images?.find((img) => img.isFeatured)?.url ?? "/fallback.jpg";
   const hasFeaturedImage = Boolean(doc.images?.some((img) => img.isFeatured));
@@ -85,14 +81,11 @@ export default function ArticleDetailLayout({
               )}
 
               {/* ✅ ToCは client に渡して追従だけ client でやる */}
-              {tocItems.length > 0 && (
-                <ArticleDetailClient
-                  tocItems={tocItems}
-                  containerSelector=".japanese-style-modern-content"
-                  headerOffset={HEADER_OFFSET}
-                  depsKey={tocSourceMarkdown}
-                />
-              )}
+              <ArticleDetailClient
+                containerSelector=".japanese-style-modern-content"
+                headerOffset={HEADER_OFFSET}
+                depsKey={tocSourceMarkdown}
+              />
 
               <div className="japanese-style-modern-container">
                 <div className="japanese-style-modern-content max-w-none">

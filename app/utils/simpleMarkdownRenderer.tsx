@@ -25,11 +25,12 @@ type ArticleTrivia = {
 };
 
 type SimpleImageProps = {
-  src?: string;
-  alt?: string;
+  src: string;
+  alt: string;
   title?: string;
   width?: number;
   height?: number;
+  className?: string;
 };
 
 /** 画像記法の前処理（あなたのまま） */
@@ -100,6 +101,20 @@ export function SimpleImage({ src, alt, title, width, height }: SimpleImageProps
   );
 }
 
+function childrenToText(children: React.ReactNode): string {
+  return React.Children.toArray(children)
+    .map((child) => {
+      if (typeof child === "string") return child;
+      if (typeof child === "number") return String(child);
+      if (React.isValidElement(child)) {
+        return childrenToText(child.props.children);
+      }
+      return "";
+    })
+    .join("")
+    .trim();
+}
+
 export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererProps) {
   const pre = preprocessTriviaSyntax(preprocessImageSyntax(content));
 
@@ -146,15 +161,32 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
 
           const normalizedSrc = normalizeSrc(src);
 
+          const hasSize = typeof width === "number" && typeof height === "number" && width > 0 && height > 0;
+
+          // ✅ サイズが無いなら 16:9 枠を確保してレイアウトシフトを抑える
           return (
             <span className="my-6 block">
-              <SimpleImage
-                src={normalizedSrc}
-                alt={alt}
-                title={title}
-                width={width}
-                height={height}
-              />
+              <span
+                className={[
+                  "relative block w-full overflow-hidden", "grid place-items-center",  
+                  hasSize ? "" : "aspect-[16/10]",
+                ].join(" ")}
+              >
+                <SimpleImage
+                  src={normalizedSrc}
+                  alt={alt}
+                  // title は渡さない（ツールチップや不要表示の原因になるため）
+                  // title={title}
+                  width={width}
+                  height={height}
+                  className={[
+                    "block w-full",
+                    hasSize
+                      ? "h-auto"
+                      : "absolute inset-0 h-full w-full object-contain", // ✅ 切れない
+                  ].join(" ")}
+                />
+              </span>
             </span>
           );
         },
@@ -169,23 +201,15 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
             />
           </div>
           ),
-              h1({ children }) {
-          const text = React.Children.toArray(children).join("").trim();
+        h1({ children }) {
+          const text = childrenToText(children);
           const id = makeHeadingId(text);
-          return (
-            <h1 id={id} className="japanese-style-modern-h1">
-              {children}
-            </h1>
-          );
+          return <h1 id={id} className="japanese-style-modern-h1">{children}</h1>;
         },
         h2({ children }) {
-          const text = React.Children.toArray(children).join("").trim();
+          const text = childrenToText(children);
           const id = makeHeadingId(text);
-          return (
-            <h2 id={id} className="japanese-style-modern-h2">
-              {children}
-            </h2>
-          );
+          return <h2 id={id} className="japanese-style-modern-h2">{children}</h2>;
         },
         h3: (p) => <h3 className="japanese-style-modern-h3">{p.children}</h3>,
         h4: (p) => <h4 className="japanese-style-modern-h4">{p.children}</h4>,

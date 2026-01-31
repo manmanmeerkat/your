@@ -60,25 +60,25 @@ export const CATEGORY_ITEMS: categoryItemType[] = [
   {
       href: "/mythology",
       title: "Japanese Mythology",
-      img: "/images/category-img/mythology.jpg",
+      img: "/images/category-img/mythology.webp",
       description: "Meet the gods, legends, and sacred stories that shaped Japan’s imagination.",
   },
   {
     href: "/culture",
     title: "Japanese Culture",
-    img: "/images/category-img/culture.jpg",
+    img: "/images/category-img/culture.webp",
     description: "Discover traditions and everyday beauty—from tea ceremony to kimono and crafts.",
   },
   {
       href: "/festivals",
       title: "Japanese Festivals",
-      img: "/images/category-img/festival.jpg",
+      img: "/images/category-img/festival.webp",
       description: "Step into seasonal celebrations, local rituals, and moments filled with light, sound, and tradition.",
     },
   {
     href: "/customs",
     title: "Japanese Customs",
-    img: "/images/category-img/custom.jpg",
+    img: "/images/category-img/custom.webp",
     description: "Learn simple manners and gestures that reveal Japan’s quiet kindness—like bowing and “itadakimasu.”",
   }
 ];

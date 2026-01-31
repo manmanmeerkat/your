@@ -37,7 +37,7 @@ export default function ContactPage() {
       <section className="relative min-h-[220px] md:min-h-[280px] pt-24 pb-20 text-white overflow-hidden">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/images/category-top/contact.jpg"
+            src="/images/category-top/contact.webp"
             alt="Contact background"
             fill
             priority

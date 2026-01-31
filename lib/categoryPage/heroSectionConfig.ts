@@ -13,7 +13,7 @@ export type HeroConfig = {
 
 export const HERO_CONFIG: Record<CategoryKey, HeroConfig> = {
   mythology: {
-    imageSrc: "/images/category-top/mythology.jpg",
+    imageSrc: "/images/category-top/mythology.webp",
     imageAlt: "Japanese Mythology",
     title: "Japanese Mythology",
     tagline: "Where gods, nature, and humanity share the same world.",
@@ -25,7 +25,7 @@ export const HERO_CONFIG: Record<CategoryKey, HeroConfig> = {
   },
 
   culture: {
-    imageSrc: "/images/category-top/culture.jpg",
+    imageSrc: "/images/category-top/culture.webp",
     imageAlt: "Japanese Culture",
     title: "Japanese Culture",
     tagline: "Traditions shaped by belief, art, and everyday life.",
@@ -37,7 +37,7 @@ export const HERO_CONFIG: Record<CategoryKey, HeroConfig> = {
   },
 
   festivals: {
-    imageSrc: "/images/category-top/festival.jpg",
+    imageSrc: "/images/category-top/festival.webp",
     imageAlt: "Japanese Festivals",
     title: "Japanese Festivals",
     tagline: "Traditions of the seasons, community, and sacred celebration.",
@@ -49,7 +49,7 @@ export const HERO_CONFIG: Record<CategoryKey, HeroConfig> = {
   },
 
   customs: {
-    imageSrc: "/images/category-top/custom.jpg",
+    imageSrc: "/images/category-top/custom.webp",
     imageAlt: "Japanese Customs",
     title: "Japanese Customs",
     tagline: "Manners and rituals shaped by respect and harmony.",
