@@ -84,11 +84,8 @@ export function SimpleImage({ src, alt, title, width, height }: SimpleImageProps
       style={{
         display: "block",
         width: "100%",
-        aspectRatio: ratio,
         position: "relative",
-        overflow: "hidden",
-        borderRadius: "12px",
-        background: "rgba(255,255,255,0.03)", // 読み込み中のチラつき抑制
+        overflow: "visible",   // ← 切らない
       }}
     >
       <Image

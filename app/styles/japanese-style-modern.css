@@ -792,3 +792,17 @@
 .japanese-style-modern-blockquote > p.japanese-style-modern-p::after {
   content: none !important;
 }
+
+/* ✅ Note(blockquote) で変な改行を防ぐ：英文は「単語単位」で折る */
+.japanese-style-modern-blockquote,
+.japanese-style-modern-blockquote p,
+.japanese-style-modern-blockquote p em {
+  word-break: normal;
+  overflow-wrap: break-word; /* 長すぎる単語だけ折る */
+  white-space: normal;
+}
+
+/* ✅ ハイフネーションが効いている場合の保険（任意） */
+.japanese-style-modern-blockquote {
+  hyphens: manual;
+}

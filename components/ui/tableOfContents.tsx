@@ -1,5 +1,8 @@
-import type { TocItem } from "../../app/hooks/useToc";
+// components/ui/tableOfContents.tsx
+"use client";
+
 import React from "react";
+import type { TocItem } from "@/app/utils/toc";
 
 type Props = {
   items: TocItem[];
@@ -23,7 +26,6 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
         bg-gradient-to-br from-[#221a18cc] via-[#15110f] to-[#0f0c0a]
       "
     >
-      {/* Header */}
       <div
         className="
           relative
@@ -31,9 +33,7 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
           border-b border-[rgba(255,255,255,0.14)]
         "
       >
-        {/* subtle highlight line */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
-        {/* subtle accent underline */}
         <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#c96a5d]/55 to-transparent" />
 
         <h3
@@ -48,7 +48,6 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
         </h3>
       </div>
 
-      {/* Items */}
       <nav className="flex flex-col gap-2 p-6">
         {visible.map((item) => {
           const isActive = activeId === item.id;
@@ -62,19 +61,15 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
                 "group relative w-full text-left",
                 "rounded-xl transition-all duration-200",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20",
-                // spacing (comfortable even when wrapped)
                 item.level === 1 ? "pl-5 pr-10 py-3" : "pl-8 pr-10 py-2.5",
-                // typography
                 item.level === 1
                   ? "text-[1.02rem] font-semibold leading-snug"
                   : "text-[0.95rem] font-medium leading-snug",
-                // colors / emphasis (noticeable but calm)
                 isActive
                   ? "text-[#e9c58a] bg-white/6"
                   : "text-[#f3f3f2] hover:bg-white/6 hover:text-[#e9c58a]",
               ].join(" ")}
             >
-              {/* left accent bar */}
               <span
                 aria-hidden="true"
                 className={[
@@ -85,12 +80,8 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
                 ].join(" ")}
               />
 
-              {/* text */}
-              <span className="block">
-                {item.text}
-              </span>
+              <span className="block">{item.text}</span>
 
-              {/* right chevron */}
               <span
                 aria-hidden="true"
                 className="
@@ -106,7 +97,6 @@ export function TableOfContents({ items, activeId, onClickItem }: Props) {
           );
         })}
 
-        {/* View more / less */}
         {shouldShowViewMore && (
           <div
             className="

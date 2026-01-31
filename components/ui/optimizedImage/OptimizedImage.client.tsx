@@ -1,5 +1,6 @@
 "use client";
 
+// components/ui/optimizedImage/OptimizedImage.client.tsx
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
@@ -10,15 +11,17 @@ type Props = {
   priority?: boolean;
   width?: number;
   height?: number;
+  sizes?: string;
 };
 
-export function OptimizedImage({
+export function OptimizedImageClient({
   src,
   alt,
   className = "",
   priority = false,
   width = 800,
   height = 400,
+  sizes = "(max-width: 768px) 100vw, 900px",
 }: Props) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -53,7 +56,7 @@ export function OptimizedImage({
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-lg shadow-lg ${className}`}
+      className={`relative w-full ${className}`}
       style={{ aspectRatio: String(ratio) }}
     >
       {/* ✅ priority のときはスケルトンも出さない（LCPを邪魔しない） */}
@@ -68,7 +71,7 @@ export function OptimizedImage({
         src={src}
         alt={alt}
         fill
-        sizes="(max-width: 768px) 100vw, 900px"
+        sizes={sizes}
         priority={priority}
         fetchPriority={priority ? "high" : "auto"}
         className={[

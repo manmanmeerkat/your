@@ -1,4 +1,6 @@
-// app/api/articles/route.ts - 一口メモ対応修正版
+// app/api/articles/route.ts
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '../../../lib/prisma';
 import { Prisma, Article, Image, ArticleTrivia } from '@prisma/client';
@@ -99,7 +101,7 @@ export async function GET(request: NextRequest) {
     console.log('📊 記事一覧API: リクエスト受信');
     
     // URLからクエリパラメータを取得
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const params = Object.fromEntries(searchParams.entries());
     console.log('🔍 検索パラメータ:', params);
     
@@ -533,7 +535,7 @@ export async function PATCH(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const articleId = searchParams.get('id');
     const includeTrivia = searchParams.get('includeTrivia') === 'true';
     
@@ -646,7 +648,7 @@ export async function DELETE(request: NextRequest) {
   const startTime = Date.now();
   
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const articleId = searchParams.get('id');
     
     if (!articleId) {

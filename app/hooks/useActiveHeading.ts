@@ -1,3 +1,4 @@
+// app\hooks\useActiveHeading.ts
 import { useCallback, useLayoutEffect, useState } from "react";
 
 type Options = {
