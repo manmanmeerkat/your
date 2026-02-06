@@ -165,11 +165,11 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
 
           // ✅ サイズが無いなら 16:9 枠を確保してレイアウトシフトを抑える
           return (
-            <span className="my-6 block">
+            <span className="my-4 block">
               <span
                 className={[
                   "relative block w-full overflow-hidden", "grid place-items-center",  
-                  hasSize ? "" : "aspect-[16/10]",
+                  hasSize ? "" : "aspect-[16/10.5]",
                 ].join(" ")}
               >
                 <SimpleImage
