@@ -130,7 +130,7 @@ export const JAPANESE_GODS: godType[] = [
       gender: "male"
     },
     {
-      name: "Kagutsuchi no Mikoto",
+      name: "Kagutsuchi no Kami",
       img: "/images/gods/kagutsuchi.png",
       gender: "male"
     },
