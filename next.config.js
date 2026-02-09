@@ -2,14 +2,13 @@
 const nextConfig = {
   // ⭐ 画像最適化を完全無効化（クレジット消費0）
   images: {
-    unoptimized: true,
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'nprutgcfqaovdxlzjoaa.supabase.co',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "nprutgcfqaovdxlzjoaa.supabase.co",
+        pathname: "/storage/v1/object/public/**",
       },
+
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',

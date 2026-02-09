@@ -61,21 +61,14 @@ export default function ArticleDetailLayout({
                 <h1 className="japanese-style-modern-title">{doc.title}</h1>
                 <div className="japanese-style-modern-date">{displayDate}</div>
               </div>
-
               {hasFeaturedImage && (
-                <div className="mb-8 px-4">
-                  <div className="flex justify-center">
-                    <div className="w-[min(400px,100%)]">
-                      <div className="relative aspect-square overflow-hidden rounded-lg">
-                        <OptimizedImage
-                          src={featuredImage}
-                          alt={doc.title}
-                          priority
-                          width={400}
-                          height={400}
-                        />
-                      </div>
-                    </div>
+                <div className="mb-8 px-4 flex justify-center">
+                  <div className="w-[min(400px,100%)]">
+                    <OptimizedImage
+                      src={featuredImage}
+                      alt={doc.title}
+                      priority
+                    />
                   </div>
                 </div>
               )}

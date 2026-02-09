@@ -16,24 +16,21 @@ export function OptimizedImageServer({
   alt,
   className = "",
   priority = false,
-  width = 800,
+  width = 400,
   height = 400,
-  sizes = "(max-width: 768px) 100vw, 900px",
+  sizes = "(max-width: 768px) 100vw, 400px",
 }: Props) {
-  const ratio = width / height;
-
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-lg shadow-lg ${className}`}
-      style={{ aspectRatio: String(ratio) }}
+      className={`relative w-full aspect-square overflow-hidden ${className}`}
     >
       <Image
         src={src}
         alt={alt}
         fill
-        sizes={sizes}
         priority={priority}
         fetchPriority={priority ? "high" : "auto"}
+        sizes={sizes}
         className="object-cover"
       />
     </div>

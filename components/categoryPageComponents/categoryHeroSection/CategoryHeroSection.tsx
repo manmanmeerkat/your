@@ -10,7 +10,7 @@ type Props = {
 export function CategoryHeroSection({
   category,
   showScrollHint = true,
-  priority = true,
+  priority = false,
 }: Props) {
   const cfg = HERO_CONFIG[category];
 
@@ -26,10 +26,10 @@ export function CategoryHeroSection({
           alt=""
           fill
           className="object-cover"
-          sizes="100vw"
+          sizes="(max-width: 768px) 100vw, 1400px"
           priority={priority}
           fetchPriority={priority ? "high" : "auto"}
-          quality={60}
+          quality={50}
         />
         <div className={`absolute inset-0 ${HERO_OVERLAY_GRADIENT}`} />
       </div>
