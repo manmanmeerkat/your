@@ -2,6 +2,7 @@
 const nextConfig = {
   // ⭐ 画像最適化を完全無効化（クレジット消費0）
   images: {
+    unoptimized: true, 
     remotePatterns: [
       {
         protocol: "https",
