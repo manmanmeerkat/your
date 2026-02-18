@@ -67,7 +67,6 @@ export function OptimizedImageClient({
       )}
 
       <Image
-        key={src}
         src={src}
         alt={alt}
         fill
@@ -79,7 +78,7 @@ export function OptimizedImageClient({
           shouldFade ? "transition-opacity duration-200" : "",
           shouldFade ? (isLoaded ? "opacity-100" : "opacity-0") : "opacity-100",
         ].join(" ")}
-        onLoad={() => setIsLoaded(true)}
+        onLoadingComplete={() => setIsLoaded(true)}
         onError={handleError}
       />
     </div>

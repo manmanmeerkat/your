@@ -20,8 +20,13 @@ export function OptimizedImageServer({
   height = 400,
   sizes = "(max-width: 768px) 100vw, 400px",
 }: Props) {
+  const ratio = width / height;
+
   return (
-    <div className={`relative w-full aspect-square overflow-hidden ${className}`}>
+    <div
+      className={`relative w-full overflow-hidden ${className}`}
+      style={{ aspectRatio: String(ratio) }}
+    >
       <Image
         src={src}
         alt={alt}
@@ -29,7 +34,7 @@ export function OptimizedImageServer({
         priority={priority}
         fetchPriority={priority ? "high" : "auto"}
         sizes={sizes}
-        className="object-cover w-full h-full rounded-inherit"
+        className="object-cover"
       />
     </div>
   );

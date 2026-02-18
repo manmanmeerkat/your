@@ -71,33 +71,37 @@ const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({ triv
   );
 };
 
-// ✅ 画像表示（あなたの SimpleImage を維持しつつ少し整理）
-export function SimpleImage({ src, alt, title, width, height }: SimpleImageProps) {
+export function SimpleImage({
+  src,
+  alt,
+  title,
+  width,
+  height,
+  className = "",
+}: SimpleImageProps) {
   if (!src) return null;
 
-  const w = width ?? 1600;
-  const h = height ?? 900;
-  const ratio = `${w}/${h}`;
+  // width/height があるならCLS対策として aspect-ratio を効かせる
+  const style: React.CSSProperties = {};
+  if (width && height && width > 0 && height > 0) {
+    style.aspectRatio = `${width} / ${height}`;
+  }
 
   return (
-    <span
-      className="simple-image-wrap"
+    <img
+      src={src}
+      alt={alt ?? ""}
+      title={title}
+      loading="lazy"
+      decoding="async"
       style={{
         display: "block",
         width: "100%",
-        position: "relative",
-        overflow: "visible",   // ← 切らない
+        height: "auto",
+        ...style,
       }}
-    >
-      <Image
-        src={src}
-        alt={alt ?? ""}
-        title={title}
-        fill
-        sizes="(max-width: 768px) 100vw, 860px"
-        className="object-cover"
-      />
-    </span>
+      className={className}
+    />
   );
 }
 
@@ -143,12 +147,11 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
         },
 
         img(props) {
-          const { src, title } = props;
+          const { src } = props;
           let alt = props.alt || "";
           let width: number | undefined;
           let height: number | undefined;
 
-          // {width=xxx height=yyy} を alt から読む
           const sizeMatch = alt.match(/\{([^}]+)\}/);
           if (sizeMatch) {
             const sizeStr = sizeMatch[1];
@@ -161,29 +164,28 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
 
           const normalizedSrc = normalizeSrc(src);
 
-          const hasSize = typeof width === "number" && typeof height === "number" && width > 0 && height > 0;
+          const hasSize =
+            typeof width === "number" &&
+            typeof height === "number" &&
+            width > 0 &&
+            height > 0;
 
-          // ✅ サイズが無いなら 16:9 枠を確保してレイアウトシフトを抑える
           return (
             <span className="my-4 block">
               <span
                 className={[
-                  "relative block w-full overflow-hidden", "grid place-items-center",  
-                  hasSize ? "" : "aspect-[16/10.5]",
+                  "block w-full overflow-hidden",
+                  hasSize ? "" : "aspect-[16/9]",
                 ].join(" ")}
               >
                 <SimpleImage
                   src={normalizedSrc}
                   alt={alt}
-                  // title は渡さない（ツールチップや不要表示の原因になるため）
-                  // title={title}
                   width={width}
                   height={height}
                   className={[
                     "block w-full",
-                    hasSize
-                      ? "h-auto"
-                      : "absolute inset-0 h-full w-full object-contain", // ✅ 切れない
+                    hasSize ? "h-auto" : "h-auto", // ← ここを軽くする
                   ].join(" ")}
                 />
               </span>

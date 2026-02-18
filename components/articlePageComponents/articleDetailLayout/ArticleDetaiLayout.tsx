@@ -61,18 +61,21 @@ export default function ArticleDetailLayout({
                 <h1 className="japanese-style-modern-title">{doc.title}</h1>
                 <div className="japanese-style-modern-date">{displayDate}</div>
               </div>
-              {hasFeaturedImage && (
-                <div className="mb-8 px-4 flex justify-center">
-                  <div className="w-[min(400px,100%)]">
-                    <OptimizedImage
-                      src={featuredImage}
-                      alt={doc.title}
-                      priority
-                      className="rounded-lg"
-                    />
+                {hasFeaturedImage && (
+                  <div className="mb-8 px-4 flex justify-center">
+                    <div className="w-[min(400px,100%)]">
+                      <OptimizedImage
+                        src={featuredImage}
+                        alt={doc.title}
+                        priority
+                        width={400}
+                        height={400}
+                        sizes="(max-width: 768px) 100vw, 400px"
+                        className="rounded-lg"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* ✅ ToCは client に渡して追従だけ client でやる */}
               <ArticleDetailClient
