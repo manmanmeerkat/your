@@ -68,6 +68,7 @@ export default function ArticleDetailLayout({
                       src={featuredImage}
                       alt={doc.title}
                       priority
+                      className="rounded-lg"
                     />
                   </div>
                 </div>

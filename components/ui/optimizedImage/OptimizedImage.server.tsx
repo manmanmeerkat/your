@@ -21,9 +21,7 @@ export function OptimizedImageServer({
   sizes = "(max-width: 768px) 100vw, 400px",
 }: Props) {
   return (
-    <div
-      className={`relative w-full aspect-square overflow-hidden ${className}`}
-    >
+    <div className={`relative w-full aspect-square overflow-hidden ${className}`}>
       <Image
         src={src}
         alt={alt}
@@ -31,7 +29,7 @@ export function OptimizedImageServer({
         priority={priority}
         fetchPriority={priority ? "high" : "auto"}
         sizes={sizes}
-        className="object-cover"
+        className="object-cover w-full h-full rounded-inherit"
       />
     </div>
   );

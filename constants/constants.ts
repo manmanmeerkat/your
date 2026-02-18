@@ -86,72 +86,72 @@ export const CATEGORY_ITEMS: categoryItemType[] = [
 export const JAPANESE_GODS: godType[] = [
     {
       name: "Izanagi no Mikoto",
-      img: "/images/gods/izanagi.png",
+      img: "/images/gods/izanagi.webp",
       gender: "male"
     },
     {
       name: "Izanami no Mikoto",
-      img: "/images/gods/izanami.png",
+      img: "/images/gods/izanami.webp",
       gender: "female"
     },
     {
       name: "Susanoo no Mikoto",
-      img: "/images/gods/susanoo.png",
+      img: "/images/gods/susanoo.webp",
       gender: "male"
     },
     {
       name: "Amaterasu Ōmikami",
-      img: "/images/gods/amaterasu.png",
+      img: "/images/gods/amaterasu.webp",
       gender: "female"
     },
     {
       name: "Tsukuyomi no Mikoto",
-      img: "/images/gods/tsukuyomi.png",
+      img: "/images/gods/tsukuyomi.webp",
       gender: "male"
     },
     {
       name: "Ōkuninushi no Mikoto",
-      img: "/images/gods/okuninushi.png",
+      img: "/images/gods/okuninushi.webp",
       gender: "male"
     },
     {
-      name: "Iwanaga-hime",
-      img: "/images/gods/iwanaga.png",
+      name: "Iwanaga hime",
+      img: "/images/gods/iwanaga-hime.webp",
       gender: "female"
     },
     {
-      name: "Konohanasakuya-hime",
-      img: "/images/gods/konohana.png",
+      name: "Konohanasakuya hime",
+      img: "/images/gods/konohanasakuya-hime.webp",
       gender: "female"
     },
     {
       name: "Ninigi no Mikoto",
-      img: "/images/gods/ninigi.png",
+      img: "/images/gods/ninigi.webp",
       gender: "male"
     },
     {
       name: "Kagutsuchi no Kami",
-      img: "/images/gods/kagutsuchi.png",
+      img: "/images/gods/kagutsuchi.webp",
       gender: "male"
     },
     {
       name: "Ōyamatsumi no Kami",
-      img: "/images/gods/oyamatsumi.png",
+      img: "/images/gods/oyamatsumi.webp",
       gender: "male"
     },
     {
       name: "Takemikazuchi no Kami",
-      img: "/images/gods/takemikazuchi.png",
+      img: "/images/gods/takemikazuchi.webp",
       gender: "male"
     },
     {
-      name: "Yagami-hime",
-      img: "/images/gods/yagami.png",
+      name: "Yagami hime",
+      img: "/images/gods/yagami-hime.webp",
       gender: "female"
     },
     // {
     //   name: "Omoikane no Kami",
-    //   img: "/images/gods/omoikane.png",
+    //   img: "/images/gods/omoikane.webp",
     //   gender: "male"
     // },
   ];

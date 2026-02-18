@@ -849,22 +849,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/category-item/tsukuyomi-no-mikoto</loc>
-    <lastmod>2025-05-04T00:20:23.009Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/category-item/takemikazuchi-no-kami</loc>
-    <lastmod>2025-05-10T08:54:47.234Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/category-item/yagami-hime</loc>
-    <lastmod>2025-05-10T11:52:14.308Z</lastmod>
+    <loc>https://www.yoursecretjapan.com/category-item/izanagi-no-mikoto</loc>
+    <lastmod>2025-05-03T11:58:24.780Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -877,22 +863,15 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/category-item/oyamatsumi-no-kami</loc>
-    <lastmod>2025-05-10T06:46:50.310Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/category-item/izanagi-no-mikoto</loc>
-    <lastmod>2025-05-03T11:58:24.780Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/category-item/amaterasu-oomikami</loc>
     <lastmod>2025-05-04T00:09:17.309Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/category-item/tsukuyomi-no-mikoto</loc>
+    <lastmod>2025-05-04T00:20:23.009Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -928,6 +907,27 @@
   <url>
     <loc>https://www.yoursecretjapan.com/category-item/kagutsuchi-no-kami</loc>
     <lastmod>2025-05-05T06:57:53.546Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/category-item/oyamatsumi-no-kami</loc>
+    <lastmod>2025-05-10T06:46:50.310Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/category-item/takemikazuchi-no-kami</loc>
+    <lastmod>2025-05-10T08:54:47.234Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/category-item/yagami-hime</loc>
+    <lastmod>2025-05-10T11:52:14.308Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
