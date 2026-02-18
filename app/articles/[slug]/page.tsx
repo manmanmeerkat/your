@@ -54,21 +54,27 @@ export default async function Page({ params }: Props) {
   const slug = decodeURIComponent(params.slug);
   const article = await getArticleBySlug(slug);
 
-  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+  // const isBuild = process.env.NEXT_PHASE === "phase-production-build";
 
   if (!article || !article.published) return notFound();
 
   //  related を Server 側で取得（カテゴリ全体の "直近POOL" からランダム抽出
+  type RelatedArticleItem = Awaited<
+  ReturnType<typeof getRandomRelatedArticles>
+  >[number];
 
-  const relatedArticles = isBuild
-  ? []
-  : await getRandomRelatedArticles({
+  let relatedArticles: RelatedArticleItem[] = [];
+
+  try {
+    relatedArticles = await getRandomRelatedArticles({
       category: article.category,
       currentSlug: article.slug,
       take: 6,
       pool: 300,
     });
-
+  } catch (e) {
+    console.error("relatedArticles failed:", e);
+  }
 
 const isCategoryKey = (v: string): v is CategoryKey =>
   Object.prototype.hasOwnProperty.call(BREADCRUMB_CONFIG.categories, v);
