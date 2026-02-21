@@ -5,12 +5,38 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import LiteYouTube from "./liteyoutube/LiteYouTube";
 
 interface TriviaMarkdownProps {
   content: string;
 }
 
 export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
+
+  function getYouTubeVideoId(src?: string) {
+    if (!src) return null;
+
+    try {
+      const u = new URL(src);
+
+      // 例: https://www.youtube.com/embed/fj-1J8NDt1w?si=...
+      if (u.hostname === "www.youtube.com" || u.hostname === "youtube.com") {
+        const m = u.pathname.match(/^\/embed\/([a-zA-Z0-9_-]{6,})/);
+        if (m) return m[1];
+      }
+
+      // もし将来 youtu.be を混ぜる可能性があるなら（保険）
+      if (u.hostname === "youtu.be") {
+        const id = u.pathname.replace("/", "");
+        if (id) return id;
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   return (
     <div className="px-4 sm:px-6 md:px-8">
       <ReactMarkdown
@@ -135,13 +161,33 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
           ),
 
           hr: (props) => <hr className="border-white/10 my-4" {...props} />,
-          iframe: (props) => (
-            <div className="mt-4 flex justify-center">
-              <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
-                <iframe className="w-full h-full" {...props} />
+          iframe: ({ src, title, ...props }) => {
+            const videoId = getYouTubeVideoId(typeof src === "string" ? src : undefined);
+
+            // ✅ YouTubeだけ軽量化
+            if (videoId) {
+              return (
+                <div className="mt-4 flex justify-center">
+                  <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
+                    <LiteYouTube
+                      videoId={videoId}
+                      title={typeof title === "string" ? title : "YouTube video"}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            // ✅ それ以外の iframe は従来通り
+            return (
+              <div className="mt-4 flex justify-center">
+                <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
+                  <iframe className="w-full h-full" src={src} title={title} {...props} />
+                </div>
               </div>
-            </div>
-          ),
+            );
+          },
           img: ({ alt, ...props }) => (
             <img
               alt={alt ?? ""}

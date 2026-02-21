@@ -856,13 +856,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/category-item/susanoo-no-mikoto</loc>
-    <lastmod>2025-05-04T00:01:18.371Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/category-item/amaterasu-oomikami</loc>
     <lastmod>2025-05-04T00:09:17.309Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -928,6 +921,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/category-item/yagami-hime</loc>
     <lastmod>2025-05-10T11:52:14.308Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/category-item/susanoo-no-mikoto</loc>
+    <lastmod>2025-05-04T00:01:18.371Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
