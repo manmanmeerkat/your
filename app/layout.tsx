@@ -1,6 +1,5 @@
 // app/layout.tsx - 修正版
 import "./globals.css";
-import "highlight.js/styles/github-dark.css";
 import type { Metadata } from "next";
 import { Noto_Serif_JP } from "next/font/google";
 import { Toaster } from "sonner";

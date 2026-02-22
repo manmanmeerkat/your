@@ -168,7 +168,7 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
             if (videoId) {
               return (
                 <div className="mt-4 flex justify-center">
-                  <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
+                  <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-transparent">
                     <LiteYouTube
                       videoId={videoId}
                       title={typeof title === "string" ? title : "YouTube video"}
@@ -181,8 +181,8 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
 
             // ✅ それ以外の iframe は従来通り
             return (
-              <div className="mt-4 flex justify-center">
-                <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
+              <div className="not-prose my-5 flex justify-center">
+                  <div className="w-full max-w-2xl aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/10">
                   <iframe className="w-full h-full" src={src} title={title} {...props} />
                 </div>
               </div>
@@ -192,7 +192,7 @@ export const TriviaMarkdown: React.FC<TriviaMarkdownProps> = ({ content }) => {
             <img
               alt={alt ?? ""}
               className="
-                my-5
+                not-prose
                 block mx-auto
                 w-full
                 max-w-none

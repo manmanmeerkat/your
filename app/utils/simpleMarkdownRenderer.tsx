@@ -171,22 +171,14 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
             height > 0;
 
           return (
-            <span className="my-4 block">
-              <span
-                className={[
-                  "block w-full overflow-hidden",
-                  hasSize ? "" : "aspect-[16/9]",
-                ].join(" ")}
-              >
-                <SimpleImage
+            <span className="my-4 block not-prose">
+              <span className="block w-full overflow-hidden rounded-xl border border-white/10 shadow-lg aspect-[16/9] flex items-center justify-center">
+                <img
                   src={normalizedSrc}
-                  alt={alt}
-                  width={width}
-                  height={height}
-                  className={[
-                    "block w-full",
-                    hasSize ? "h-auto" : "h-auto", // ← ここを軽くする
-                  ].join(" ")}
+                  alt={alt ?? ""}
+                  loading="lazy"
+                  decoding="async"
+                  className="block w-full h-full object-contain m-0"
                 />
               </span>
             </span>

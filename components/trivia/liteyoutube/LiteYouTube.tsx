@@ -81,20 +81,22 @@ export default function LiteYouTube({
         display: "block",
       }}
     >
-      <img
-        src={thumbUrl(videoId)}
-        alt={title}
-        loading="lazy"
-        decoding="async"
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          opacity: 0.92,
-        }}
-      />
+    <img
+    className="yt-thumb not-prose"
+    src={thumbUrl(videoId)}
+    alt={title}
+    loading="lazy"
+    decoding="async"
+    style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        objectPosition: "center",
+        display: "block",
+    }}
+    />
       <span
         aria-hidden
         style={{
