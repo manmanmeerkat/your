@@ -245,7 +245,7 @@ export default async function HomePage() {
 }
 
 // 🚀 ISR設定の最適化
-export const revalidate = 300; // 5分間キャッシュ
+export const revalidate = 86400; // 5分間キャッシュ
 
 // 🚀 静的生成の最適化
 export const dynamic = "force-static"; // 可能な限り静的生成

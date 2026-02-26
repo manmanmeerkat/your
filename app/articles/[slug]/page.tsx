@@ -19,7 +19,7 @@ import {
 import { getRandomRelatedArticles } from "@/lib/sidebar/getRelatedArticles";
 
 //1時間ごとにキャッシュ
-export const revalidate = 3600; 
+export const revalidate = 86400; 
 
 type Props = { params: { slug: string } };
 

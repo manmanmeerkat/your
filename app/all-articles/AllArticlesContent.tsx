@@ -41,7 +41,7 @@ async function getAllArticles(
 
     const res = await fetch(`${baseUrl}/api/articles?${params.toString()}`, {
       next: {
-        revalidate: 3600, // 1時間キャッシュ
+        revalidate: 86400, // 1時間キャッシュ
         tags: ["all-articles"],
       },
     });
@@ -93,7 +93,7 @@ async function getCategoryCounts(): Promise<Record<string, number>> {
 
     const res = await fetch(`${baseUrl}/api/article-counts`, {
       next: {
-        revalidate: 3600, // 1時間キャッシュ
+        revalidate: 86400, // 1時間キャッシュ
         tags: ["article-counts"],
       },
     });

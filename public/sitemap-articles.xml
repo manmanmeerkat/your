@@ -156,22 +156,8 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/amano-iwato-legend</loc>
-    <lastmod>2026-01-02T02:07:00.961Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/wadaiko</loc>
     <lastmod>2025-06-30T08:51:03.502Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://www.yoursecretjapan.com/articles/izanagi-purification</loc>
-    <lastmod>2026-01-05T21:51:10.642Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -345,6 +331,13 @@
   </url>
 
   <url>
+    <loc>https://www.yoursecretjapan.com/articles/amano-iwato-legend</loc>
+    <lastmod>2026-02-23T10:24:12.184Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
     <loc>https://www.yoursecretjapan.com/articles/new-year-greeting-card</loc>
     <lastmod>2025-10-04T11:51:46.805Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -396,6 +389,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/creation-myth-of-japan</loc>
     <lastmod>2026-01-02T02:04:41.821Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/izanagi-purification</loc>
+    <lastmod>2026-02-24T11:35:19.901Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
