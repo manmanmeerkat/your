@@ -17,7 +17,7 @@ import {
 
 import { AllArticlesHeroSection } from "@/components/allArticlesComponents/allArticlesHeroSection/AllArticlesHeroSection";
 
-export const revalidate = 1800;
+export const revalidate = 86400;
 
 type SearchParams = {
   page?: string;

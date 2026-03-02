@@ -2,7 +2,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Script from "next/script";
-import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { generateBreadcrumbStructuredData,
@@ -11,7 +10,13 @@ import { BREADCRUMB_CONFIG, type CategoryKey } from "@/components/breadcrumb/con
 import CategoryItemClient from "../../../components/articlePageComponents/categoryArticlePage/categoryItemClient/CategoryItemClient";
 import type { CategoryItemDTO } from "../../../components/articlePageComponents/categoryArticlePage/categoryItemClient/CategoryItemClient";
 
-export const dynamic = "force-dynamic";
+const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
+
+export const dynamic = IS_PREVIEW ? "force-dynamic" : "force-static";
+export const revalidate = IS_PREVIEW ? 0 : false;
+export const dynamicParams = false;
+// 任意（Previewで反映ブレ対策）
+export const fetchCache = IS_PREVIEW ? "force-no-store" : "auto";
 
 type Props = {
   params: { slug: string };
@@ -93,29 +98,17 @@ async function getCategoryItemDTO(slug: string): Promise<CategoryItemDTO | null>
   };
 }
 
-// 本番キャッシュ（DTOをキャッシュ）
-const getCategoryItemDTOProd = unstable_cache(
-  getCategoryItemDTO,
-  ["category-item-dto-by-slug"],
-  { revalidate: 300, tags: ["category-item"] }
-);
-
-const getCategoryItemDTORuntime = async (slug: string) => {
-  return process.env.NODE_ENV === "development"
-    ? getCategoryItemDTO(slug)
-    : getCategoryItemDTOProd(slug);
-};
+const getCategoryItemDTORuntime = async (slug: string) => getCategoryItemDTO(slug);
 
 export async function generateStaticParams() {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview") {
     return [];
   }
-
+  // 本番だけ全slug生成
   const items = await prisma.categoryItem.findMany({
     where: { published: true },
     select: { slug: true },
   });
-
   return items.map((i) => ({ slug: i.slug }));
 }
 
@@ -160,40 +153,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const slug = decodeURIComponent(params.slug);
   const item = await getCategoryItemDTORuntime(slug);
-  const isBuild = process.env.NEXT_PHASE === "phase-production-build";
 
   if (!item || !item.published) return notFound();
-
-  const relatedItems = isBuild
-  ? []
-  : (await prisma.categoryItem.findMany({
-      where: {
-        published: true,
-        category: item.category,
-        NOT: { id: item.id },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        images: {
-          take: 1,
-          orderBy: [{ isFeatured: "desc" }, { id: "asc" }],
-          select: { url: true, altText: true },
-        },
-      },
-    }))
-      .slice(0, 3)
-      .map((a) => ({
-        id: a.id,
-        slug: a.slug,
-        title: a.title,
-        href: `/category-item/${a.slug}`,
-        imageUrl: a.images?.[0]?.url ?? null,
-        imageAlt: a.images?.[0]?.altText ?? a.title,
-      }));
 
   // ===== パンくず =====
   type CategoryNode = { label: string; parent?: CategoryKey };
@@ -294,7 +255,7 @@ export default async function Page({ params }: Props) {
         <Breadcrumb customItems={breadcrumbItems} />
       </div>
 
-      <CategoryItemClient item={item} relatedItems={relatedItems} />
+      <CategoryItemClient item={item} />
     </>
   );
 }

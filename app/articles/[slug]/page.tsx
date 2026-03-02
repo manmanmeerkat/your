@@ -16,15 +16,20 @@ import {
   buildArticleJsonLd,
   buildArticleMetadata,
 } from "@/components/articlePageComponents/articleSeo/articleSeo";
-import { getRandomRelatedArticles } from "@/lib/sidebar/getRelatedArticles";
 
-//1時間ごとにキャッシュ
-export const revalidate = 86400; 
+// ✅ Previewでは動的、Productionでは静的（更新はデプロイで反映）
+const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
+
+export const dynamic = IS_PREVIEW ? "force-dynamic" : "force-static";
+export const revalidate = IS_PREVIEW ? 0 : false;
+export const dynamicParams = false;
+export const fetchCache = IS_PREVIEW ? "force-no-store" : "auto";
 
 type Props = { params: { slug: string } };
 
 export async function generateStaticParams() {
-  if (process.env.NODE_ENV === "development") {
+  // dev / preview では事前生成しない（SSRで見る）
+  if (process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview") {
     return [];
   }
 
@@ -57,24 +62,6 @@ export default async function Page({ params }: Props) {
   // const isBuild = process.env.NEXT_PHASE === "phase-production-build";
 
   if (!article || !article.published) return notFound();
-
-  //  related を Server 側で取得（カテゴリ全体の "直近POOL" からランダム抽出
-  type RelatedArticleItem = Awaited<
-  ReturnType<typeof getRandomRelatedArticles>
-  >[number];
-
-  let relatedArticles: RelatedArticleItem[] = [];
-
-  try {
-    relatedArticles = await getRandomRelatedArticles({
-      category: article.category,
-      currentSlug: article.slug,
-      take: 6,
-      pool: 300,
-    });
-  } catch (e) {
-    console.error("relatedArticles failed:", e);
-  }
 
 const isCategoryKey = (v: string): v is CategoryKey =>
   Object.prototype.hasOwnProperty.call(BREADCRUMB_CONFIG.categories, v);
@@ -142,7 +129,7 @@ const toCategoryHref = (key: CategoryKey) => {
         <Breadcrumb customItems={breadcrumbItems} />
       </div>
 
-      <ArticleClientPage article={article} relatedArticles={relatedArticles} />
+      <ArticleClientPage article={article} />
     </>
   );
 }

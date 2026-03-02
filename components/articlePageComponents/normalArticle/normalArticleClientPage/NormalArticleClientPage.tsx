@@ -1,42 +1,30 @@
-import RelatedArticles from "../../sidebar/RelatedArticles";
 import ArticleDetailLayout from "../../articleDetailLayout/ArticleDetaiLayout";
 import { toDisplayDocFromArticle } from "@/lib/articlePage/toDisplayDocFromArticle";
 import { CATEGORY_LABELS } from "@/constants/constants";
 import type { ArticleDTO } from "@/components/articlePageComponents/getArticleBySlug/getArticleBySlug";
-
-type RelatedArticleItem = {
-  id: string;
-  slug: string;
-  title: string;
-  imageUrl: string | null;
-  imageAlt: string | null;
-};
+import RelatedArticlesClient from "../../sidebar/relatedArticlesClient/RelatedArticlesClient";
 
 type ArticleClientPageProps = {
   article: ArticleDTO;
-  relatedArticles: RelatedArticleItem[];
 };
 
 export default function ArticleClientPage({
   article,
-  relatedArticles,
 }: ArticleClientPageProps) {
   const doc = toDisplayDocFromArticle(article);
-
-  const relatedItems = relatedArticles.slice(0, 3).map((a) => ({
-    id: a.id,
-    slug: a.slug,
-    title: a.title,
-    href: `/articles/${a.slug}`, 
-    imageUrl: a.imageUrl ?? null,
-    imageAlt: a.imageAlt ?? a.title,
-  }));
 
   return (
     <ArticleDetailLayout
       doc={doc}
       sidebar={
-        <RelatedArticles items={relatedItems} currentCategory={doc.category} />
+        <RelatedArticlesClient
+          currentCategory={doc.category}
+          category={article.category}
+          currentSlug={article.slug}
+          take={6}
+          pool={300}
+          show={3}
+        />
       }
       backHref={`/${doc.category}`}
       backLabel={`Back to ${

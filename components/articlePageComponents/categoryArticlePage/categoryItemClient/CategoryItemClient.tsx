@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import ArticleDetailLayout from "@/components/articlePageComponents/articleDetailLayout/ArticleDetaiLayout";
 import RelatedArticles from "../../sidebar/RelatedArticles";
 import { toDisplayDocFromCategoryItem } from "@/lib/articlePage/toDisplayDocFromCategoryItem";
@@ -54,11 +55,41 @@ type RelatedItem = {
 
 type Props = {
   item: CategoryItemDTO;
-  relatedItems: RelatedItem[];
 };
 
-export default function CategoryItemClient({ item, relatedItems }: Props) {
+export default function CategoryItemClient({ item }: Props) {
   const doc = toDisplayDocFromCategoryItem(item);
+
+  const [relatedItems, setRelatedItems] = useState<RelatedItem[]>([]);
+
+    useEffect(() => {
+    let canceled = false;
+
+    (async () => {
+      try {
+        const qs = new URLSearchParams({
+          category: item.category,
+          currentSlug: item.slug,
+          take: "3",
+          pool: "60",
+        });
+
+        const res = await fetch(`/api/category-item-related-articles?${qs.toString()}`, {
+          cache: "no-store",
+        });
+
+        const data = (await res.json()) as { items?: RelatedItem[] };
+
+        if (!canceled) setRelatedItems(data.items ?? []);
+      } catch {
+        if (!canceled) setRelatedItems([]);
+      }
+    })();
+
+    return () => {
+      canceled = true;
+    };
+  }, [item.category, item.slug]);
 
   // DBが about-japanese-gods のはずなので両対応
   const c = item.category.toLowerCase();
@@ -71,12 +102,7 @@ export default function CategoryItemClient({ item, relatedItems }: Props) {
     <ArticleDetailLayout
       key={item.slug}
       doc={doc}
-      sidebar={
-        <RelatedArticles
-          items={relatedItems ?? []}
-          currentCategory={doc.category}
-        />
-      }
+      sidebar={<RelatedArticles items={relatedItems} currentCategory={doc.category} />}
       backHref={backHref}
       backLabel={backLabel}
     />
