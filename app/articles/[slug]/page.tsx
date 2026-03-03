@@ -16,14 +16,18 @@ import {
   buildArticleJsonLd,
   buildArticleMetadata,
 } from "@/components/articlePageComponents/articleSeo/articleSeo";
+import {
+  IS_DEV,
+  IS_PREVIEW,
+  PAGE_DYNAMIC,
+  PAGE_REVALIDATE,
+  PAGE_FETCH_CACHE,
+} from "@/lib/cachePolicy/cachePolicy";
 
-// ✅ Previewでは動的、Productionでは静的（更新はデプロイで反映）
-const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
-
-export const dynamic = IS_PREVIEW ? "force-dynamic" : "force-static";
-export const revalidate = IS_PREVIEW ? 0 : false;
+export const dynamic = PAGE_DYNAMIC;
+export const revalidate = PAGE_REVALIDATE;
 export const dynamicParams = false;
-export const fetchCache = IS_PREVIEW ? "force-no-store" : "auto";
+export const fetchCache = PAGE_FETCH_CACHE;
 
 type Props = { params: { slug: string } };
 

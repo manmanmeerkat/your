@@ -1,5 +1,6 @@
 // lib/all-articles.ts
 import type { articleType } from "@/types/types";
+import { IS_NON_PROD, FETCH_CACHE } from "@/lib/cachePolicy/cachePolicy";
 
 export type ArticleCounts = Record<string, number>;
 
@@ -32,17 +33,16 @@ export async function fetchAllArticlesData(args: {
 }): Promise<AllArticlesData> {
   const { page, category, pageSize = 12 } = args;
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
+  const baseUrl = IS_NON_PROD ? "http://localhost:3000" : "";
 
-  const cacheOption = process.env.NODE_ENV === "development" ? "no-store" : "force-cache";
-  const revalidateTime = process.env.NODE_ENV === "development" ? 0 : 1800;
+  // ✅ 方針統一：Dev/Previewはno-store、Prodはforce-cache（デプロイ反映）
+  const baseFetchInit = FETCH_CACHE.pageData;
 
   try {
     const countsPromise = fetch(`${baseUrl}/api/article-counts`, {
-      cache: cacheOption,
-      next: { revalidate: 3600, tags: ["article-counts"] },
+      ...baseFetchInit,
+      // tags は残してOK（将来 revalidateTag したいなら役立つ）
+      ...(IS_NON_PROD ? {} : { next: { tags: ["article-counts"] } }),
     });
 
     const params = new URLSearchParams({
@@ -53,17 +53,35 @@ export async function fetchAllArticlesData(args: {
     if (category) params.append("category", category);
 
     const articlesPromise = fetch(`${baseUrl}/api/articles?${params.toString()}`, {
-      cache: cacheOption,
-      next: { revalidate: revalidateTime, tags: ["articles", `articles-${category}`, `articles-page-${page}`] },
+      ...baseFetchInit,
+      ...(IS_NON_PROD
+        ? {}
+        : {
+            next: {
+              tags: [
+                "articles",
+                `articles-${category || "all"}`,
+                `articles-page-${page}`,
+              ],
+            },
+          }),
     });
 
-    const [countsResponse, articlesResponse] = await Promise.all([countsPromise, articlesPromise]);
+    const [countsResponse, articlesResponse] = await Promise.all([
+      countsPromise,
+      articlesPromise,
+    ]);
 
     const categoryCounts: ArticleCounts = countsResponse.ok
       ? ((await countsResponse.json())?.counts ?? {})
       : {};
 
-    const fallbackPagination: Pagination = { total: 0, page, pageSize, pageCount: 1 };
+    const fallbackPagination: Pagination = {
+      total: 0,
+      page,
+      pageSize,
+      pageCount: 1,
+    };
 
     const { articles, pagination } = articlesResponse.ok
       ? await articlesResponse.json()

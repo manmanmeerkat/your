@@ -9,7 +9,7 @@ export type RelatedItem = {
   id: string;
   slug: string;
   title: string;
-  href: string;              // ✅ 追加（ここが肝）
+  href: string;
   imageUrl?: string | null;
   imageAlt?: string | null;
 };
@@ -17,6 +17,7 @@ export type RelatedItem = {
 interface RelatedArticlesProps {
   items: RelatedItem[];
   currentCategory: string;
+  loading?: boolean;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -82,12 +83,37 @@ function PrimaryArrowButton({
   );
 }
 
-export default function RelatedArticles({ items, currentCategory }: RelatedArticlesProps) {
-  if (!items || items.length === 0) return null;
+function SkeletonCard() {
+  return (
+    <div
+      className={[
+        "relative flex gap-4 p-4 rounded-xl",
+        "bg-[rgba(255,255,255,0.035)]",
+        "border border-[rgba(255,255,255,0.12)]",
+        "animate-pulse",
+      ].join(" ")}
+    >
+      <div className="flex-shrink-0 w-20 h-20 rounded-xl bg-white/10" />
+      <div className="flex-1 min-w-0 flex flex-col gap-3">
+        <div className="h-4 w-4/5 rounded bg-white/10" />
+        <div className="h-4 w-3/5 rounded bg-white/10" />
+        <div className="mt-auto flex justify-end">
+          <div className="h-9 w-28 rounded-full bg-white/10" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-const c = currentCategory.toLowerCase();
-const label = CATEGORY_LABELS[c] ?? currentCategory;
+export default function RelatedArticles({ items, currentCategory, loading }: RelatedArticlesProps) {
 
+  // loading中はスケルトンだけ出す（枠は同じ）
+  const showSkeleton = loading && (!items || items.length === 0);
+
+  if ((!items || items.length === 0) && !showSkeleton) return null
+
+  const c = currentCategory.toLowerCase();
+  const label = CATEGORY_LABELS[c] ?? currentCategory;
   const viewAllHref = getViewAllHref(currentCategory);
 
   return (
@@ -115,9 +141,15 @@ const label = CATEGORY_LABELS[c] ?? currentCategory;
 
       <div className="p-6">
         <div className="space-y-4">
-          {items.map((a) => (
-            <RelatedArticleCard key={a.id} item={a} />
-          ))}
+          {showSkeleton ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : (
+            items.map((a) => <RelatedArticleCard key={a.id} item={a} />)
+          )}
         </div>
 
         <div className="mt-8 pt-6 border-t border-[rgba(255,255,255,0.10)] flex justify-center">

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ArticleDetailLayout from "@/components/articlePageComponents/articleDetailLayout/ArticleDetaiLayout";
 import RelatedArticles from "../../sidebar/RelatedArticles";
 import { toDisplayDocFromCategoryItem } from "@/lib/articlePage/toDisplayDocFromCategoryItem";
+import CategoryItemRelatedArticlesClient from "@/components/articlePageComponents/sidebar/categoryItemRelatedArticlesClient/CategoryItemRelatedArticlesClient";
 
 type CategoryItemImage = {
   id: string;
@@ -102,7 +103,16 @@ export default function CategoryItemClient({ item }: Props) {
     <ArticleDetailLayout
       key={item.slug}
       doc={doc}
-      sidebar={<RelatedArticles items={relatedItems} currentCategory={doc.category} />}
+      sidebar={
+        <CategoryItemRelatedArticlesClient
+          currentCategory={doc.category}
+          category={item.category}
+          currentSlug={item.slug}
+          take={6}
+          pool={60}
+          show={3}
+        />
+      }
       backHref={backHref}
       backLabel={backLabel}
     />

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { unstable_cache } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import type { TriviaCategoryType, TriviaColorThemeType } from "@/types/types";
+import { IS_NON_PROD } from "@/lib/cachePolicy/cachePolicy";
 
 export type ArticleDTO = {
   id: string;
@@ -175,16 +175,6 @@ if (!globalForArticle.__articleBySlugPromise) {
   globalForArticle.__articleBySlugPromise = inFlight;
 }
 
-// 本番：キャッシュ
-const getArticleCached = unstable_cache(
-  async (slug: string) => {
-    const raw = await fetchArticleRaw(slug);
-    return raw ? toArticleDTO(raw) : null;
-  },
-  ["article-by-slug"],
-  { revalidate: 300, tags: ["article", "trivia"] }
-);
-
 // 開発：キャッシュなし（そのまま）
 async function getArticleNoCache(slug: string) {
   const raw = await fetchArticleRaw(slug);
@@ -206,9 +196,12 @@ async function getArticleDedupe(slug: string, fn: (s: string) => Promise<Article
 }
 
 export async function getArticleBySlug(slug: string) {
-  // devは従来通り。ただしdedupeだけは効かせてもOK（ビルドにも有利）
-  if (process.env.NODE_ENV === "development") {
+  // ✅ dev/preview は即反映（no cache）
+  if (IS_NON_PROD) {
     return getArticleDedupe(slug, getArticleNoCache);
   }
-  return getArticleDedupe(slug, getArticleCached);
+
+  // ✅ 本番はデプロイ更新でOK → 毎回DBでもOK（静的ページ生成時だけ呼ばれるのが基本）
+  // ただし、同一リクエスト内の重複は dedupe で吸収
+  return getArticleDedupe(slug, getArticleNoCache);
 }

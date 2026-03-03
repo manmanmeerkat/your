@@ -1,3 +1,4 @@
+// CategoryItemClient.tsx
 import ArticleDetailLayout from "../../articleDetailLayout/ArticleDetaiLayout";
 import { toDisplayDocFromArticle } from "@/lib/articlePage/toDisplayDocFromArticle";
 import { CATEGORY_LABELS } from "@/constants/constants";

@@ -14,10 +14,12 @@ import {
   parsePage,
   totalCountFromCounts,
 } from "@/components/allArticlesComponents/getAllArticlesData/GetAllArticlesData";
-
+import { PAGE_DYNAMIC, PAGE_REVALIDATE, PAGE_FETCH_CACHE } from "@/lib/cachePolicy/cachePolicy";
 import { AllArticlesHeroSection } from "@/components/allArticlesComponents/allArticlesHeroSection/AllArticlesHeroSection";
 
-export const revalidate = 86400;
+export const dynamic = PAGE_DYNAMIC;
+export const revalidate = PAGE_REVALIDATE;
+export const fetchCache = PAGE_FETCH_CACHE;
 
 type SearchParams = {
   page?: string;

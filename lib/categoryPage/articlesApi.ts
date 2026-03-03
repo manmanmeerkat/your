@@ -1,4 +1,6 @@
 import type { articleType } from "@/types/types";
+import { IS_NON_PROD } from "@/lib/cachePolicy/cachePolicy";
+
 
 export const DEFAULT_ARTICLES_PER_PAGE = 6;
 
@@ -76,10 +78,22 @@ export async function getCategoryArticles(
       `${baseUrl}/api/articles?category=${category}&published=${published}&page=${page}&pageSize=${pageSize}`,
       {
         timeoutMs,
-        next: {
-          revalidate: revalidateSec,
-          tags: [`${category}-articles`, `${category}-page-${page}`],
-        },
+
+        // ✅ ここは "key: value" ではなく、オブジェクトを展開する
+        ...(IS_NON_PROD
+          ? ({ cache: "no-store" } as const)
+          : ({ cache: "force-cache" } as const)),
+
+        // ✅ 本番では next を付けない（writeを増やす可能性を下げる）
+        ...(IS_NON_PROD
+          ? ({
+              next: {
+                revalidate: revalidateSec,
+                tags: [`${category}-articles`, `${category}-page-${page}`],
+              },
+            } as const)
+          : {}),
+
         headers: {
           Accept: "application/json",
           ...(opts?.headers ?? {}),

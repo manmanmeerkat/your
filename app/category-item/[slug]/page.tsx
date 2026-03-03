@@ -9,14 +9,18 @@ import { generateBreadcrumbStructuredData,
 import { BREADCRUMB_CONFIG, type CategoryKey } from "@/components/breadcrumb/config";
 import CategoryItemClient from "../../../components/articlePageComponents/categoryArticlePage/categoryItemClient/CategoryItemClient";
 import type { CategoryItemDTO } from "../../../components/articlePageComponents/categoryArticlePage/categoryItemClient/CategoryItemClient";
+import {
+  IS_DEV,
+  IS_PREVIEW,
+  PAGE_DYNAMIC,
+  PAGE_REVALIDATE,
+  PAGE_FETCH_CACHE,
+} from "@/lib/cachePolicy/cachePolicy";
 
-const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
-
-export const dynamic = IS_PREVIEW ? "force-dynamic" : "force-static";
-export const revalidate = IS_PREVIEW ? 0 : false;
+export const dynamic = PAGE_DYNAMIC;
+export const revalidate = PAGE_REVALIDATE;
 export const dynamicParams = false;
-// 任意（Previewで反映ブレ対策）
-export const fetchCache = IS_PREVIEW ? "force-no-store" : "auto";
+export const fetchCache = PAGE_FETCH_CACHE;
 
 type Props = {
   params: { slug: string };
@@ -101,7 +105,7 @@ async function getCategoryItemDTO(slug: string): Promise<CategoryItemDTO | null>
 const getCategoryItemDTORuntime = async (slug: string) => getCategoryItemDTO(slug);
 
 export async function generateStaticParams() {
-  if (process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview") {
+  if (IS_DEV || IS_PREVIEW) {
     return [];
   }
   // 本番だけ全slug生成

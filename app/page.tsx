@@ -8,6 +8,11 @@ import LatestArticlesSection from "@/components/top/latestArticlesSection/Latest
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 // import Redbubble from "@/components/redBubble/RedBubble";
 import { SimpleContact } from "@/components/getInTouch/simpleContact/SimpleContact";
+import {
+  PAGE_DYNAMIC,
+  PAGE_REVALIDATE,
+  PAGE_FETCH_CACHE,
+} from "@/lib/cachePolicy/cachePolicy";
 
 // 🚀 超最適化されたデータベースクエリ（N+1問題解決版）
 async function getLatestArticles(): Promise<articleType[]> {
@@ -244,14 +249,7 @@ export default async function HomePage() {
   );
 }
 
-// 🚀 ISR設定の最適化
-export const revalidate = 86400; // 5分間キャッシュ
-
-// 🚀 静的生成の最適化
-export const dynamic = "force-static"; // 可能な限り静的生成
-
-// 🚀 ランタイム最適化
-export const runtime = "nodejs"; // Node.js ランタイム使用
-
-// 🚀 プリフェッチ設定
-export const fetchCache = "auto"; // 自動キャッシュ最適化
+export const dynamic = PAGE_DYNAMIC;
+export const revalidate = PAGE_REVALIDATE;
+export const fetchCache = PAGE_FETCH_CACHE;
+export const runtime = "nodejs";

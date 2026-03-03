@@ -7,6 +7,20 @@ import { CATEGORIES } from "@/constants/constants";
 // import Redbubble from "@/components/redBubble/RedBubble";
 import AllArticlesPaginationWrapper from "@/components/allArticlesComponents/AllArticlesPaginationWrapper";
 import AllArticlesCategoryFilter from "@/components/allArticlesComponents/allArticlesCategoryFilter/AllArticlesCategoryFilter";
+import {
+  PAGE_DYNAMIC,
+  PAGE_REVALIDATE,
+  PAGE_FETCH_CACHE,
+  FETCH_CACHE,
+} from "@/lib/cachePolicy/cachePolicy";
+
+// Dev/Preview: 即反映（毎回最新）
+// Prod: 静的（デプロイで更新）
+export const dynamic = PAGE_DYNAMIC;
+export const revalidate = PAGE_REVALIDATE;
+export const fetchCache = PAGE_FETCH_CACHE;
+
+const FETCH_INIT = FETCH_CACHE.pageData;
 
 // ページごとの記事数
 const ARTICLES_PER_PAGE = 6;
@@ -39,12 +53,7 @@ async function getAllArticles(
 
     if (category) params.append("category", category);
 
-    const res = await fetch(`${baseUrl}/api/articles?${params.toString()}`, {
-      next: {
-        revalidate: 86400, // 1時間キャッシュ
-        tags: ["all-articles"],
-      },
-    });
+    const res = await fetch(`${baseUrl}/api/articles?${params.toString()}`, FETCH_INIT);
 
     if (!res.ok) {
       return {
@@ -91,12 +100,7 @@ async function getCategoryCounts(): Promise<Record<string, number>> {
         ? "http://localhost:3000"
         : "https://yourwebsite.com");
 
-    const res = await fetch(`${baseUrl}/api/article-counts`, {
-      next: {
-        revalidate: 86400, // 1時間キャッシュ
-        tags: ["article-counts"],
-      },
-    });
+    const res = await fetch(`${baseUrl}/api/article-counts`, FETCH_INIT);
 
     if (res.ok) {
       const data = await res.json();
