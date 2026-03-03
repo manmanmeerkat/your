@@ -1,17 +1,16 @@
-import { fetchJsonWithTimeout, getBaseUrl, getCategoryArticles, parsePage } from "@/lib/categoryPage/articlesApi";
+import { fetchJsonWithTimeout, getApiOrigin, getCategoryArticles, parsePage } from "@/lib/categoryPage/articlesApi";
 
 export { parsePage };
 
 export const getMythologyArticles = (page = 1) =>
   getCategoryArticles("mythology", page);
 
-// mythology 固有：神様 slug map はここに残す
 export async function getGodsSlugMap(): Promise<Record<string, string>> {
-  const baseUrl = getBaseUrl();
+  const origin = getApiOrigin();
 
   try {
     const gods = await fetchJsonWithTimeout<Array<{ title: string; slug: string }>>(
-      `${baseUrl}/api/category-items?category=about-japanese-gods`,
+      `${origin}/api/category-items?category=about-japanese-gods`,
       {
         timeoutMs: 8000,
         cache: "no-store",

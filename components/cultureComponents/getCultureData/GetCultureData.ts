@@ -1,4 +1,4 @@
-import { fetchJsonWithTimeout, getBaseUrl, getCategoryArticles, parsePage } from "@/lib/categoryPage/articlesApi";
+import { fetchJsonWithTimeout, getCategoryArticles, parsePage } from "@/lib/categoryPage/articlesApi";
 
 export { parsePage };
 
@@ -7,11 +7,9 @@ export const getCultureArticles = (page = 1) =>
 
 /* ★ 将来用：文化人物 slugMap（culture固有なので残す） */
 export async function getCultureMastersSlugMap(): Promise<Record<string, string>> {
-  const baseUrl = getBaseUrl();
-
   try {
     const items = await fetchJsonWithTimeout<Array<{ title: string; slug: string }>>(
-      `${baseUrl}/api/category-items?category=japanese-culture-masters`,
+      `/api/category-items?category=japanese-culture-masters`,
       {
         timeoutMs: 8000,
         cache: "no-store",
