@@ -13,6 +13,9 @@ import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
 
 // import { WayOfLifeSection } from "@/components/customsComponents/wayOfLifeSection/WayOfLifeSection";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const copy = ARTICLES_COPY.customs;
 
 export default async function CustomsPage({

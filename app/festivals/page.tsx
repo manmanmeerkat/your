@@ -10,6 +10,9 @@ import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
 // import { SeasonalFestivalsSection } from "@/components/festivalsComponents/seasonalFestivalsSection/SeasonalFestivalsSection";
 // import { ThreeBigFestivalsSection } from "@/components/festivalsComponents/threeBigFestivalsSection/ThreeBigFestivalsSection";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const copy = ARTICLES_COPY.festivals;
 
 export default async function FestivalsPage({

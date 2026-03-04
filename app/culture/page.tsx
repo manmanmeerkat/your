@@ -4,12 +4,11 @@ import { CategoryHeroSection } from "@/components/categoryPageComponents/categor
 import { CategoryArticlesSection } from "@/components/categoryPageComponents/categoryArticlesSection/CategoryArticleSection";
 import { CategoryArticlesSkeleton } from "@/components/categoryPageComponents/categoryArticlesSkeleton/CategoryArticlesSkeleton";
 
-import {
-  parsePage,
-  getCultureArticles,
-} from "@/components/cultureComponents/getCultureData/GetCultureData";
-
+import { parsePage, getCultureArticles } from "@/components/cultureComponents/getCultureData/GetCultureData";
 import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const copy = ARTICLES_COPY.culture;
 
@@ -29,7 +28,6 @@ export default async function CulturePage({
     <CategoryPageLayout
       breadcrumbItems={breadcrumbItems}
       hero={<CategoryHeroSection category="culture" />}
-
       articles={
         <CategoryArticlesSection
           currentPage={currentPage}
@@ -41,7 +39,6 @@ export default async function CulturePage({
           basePath={copy.basePath}
         />
       }
-
       articlesFallback={
         <CategoryArticlesSkeleton
           sectionId={copy.sectionId}
@@ -49,8 +46,6 @@ export default async function CulturePage({
           loadingText={copy.loadingText}
         />
       }
-
-      // afterArticles は未定なので渡さない
     />
   );
 }

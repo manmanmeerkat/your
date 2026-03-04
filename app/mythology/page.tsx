@@ -2,7 +2,6 @@ import { CategoryPageLayout } from "@/components/categoryPageComponents/category
 import { CategoryHeroSection } from "@/components/categoryPageComponents/categoryHeroSection/CategoryHeroSection";
 import { CategoryArticlesSection } from "@/components/categoryPageComponents/categoryArticlesSection/CategoryArticleSection";
 import { CategoryArticlesSkeleton } from "@/components/categoryPageComponents/categoryArticlesSkeleton/CategoryArticlesSkeleton";
-import { PAGE_DYNAMIC, PAGE_REVALIDATE, PAGE_FETCH_CACHE } from "@/lib/cachePolicy/cachePolicy";
 import {
   parsePage,
   getGodsSlugMap,
@@ -12,9 +11,8 @@ import {
 import { JapaneseGodsSection } from "@/components/mythologyComponents/japaneseGodsSection/JapaneseGodsSection";
 import { ARTICLES_COPY } from "@/lib/categoryPage/articlesSectionConfig";
 
-export const dynamic = PAGE_DYNAMIC;
-export const revalidate = PAGE_REVALIDATE;
-export const fetchCache = PAGE_FETCH_CACHE;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const copy = ARTICLES_COPY.mythology;
 
