@@ -26,6 +26,23 @@ export function normalizeCategory(value?: string) {
   return (value ?? "").trim();
 }
 
+// ✅ 追加：API origin を安全に解決
+function getApiOrigin() {
+  // ブラウザで動くなら相対でOK
+  if (typeof window !== "undefined") return "";
+
+  // 最優先：明示した本番URL
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (siteUrl) return siteUrl.replace(/\/$/, "");
+
+  // Vercel が付与（Preview/Prod）
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) return `https://${vercelUrl}`.replace(/\/$/, "");
+
+  // ローカル
+  return "http://localhost:3000";
+}
+
 export async function fetchAllArticlesData(args: {
   page: number;
   category: string;
@@ -33,15 +50,12 @@ export async function fetchAllArticlesData(args: {
 }): Promise<AllArticlesData> {
   const { page, category, pageSize = 12 } = args;
 
-  const baseUrl = IS_NON_PROD ? "http://localhost:3000" : "";
-
-  // ✅ 方針統一：Dev/Previewはno-store、Prodはforce-cache（デプロイ反映）
+  const origin = getApiOrigin(); // ✅ ここが必要
   const baseFetchInit = FETCH_CACHE.pageData;
 
   try {
-    const countsPromise = fetch(`${baseUrl}/api/article-counts`, {
+    const countsPromise = fetch(`${origin}/api/article-counts`, {
       ...baseFetchInit,
-      // tags は残してOK（将来 revalidateTag したいなら役立つ）
       ...(IS_NON_PROD ? {} : { next: { tags: ["article-counts"] } }),
     });
 
@@ -52,7 +66,7 @@ export async function fetchAllArticlesData(args: {
     });
     if (category) params.append("category", category);
 
-    const articlesPromise = fetch(`${baseUrl}/api/articles?${params.toString()}`, {
+    const articlesPromise = fetch(`${origin}/api/articles?${params.toString()}`, {
       ...baseFetchInit,
       ...(IS_NON_PROD
         ? {}

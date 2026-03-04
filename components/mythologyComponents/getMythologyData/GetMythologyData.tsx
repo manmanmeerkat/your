@@ -1,28 +1,31 @@
-import { fetchJsonWithTimeout, getApiOrigin, getCategoryArticles, parsePage } from "@/lib/categoryPage/articlesApi";
-
+import { getCategoryArticles, parsePage } from "@/lib/categoryPage/articlesApi";
+import { prisma } from "@/lib/prisma";
 export { parsePage };
 
 export const getMythologyArticles = (page = 1) =>
   getCategoryArticles("mythology", page);
 
 export async function getGodsSlugMap(): Promise<Record<string, string>> {
-  const origin = getApiOrigin();
-
   try {
-    const gods = await fetchJsonWithTimeout<Array<{ title: string; slug: string }>>(
-      `${origin}/api/category-items?category=about-japanese-gods`,
-      {
-        timeoutMs: 8000,
-        cache: "no-store",
-        headers: { Accept: "application/json" },
-      }
-    );
+    const gods = await prisma.categoryItem.findMany({
+      where: {
+        category: "about-japanese-gods",
+        published: true,
+      },
+      select: {
+        title: true,
+        slug: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
 
     const slugMap: Record<string, string> = {};
+
     for (const god of gods ?? []) {
       if (!god?.title || !god?.slug) continue;
 
       const normalized = god.title.trim();
+
       const variations = new Set<string>([
         normalized,
         normalized.toLowerCase(),
@@ -34,7 +37,9 @@ export async function getGodsSlugMap(): Promise<Record<string, string>> {
         if (key) slugMap[key] = god.slug;
       }
     }
+
     return slugMap;
+
   } catch (e) {
     console.error("Failed to fetch gods data:", e);
     return {};

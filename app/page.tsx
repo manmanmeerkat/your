@@ -199,10 +199,10 @@ export const metadata = {
       name: "Your Secret Japan",
       description:
         "Japanese mythology, festivals, culture, and everyday customs—stories told with clarity, warmth, and quiet wonder.",
-      url: "https://your-secret-japan.com",
+      url: "https://yoursecretjapan.com",
       potentialAction: {
         "@type": "SearchAction",
-        target: "https://your-secret-japan.com/search?q={search_term_string}",
+        target: "https://yoursecretjapan.com/search?q={search_term_string}",
         "query-input": "required name=search_term_string",
       },
     }),
