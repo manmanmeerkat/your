@@ -241,6 +241,12 @@
   background: var(--japanese-orange-light);
 }
 
+.japanese-style-modern-h4 {
+  color: #efe7db;
+  border-left: 3px solid #dd9e90;
+  padding-left: 8px;
+}
+
 /* 🎌 基本要素 */
 .japanese-style-modern-section {
   margin: 1.5rem 0 2.5rem;
