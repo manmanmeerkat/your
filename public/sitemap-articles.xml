@@ -681,13 +681,6 @@
   </url>
 
   <url>
-    <loc>https://www.yoursecretjapan.com/articles/abe-no-seimei</loc>
-    <lastmod>2026-04-01T11:41:18.821Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
     <loc>https://www.yoursecretjapan.com/articles/bon-odori</loc>
     <lastmod>2026-04-01T11:42:40.437Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -816,6 +809,13 @@
   <url>
     <loc>https://www.yoursecretjapan.com/articles/sensu</loc>
     <lastmod>2026-04-01T12:01:39.149Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.yoursecretjapan.com/articles/abe-no-seimei</loc>
+    <lastmod>2026-04-03T20:46:57.873Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
