@@ -104,6 +104,21 @@ export function SimpleImage({
   );
 }
 
+function preprocessSummarySyntax(content: string): string {
+  return content.replace(
+    /:::\s*summary\[(.*?)\]\s*([\s\S]*?):::/g,
+    (_m, title, body) => {
+      const encoded = encodeURIComponent(
+        JSON.stringify({
+          title: title.trim(),
+          body: body.trim(),
+        })
+      );
+      return `@@SUMMARY:${encoded}@@`;
+    }
+  );
+}
+
 function childrenToText(children: React.ReactNode): string {
   return React.Children.toArray(children)
     .map((child) => {
@@ -119,7 +134,11 @@ function childrenToText(children: React.ReactNode): string {
 }
 
 export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererProps) {
-  const pre = preprocessTriviaSyntax(preprocessImageSyntax(content));
+    const pre = preprocessSummarySyntax(
+    preprocessTriviaSyntax(
+      preprocessImageSyntax(content)
+    )
+  );
 
   return (
     <ReactMarkdown
@@ -127,15 +146,41 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
       components={{
         /** ✅ ここで Trivia プレースホルダだけを差し替える */
         p({ children }) {
-          // children が単一テキストのケースが多いのでここで拾う
-          const text =
-            typeof children === "string"
-              ? children
-              : Array.isArray(children) && children.length === 1 && typeof children[0] === "string"
-              ? children[0]
-              : null;
+          const text = childrenToText(children);
 
-          if (text && text.startsWith("TRIVIA_PLACEHOLDER_")) {
+          if (text.startsWith("@@SUMMARY:") && text.endsWith("@@")) {
+            const raw = text.replace(/^@@SUMMARY:/, "").replace(/@@$/, "");
+
+            type SummaryData = {
+              title: string;
+              body: string;
+            };
+
+            const { title, body } = JSON.parse(
+              decodeURIComponent(raw)
+            ) as SummaryData;
+
+            return (
+              <div className="summary-box">
+                <p className="summary-box-title">{title}</p>
+                {body.split(/\n\s*\n/).map((paragraph: string, i: number) => (
+                  <ReactMarkdown
+                    key={i}
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      ul: (p) => <ul className="summary-box-ul">{p.children}</ul>,
+                      li: (p) => <li className="summary-box-li">{p.children}</li>,
+                      p: (p) => <p className="summary-box-text">{p.children}</p>,
+                    }}
+                  >
+                    {paragraph}
+                  </ReactMarkdown>
+                ))}
+              </div>
+            );
+          }
+
+          if (text.startsWith("TRIVIA_PLACEHOLDER_")) {
             const idx = Number(text.replace("TRIVIA_PLACEHOLDER_", ""));
             const trivia = triviaList[idx];
             if (!trivia) return null;

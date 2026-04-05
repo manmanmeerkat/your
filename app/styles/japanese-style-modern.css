@@ -805,3 +805,60 @@
   :is(h1, h2, h3, h4, h5, h6)[id] {
   scroll-margin-top: 120px;
 }
+
+.summary-box {
+  margin: 2rem 0 2.5rem;
+  padding: 1.25rem 1.5rem;
+  border-left: 3px solid #dd9e90;
+  background: rgba(255, 255, 255, 0.035);
+  border-radius: 10px;
+}
+
+.summary-box-title {
+  margin: 0 0 0.85rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #dd9e90;
+  line-height: 1.5;
+  letter-spacing: 0.03em;
+}
+
+.summary-box-text {
+  margin: 0 0 0.9rem;
+  line-height: 2;
+  color: rgba(255, 245, 235, 0.9);
+  font-size: 1rem;
+}
+
+.summary-box-ul {
+  margin: 0.35rem 0 1.1rem;
+  padding-left: 1.2rem;
+  list-style: none;
+  font-size: 1rem;
+}
+
+.summary-box-li {
+  position: relative;
+  margin: 0 0 0.35rem 0;
+  padding-left: 1.1rem;
+  line-height: 1.9;
+  color: rgba(255, 245, 235, 0.9);
+}
+
+.summary-box-li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #c8a46b;
+  font-size: 0.95em;
+}
+
+.summary-box ul:last-child,
+.summary-box p:last-child {
+  margin-bottom: 0;
+}
+
+.summary-box-text:last-child {
+  margin-bottom: 0;
+}
