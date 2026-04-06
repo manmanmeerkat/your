@@ -8,6 +8,7 @@ export function toDisplayDocFromArticle(article: ArticleDTO): DisplayDoc {
     content: article.content ?? "",
     category: article.category ?? "",
     updatedAt: article.updatedAt ?? new Date().toISOString(),
+    catchCopy: article.catchCopy ?? null,
     images: (article.images ?? []).map((img) => ({
       url: img.url,
       alt: img.altText ?? article.title ?? "",

@@ -19,6 +19,7 @@ model Article {
   createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime        @default(now()) @map("updated_at") @db.Timestamptz(6)
   description String?
+  catchCopy   String?         @map("catch_copy")
   trivia      ArticleTrivia[]
   images      Image[]
 
@@ -53,16 +54,16 @@ model ArticleTrivia {
 }
 
 model CategoryItem {
-  id          String              @id @default(uuid()) @db.Uuid
-  title       String              @db.VarChar(255)
-  slug        String              @unique @db.VarChar(255)
+  id          String               @id @default(uuid()) @db.Uuid
+  title       String               @db.VarChar(255)
+  slug        String               @unique @db.VarChar(255)
   summary     String?
   description String?
   content     String
-  category    String              @db.VarChar(100)
-  published   Boolean             @default(false)
-  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime            @default(now()) @map("updated_at") @db.Timestamptz(6)
+  category    String               @db.VarChar(100)
+  published   Boolean              @default(false)
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime             @default(now()) @map("updated_at") @db.Timestamptz(6)
   images      CategoryItemImage[]
   trivia      CategoryItemTrivia[]
 
@@ -103,7 +104,7 @@ model CategoryItemTrivia {
   @@index([categoryItemId, displayOrder], map: "category_item_trivia_order_idx")
   @@index([categoryItemId, isActive, displayOrder], map: "category_item_trivia_active_idx")
   @@index([category, isActive], map: "category_item_trivia_category_active_idx")
-  @@index([tags], map: "category_item_trivia_tags_idx")
+  @@index([tags])
   @@map("category_item_trivia")
 }
 

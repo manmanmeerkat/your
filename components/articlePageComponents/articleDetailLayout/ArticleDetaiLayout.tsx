@@ -1,10 +1,9 @@
-// components/articlePageComponents/articleDetailLayout/ArticleDetailLayout.tsx
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { WhiteLine } from "@/components/whiteLine/whiteLine";
 import { OptimizedImage } from "@/components/ui/optimizedImage";
 import type { DisplayDoc } from "@/types/slugDisplay";
-import "@/app/styles/japanese-style-modern.css";
+import styles from "@/app/styles/japanese-style-modern.module.css";
 
 import { ContentWithTrivia } from "@/components/trivia/ContentWithTrivia";
 import { preprocessImageSyntax, separateTriviaFromMarkdown } from "@/app/utils/markdownPreprocess";
@@ -23,7 +22,6 @@ export default function ArticleDetailLayout({
   backHref: string;
   backLabel: string;
 }) {
-  // ✅ server で日付整形
   const displayDate = (() => {
     try {
       const date = new Date(doc.updatedAt);
@@ -40,7 +38,6 @@ export default function ArticleDetailLayout({
   const allTrivia = doc.trivia ?? [];
   const activeTrivia = allTrivia.filter((t) => t.isActive);
 
-  // ✅ ToC用 markdown（server）
   const tocSourceMarkdown = (() => {
     const pre = preprocessImageSyntax(doc.content);
     const { markdownContent } = separateTriviaFromMarkdown(pre, activeTrivia);
@@ -52,40 +49,40 @@ export default function ArticleDetailLayout({
   const hasFeaturedImage = Boolean(doc.images?.some((img) => img.isFeatured));
 
   return (
-    <div className="min-h-screen article-page-container">
+    <div className={`min-h-screen ${styles.pageContainer}`}>
       <div className="container mx-auto px-4 pb-8 max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1 lg:w-[70%] min-w-0">
-            <div className="japanese-style-modern">
-              <div className="japanese-style-modern-header">
-                <h1 className="japanese-style-modern-title">{doc.title}</h1>
-                <div className="japanese-style-modern-date">{displayDate}</div>
+            <div className={styles.root}>
+              <div className={styles.header}>
+                <h1 className={styles.title}>{doc.title}</h1>
+                <div className={styles.date}>{displayDate}</div>
               </div>
-                {hasFeaturedImage && (
-                  <div className="mb-8 px-4 flex justify-center">
-                    <div className="w-[min(400px,100%)]">
-                      <OptimizedImage
-                        src={featuredImage}
-                        alt={doc.title}
-                        priority
-                        width={400}
-                        height={400}
-                        sizes="(max-width: 768px) 100vw, 400px"
-                        className="rounded-lg"
-                      />
-                    </div>
-                  </div>
-                )}
 
-              {/* ✅ ToCは client に渡して追従だけ client でやる */}
+              {hasFeaturedImage && (
+                <div className="mb-8 px-4 flex justify-center">
+                  <div className="w-[min(400px,100%)]">
+                    <OptimizedImage
+                      src={featuredImage}
+                      alt={doc.title}
+                      priority
+                      width={400}
+                      height={400}
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      className="rounded-lg"
+                    />
+                  </div>
+                </div>
+              )}
+
               <ArticleDetailClient
-                containerSelector=".japanese-style-modern-content"
+                containerSelector={`.${styles.content}`}
                 headerOffset={HEADER_OFFSET}
                 depsKey={tocSourceMarkdown}
               />
 
-              <div className="japanese-style-modern-container">
-                <div className="japanese-style-modern-content max-w-none">
+              <div className={styles.container}>
+                <div className={`${styles.content} max-w-none`}>
                   <div className="prose prose-lg prose-invert max-w-none overflow-hidden">
                     <ContentWithTrivia content={doc.content} triviaList={allTrivia} />
                   </div>

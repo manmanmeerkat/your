@@ -12,8 +12,8 @@ export type ArticleDTO = {
   category: string;
   published: boolean;
   description: string | null;
+  catchCopy: string | null;
 
-  // ✅ Date → string
   createdAt: string;
   updatedAt: string;
 
@@ -22,8 +22,6 @@ export type ArticleDTO = {
     url: string;
     altText: string | null;
     isFeatured: boolean;
-
-    // ✅ Date → string
     createdAt: string;
     articleId: string;
   }[];
@@ -39,8 +37,6 @@ export type ArticleDTO = {
     colorTheme: TriviaColorThemeType | null;
     displayOrder: number;
     isActive: boolean;
-
-    // ✅ Date → string
     createdAt: string;
     updatedAt: string;
     articleId: string;
@@ -127,8 +123,8 @@ function toArticleDTO(article: ArticlePayload): ArticleDTO {
     category: article.category ?? "",
     published: Boolean(article.published),
     description: article.description ?? null,
+    catchCopy: article.catchCopy ?? null,
 
-    // ✅ Date → string
     createdAt: article.createdAt.toISOString(),
     updatedAt: article.updatedAt.toISOString(),
 
@@ -137,8 +133,6 @@ function toArticleDTO(article: ArticlePayload): ArticleDTO {
       url: img.url ?? "",
       altText: img.altText ?? null,
       isFeatured: Boolean(img.isFeatured),
-
-      // ✅ Date → string
       createdAt: img.createdAt.toISOString(),
       articleId: img.articleId ?? "",
     })),
@@ -154,8 +148,6 @@ function toArticleDTO(article: ArticlePayload): ArticleDTO {
       colorTheme: (t.colorTheme ?? null) as TriviaColorThemeType | null,
       displayOrder: Number(t.displayOrder) || 0,
       isActive: Boolean(t.isActive),
-
-      // ✅ Date → string
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
       articleId: article.id,

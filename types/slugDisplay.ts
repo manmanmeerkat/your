@@ -20,6 +20,7 @@ export type DisplayDoc = {
   content: string;
   category: string;
   updatedAt: string; // ISO文字列
+  catchCopy?: string | null; // ← ★これ追加
   images: DisplayImage[];
   trivia: DisplayTrivia[];
 };

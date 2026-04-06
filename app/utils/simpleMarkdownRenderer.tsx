@@ -2,6 +2,7 @@ import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { makeHeadingId } from "@/app/utils/headingId";
+import styles from "@/app/styles/japanese-style-modern.module.css";
 
 interface MarkdownRendererProps {
   content: string;
@@ -32,7 +33,6 @@ type SimpleImageProps = {
   className?: string;
 };
 
-/** 画像記法の前処理（あなたのまま） */
 function preprocessImageSyntax(content: string): string {
   const imageWithOptionsRegex = /!\[([^\]]*?)\]\(([^)]+?)\)\{([^}]+?)\}/g;
 
@@ -43,13 +43,10 @@ function preprocessImageSyntax(content: string): string {
   });
 }
 
-/** ✅ :::trivia[n] をプレースホルダ文字列へ */
 function preprocessTriviaSyntax(content: string): string {
-  // 行単位でも、インラインでも拾えるように
   return content.replace(/:::\s*trivia\[(\d+)\]\s*/g, (_m, n) => `TRIVIA_PLACEHOLDER_${n}`);
 }
 
-/** src 正規化だけを独立 */
 function normalizeSrc(src?: string) {
   if (!src) return "";
   if (src.includes("supabase.co")) return src;
@@ -59,12 +56,9 @@ function normalizeSrc(src?: string) {
   return src;
 }
 
-// ✅ 一口メモ（あなたの InlineTrivia をそのまま置いてOK）
-// ここでは省略せず使う想定
 const InlineTrivia: React.FC<{ trivia: ArticleTrivia; index: number }> = ({ trivia }) => {
   return (
     <div style={{ width: "100%", marginTop: "3rem", marginBottom: "3rem" }}>
-      {/* ...（あなたの InlineTrivia の中身そのまま）... */}
       <div style={{ color: "#d1d5db", whiteSpace: "pre-wrap" }}>{trivia.content}</div>
     </div>
   );
@@ -80,7 +74,6 @@ export function SimpleImage({
 }: SimpleImageProps) {
   if (!src) return null;
 
-  // width/height があるならCLS対策として aspect-ratio を効かせる
   const style: React.CSSProperties = {};
   if (width && height && width > 0 && height > 0) {
     style.aspectRatio = `${width} / ${height}`;
@@ -125,7 +118,7 @@ function childrenToText(children: React.ReactNode): string {
       if (typeof child === "string") return child;
       if (typeof child === "number") return String(child);
       if (React.isValidElement(child)) {
-        return childrenToText(child.props.children);
+        return childrenToText((child.props as { children?: React.ReactNode }).children);
       }
       return "";
     })
@@ -134,17 +127,12 @@ function childrenToText(children: React.ReactNode): string {
 }
 
 export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererProps) {
-    const pre = preprocessSummarySyntax(
-    preprocessTriviaSyntax(
-      preprocessImageSyntax(content)
-    )
-  );
+  const pre = preprocessSummarySyntax(preprocessTriviaSyntax(preprocessImageSyntax(content)));
 
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
-        /** ✅ ここで Trivia プレースホルダだけを差し替える */
         p({ children }) {
           const text = childrenToText(children);
 
@@ -156,21 +144,19 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
               body: string;
             };
 
-            const { title, body } = JSON.parse(
-              decodeURIComponent(raw)
-            ) as SummaryData;
+            const { title, body } = JSON.parse(decodeURIComponent(raw)) as SummaryData;
 
             return (
-              <div className="summary-box">
-                <p className="summary-box-title">{title}</p>
+              <div className={styles.summaryBox}>
+                <p className={styles.summaryBoxTitle}>{title}</p>
                 {body.split(/\n\s*\n/).map((paragraph: string, i: number) => (
                   <ReactMarkdown
                     key={i}
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      ul: (p) => <ul className="summary-box-ul">{p.children}</ul>,
-                      li: (p) => <li className="summary-box-li">{p.children}</li>,
-                      p: (p) => <p className="summary-box-text">{p.children}</p>,
+                      ul: (p) => <ul className={styles.summaryBoxUl}>{p.children}</ul>,
+                      li: (p) => <li className={styles.summaryBoxLi}>{p.children}</li>,
+                      p: (p) => <p className={styles.summaryBoxText}>{p.children}</p>,
                     }}
                   >
                     {paragraph}
@@ -187,7 +173,7 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
             return <InlineTrivia trivia={trivia} index={idx} />;
           }
 
-          return <p className="japanese-style-modern-p">{children}</p>;
+          return <p className={styles.p}>{children}</p>;
         },
 
         img(props) {
@@ -208,12 +194,6 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
 
           const normalizedSrc = normalizeSrc(src);
 
-          const hasSize =
-            typeof width === "number" &&
-            typeof height === "number" &&
-            width > 0 &&
-            height > 0;
-
           return (
             <span className="my-4 block not-prose">
               <span className="block w-full overflow-hidden rounded-xl border border-white/10 shadow-lg aspect-[16/9] flex items-center justify-center">
@@ -230,7 +210,10 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
         },
 
         iframe: (props) => (
-          <div className="my-6" style={{ width: "100%", aspectRatio: "16/9", position: "relative" }}>
+          <div
+            className="my-6"
+            style={{ width: "100%", aspectRatio: "16/9", position: "relative" }}
+          >
             <iframe
               {...props}
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
@@ -238,31 +221,34 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
               allowFullScreen
             />
           </div>
-          ),
+        ),
+
         h1({ children }) {
           const text = childrenToText(children);
           const id = makeHeadingId(text);
-          return <h1 id={id} className="japanese-style-modern-h1">{children}</h1>;
+          return <h1 id={id} className={styles.h1}>{children}</h1>;
         },
+
         h2({ children }) {
           const text = childrenToText(children);
           const id = makeHeadingId(text);
-          return <h2 id={id} className="japanese-style-modern-h2">{children}</h2>;
+          return <h2 id={id} className={styles.h2}>{children}</h2>;
         },
-        h3: (p) => <h3 className="japanese-style-modern-h3">{p.children}</h3>,
-        h4: (p) => <h4 className="japanese-style-modern-h4">{p.children}</h4>,
+
+        h3: (p) => <h3 className={styles.h3}>{p.children}</h3>,
+        h4: (p) => <h4 className={styles.h4}>{p.children}</h4>,
 
         blockquote: (p) => (
-          <blockquote className="japanese-style-modern-blockquote">{p.children}</blockquote>
+          <blockquote className={styles.blockquote}>{p.children}</blockquote>
         ),
 
-        strong: (p) => <strong className="japanese-style-modern-strong">{p.children}</strong>,
-        em: (p) => <em className="japanese-style-modern-em">{p.children}</em>,
+        strong: (p) => <strong className={styles.strong}>{p.children}</strong>,
+        em: (p) => <em className={styles.em}>{p.children}</em>,
 
         a(props) {
           return (
             <a
-              className="japanese-style-modern-a"
+              className={styles.a}
               href={props.href}
               target="_blank"
               rel="noopener noreferrer"
@@ -272,27 +258,27 @@ export function MarkdownRenderer({ content, triviaList = [] }: MarkdownRendererP
           );
         },
 
-        ul: (p) => <ul className="japanese-style-modern-ul">{p.children}</ul>,
-        ol: (p) => <ol className="japanese-style-modern-ol">{p.children}</ol>,
-        li: (p) => <li className="japanese-style-modern-li">{p.children}</li>,
+        ul: (p) => <ul className={styles.ul}>{p.children}</ul>,
+        ol: (p) => <ol className={styles.ol}>{p.children}</ol>,
+        li: (p) => <li className={styles.li}>{p.children}</li>,
 
-        table: (p) => <table className="japanese-style-modern-table">{p.children}</table>,
-        thead: (p) => <thead className="japanese-style-modern-thead">{p.children}</thead>,
-        tbody: (p) => <tbody className="japanese-style-modern-tbody">{p.children}</tbody>,
-        tr: (p) => <tr className="japanese-style-modern-tr">{p.children}</tr>,
-        th: (p) => <th className="japanese-style-modern-th">{p.children}</th>,
-        td: (p) => <td className="japanese-style-modern-td">{p.children}</td>,
+        table: (p) => <table className={styles.table}>{p.children}</table>,
+        thead: (p) => <thead className={styles.thead}>{p.children}</thead>,
+        tbody: (p) => <tbody className={styles.tbody}>{p.children}</tbody>,
+        tr: (p) => <tr className={styles.tr}>{p.children}</tr>,
+        th: (p) => <th className={styles.th}>{p.children}</th>,
+        td: (p) => <td className={styles.td}>{p.children}</td>,
 
-        hr: () => <hr className="japanese-style-modern-hr" />,
+        hr: () => <hr className={styles.hr} />,
 
         code(props: React.ComponentProps<"code"> & { inline?: boolean }) {
           if (props.inline) {
-            return <code className="japanese-style-modern-code-inline">{props.children}</code>;
+            return <code className={styles.codeInline}>{props.children}</code>;
           }
-          return <code className="japanese-style-modern-code">{props.children}</code>;
+          return <code className={styles.code}>{props.children}</code>;
         },
 
-        pre: (p) => <pre className="japanese-style-modern-pre">{p.children}</pre>,
+        pre: (p) => <pre className={styles.pre}>{p.children}</pre>,
       }}
     >
       {pre}
