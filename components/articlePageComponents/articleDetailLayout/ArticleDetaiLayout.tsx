@@ -74,7 +74,11 @@ export default function ArticleDetailLayout({
                   </div>
                 </div>
               )}
-
+{doc.catchCopy && (
+  <div className={styles.catchCopyWrap}>
+    <p className={styles.catchCopy}>{doc.catchCopy}</p>
+  </div>
+)}
               <ArticleDetailClient
                 containerSelector={`.${styles.content}`}
                 headerOffset={HEADER_OFFSET}

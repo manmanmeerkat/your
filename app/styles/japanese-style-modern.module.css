@@ -898,3 +898,21 @@
     display: block;
   }
 }
+
+.catchCopyWrap {
+  margin: -6px auto 28px;
+  padding: 0 24px;
+  max-width: 760px;
+  display: flex;
+  justify-content: center;
+}
+
+.catchCopy {
+  width: 100%;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.9;
+  color: rgba(255, 245, 235, 0.92);
+  font-style: italic;
+  letter-spacing: 0.02em;
+}

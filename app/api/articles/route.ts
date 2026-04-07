@@ -311,13 +311,13 @@ export async function POST(request: NextRequest) {
       category?: string;
       summary?: string;
       description?: string;
+      catchCopy?: string;
       published?: boolean;
       images?: Array<{
         url: string;
         altText?: string;
         isFeatured?: boolean;
       }>;
-      // 🆕 一口メモ初期データ（オプション）
       trivia?: Array<{
         title: string;
         content: string;
@@ -328,7 +328,7 @@ export async function POST(request: NextRequest) {
         colorTheme?: string;
         isActive?: boolean;
       }>;
-    };
+};
     
     try {
       requestBody = await request.json();
@@ -388,6 +388,7 @@ export async function POST(request: NextRequest) {
       slug: slug!.trim(),
       summary: requestBody.summary?.trim() || '',
       description: requestBody.description?.trim() || '',
+      catchCopy: requestBody.catchCopy?.trim() || '',
       content: content!.trim(),
       category: category!.trim(),
       published: Boolean(requestBody.published),

@@ -24,6 +24,7 @@ export default function EditArticlePage({
   const [category, setCategory] = useState("");
   const [published, setPublished] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [catchCopy, setCatchCopy] = useState("");
 
   // 画像状態の分離
   const [editorImage, setEditorImage] = useState<{
@@ -227,6 +228,7 @@ export default function EditArticlePage({
         setCategory(article.category);
         setPublished(article.published);
         setArticleId(article.id);
+        setCatchCopy(article.catchCopy || "");
 
         // 画像の処理を修正 - 記事編集用のフィーチャー画像のみを取得
         const managedImages =
@@ -284,6 +286,7 @@ export default function EditArticlePage({
           setCategory(localData.category);
           setPublished(localData.published);
           setArticleId(localData.articleId || "");
+          setCatchCopy(localData.catchCopy || "");
 
           if (localData.editorImage) {
             setEditorImage(localData.editorImage);
@@ -499,6 +502,7 @@ export default function EditArticlePage({
         slug: string;
         summary: string;
         description: string;
+        catchCopy:string;
         content: string;
         category: string;
         published: boolean;
@@ -514,6 +518,7 @@ export default function EditArticlePage({
         slug,
         summary,
         description,
+        catchCopy,
         content,
         category,
         published,
@@ -793,6 +798,20 @@ export default function EditArticlePage({
               <p className="text-xs text-gray-500">
                 検索結果やSNSでの表示に使用されます。マークダウン記法なし、150文字以内推奨。
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="catchCopy" className="text-sm font-medium">
+                キャッチコピー
+              </label>
+              <Textarea
+                id="catchCopy"
+                value={catchCopy}
+                onChange={(e) => setCatchCopy(e.target.value)}
+                placeholder="記事冒頭に表示する短いキャッチコピー..."
+                className="h-20"
+                disabled={saving}
+              />
             </div>
 
             <div className="space-y-2">

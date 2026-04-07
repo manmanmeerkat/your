@@ -14,6 +14,7 @@ type PrismaArticle = {
   category: string | null;
   published: boolean;
   description: string | null;
+  catchCopy: string | null;
   createdAt: Date;
   updatedAt: Date;
   images?: PrismaImage[];
@@ -66,6 +67,7 @@ const formatArticleData = (article: PrismaArticle) => {
     category: article.category || '',
     published: Boolean(article.published),
     description: article.description || null,
+    catchCopy: article.catchCopy || null,
     createdAt: formatDate(article.createdAt),
     updatedAt: formatDate(article.updatedAt),
     images: (article.images || []).map((img: PrismaImage) => ({
@@ -319,7 +321,8 @@ export async function PUT(
       title, 
       slug, 
       summary, 
-      description, 
+      description,
+      catchCopy, 
       content, 
       category, 
       published, 
@@ -362,6 +365,7 @@ export async function PUT(
         slug,
         summary: summary || null,
         description: description || null,
+        catchCopy: catchCopy || null,
         content,
         category,
         published,

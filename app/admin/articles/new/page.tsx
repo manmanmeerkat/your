@@ -24,6 +24,7 @@ export default function NewArticlePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoUpdateSummary, setAutoUpdateSummary] = useState(true); // 要約自動更新の制御
+  const [catchCopy, setCatchCopy] = useState("");
   const router = useRouter();
 
   // マークダウン記法とHTMLタグを削除する関数
@@ -226,11 +227,11 @@ export default function NewArticlePage() {
         title,
         slug,
         summary,
-        description, // 説明文フィールド
+        description,
+        catchCopy,
         content,
         category,
         published,
-        // 画像データがある場合のみimages配列に追加
         images: imageData ? [imageData] : [],
       };
 
@@ -336,6 +337,22 @@ export default function NewArticlePage() {
             />
             <p className="text-xs text-gray-500">
               検索結果やSNSでの表示に使用されます。150文字以内推奨。
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="catchCopy" className="text-sm font-medium">
+              キャッチコピー
+            </label>
+            <Textarea
+              id="catchCopy"
+              value={catchCopy}
+              onChange={(e) => setCatchCopy(e.target.value)}
+              placeholder="記事冒頭に表示する短いキャッチコピー..."
+              className="h-20"
+            />
+            <p className="text-xs text-gray-500">
+              記事の導入として表示する短い印象的な文章です。
             </p>
           </div>
 
