@@ -1,4 +1,3 @@
-// components/ui/tableOfContents.tsx
 "use client";
 
 import React from "react";
@@ -7,127 +6,92 @@ import type { TocItem } from "@/app/utils/toc";
 type Props = {
   items: TocItem[];
   activeId: string;
-}
+};
 
 export function TableOfContents({ items, activeId }: Props) {
   const initialVisibleItems = 5;
+  const [open, setOpen] = React.useState(false);
   const [expanded, setExpanded] = React.useState(false);
+
   const shouldShowViewMore = items.length > initialVisibleItems;
   const visible = expanded ? items : items.slice(0, initialVisibleItems);
 
   return (
     <section
       aria-label="Table of contents"
-      className="
-        mx-6 mb-8 overflow-hidden rounded-2xl
-        border border-[rgba(255,255,255,0.14)]
-        shadow-[0_18px_45px_rgba(0,0,0,0.45),_inset_0_1px_0_rgba(255,255,255,0.07)]
-        bg-gradient-to-br from-[#221a18cc] via-[#15110f] to-[#0f0c0a]
-      "
+      className="mx-6 mb-8 rounded-xl border border-white/10 bg-white/[0.03]"
     >
-      <div
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        aria-expanded={open}
         className="
-          relative
-          bg-gradient-to-br from-[rgba(255,255,255,0.08)] via-[rgba(255,255,255,0.04)] to-[rgba(255,255,255,0.08)]
-          border-b border-[rgba(255,255,255,0.14)]
+          flex w-full items-center justify-between
+          px-4 py-3 text-left
+          text-[0.95rem] font-medium tracking-[0.08em]
+          text-[#f5ede3]
+          transition-colors duration-200
+          hover:bg-white/[0.04]
         "
       >
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-transparent via-[#c96a5d]/55 to-transparent" />
-
-        <h3
-          className="
-            m-0 py-4 text-center
-            text-[1.22rem] font-semibold tracking-[0.12em]
-            text-[#f5ede3]
-            drop-shadow-[0_1px_0_rgba(0,0,0,0.55)]
-          "
+        <span>Contents</span>
+        <span
+          className={`
+            transition-transform duration-200 hover:bg-white/5
+            ${open ? "rotate-90" : ""}
+          `}
         >
-          Contents
-        </h3>
-      </div>
+          ›
+        </span>
+      </button>
 
-      <nav className="flex flex-col gap-2 p-6">
-        {visible.map((item) => {
-          const isActive = activeId === item.id;
+      {open && (
+        <nav className="flex flex-col gap-1 px-3 pb-3">
+          {visible.map((item) => {
+            const isActive = activeId === item.id;
 
-          return (
-            <a
-              key={item.id}
-              href={`#${item.id}`}
-              onClick={() => {
-                // クリック直後は hash が付くので、少し待ってから消す
-                window.setTimeout(() => {
-                  // hash だけ消して、履歴を汚さない
-                  history.replaceState(null, "", window.location.pathname + window.location.search);
-                }, 50);
-              }}
+            return (
+              <a
+                key={item.id}
+                href={`#${item.id}`}
+                onClick={() => {
+                  window.setTimeout(() => {
+                    history.replaceState(
+                      null,
+                      "",
+                      window.location.pathname + window.location.search
+                    );
+                  }, 50);
+                }}
                 className={[
-                "group relative block w-full text-left",
-                "rounded-xl transition-all duration-200",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20",
-                item.level === 1 ? "pl-5 pr-10 py-3" : "pl-8 pr-10 py-2.5",
-                item.level === 1
-                  ? "text-[1.02rem] font-semibold leading-snug"
-                  : "text-[0.95rem] font-medium leading-snug",
-                isActive
-                  ? "text-[#e9c58a] bg-white/6"
-                  : "text-[#f3f3f2] hover:bg-white/6 hover:text-[#e9c58a]",
-              ].join(" ")}
-            >
-              <span
-                aria-hidden="true"
-                className={[
-                  "absolute top-1/2 -translate-y-1/2 rounded-full",
-                  "w-[3px] h-[62%]",
-                  item.level === 1 ? "left-0" : "left-3",
-                  isActive ? "bg-[#e9c58a]" : "bg-[#c96a5d]",
+                  "block rounded-lg transition-colors duration-200",
+                  item.level === 1 ? "px-3 py-2 text-[0.95rem] font-medium" : "px-6 py-2 text-[0.9rem]",
+                  isActive
+                    ? "bg-white/8 text-[#e9c58a]"
+                    : "text-white/80 hover:bg-white/5 hover:text-[#e9c58a]",
                 ].join(" ")}
-              />
-
-              <span className="block">{item.text}</span>
-
-              <span
-                aria-hidden="true"
-                className="
-                  absolute right-3 top-1/2 -translate-y-1/2
-                  text-white/30
-                  transition-all duration-200
-                  group-hover:text-white/60 group-hover:translate-x-[1px]
-                "
               >
-                ›
-              </span>
-            </a>
-          );
-        })}
+                {item.text}
+              </a>
+            );
+          })}
 
-        {shouldShowViewMore && (
-          <div
-            className="
-              mt-4 overflow-hidden rounded-xl
-              border border-[rgba(255,255,255,0.14)]
-              bg-white/6
-            "
-          >
+          {shouldShowViewMore && (
             <button
-              onClick={() => setExpanded((p) => !p)}
+              onClick={() => setExpanded((prev) => !prev)}
               type="button"
               className="
-                w-full px-5 py-4
-                text-center text-[0.95rem] font-semibold tracking-[0.08em]
-                text-[#f5ede3]
-                bg-transparent
-                transition-all duration-200
-                hover:bg-white/8 hover:-translate-y-[1px]
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-white/20
+                mt-2 rounded-lg px-3 py-2
+                text-[0.88rem] text-white/70
+                transition-colors duration-200
+                hover:bg-white/5 hover:text-white
               "
             >
-              {expanded ? "View less <<" : "View more >>"}
+              {expanded ? "Show less" : "Show all"}
             </button>
-          </div>
-        )}
-      </nav>
+          )}
+        </nav>
+      )}
     </section>
   );
 }

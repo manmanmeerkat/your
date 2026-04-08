@@ -23,7 +23,7 @@ export default function NewArticlePage() {
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [autoUpdateSummary, setAutoUpdateSummary] = useState(true); // 要約自動更新の制御
+  const [autoUpdateSummary, setAutoUpdateSummary] = useState(false);
   const [catchCopy, setCatchCopy] = useState("");
   const router = useRouter();
 

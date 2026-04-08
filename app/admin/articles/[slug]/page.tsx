@@ -45,7 +45,7 @@ export default function EditArticlePage({
   const [error, setError] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [autoUpdateSummary, setAutoUpdateSummary] = useState(true);
+  const [autoUpdateSummary, setAutoUpdateSummary] = useState(false);
 
   // 記事IDの状態を追加
   const [articleId, setArticleId] = useState<string>("");
@@ -188,6 +188,7 @@ export default function EditArticlePage({
           setSlug(localData.slug);
           setSummary(localData.summary || "");
           setDescription(localData.description || "");
+          setCatchCopy(localData.catchCopy || "");
           setContent(localData.content);
           setCategory(localData.category);
           setPublished(localData.published);
@@ -223,6 +224,7 @@ export default function EditArticlePage({
         setTitle(article.title);
         setSlug(article.slug);
         setSummary(article.summary || "");
+        setAutoUpdateSummary(false);
         setDescription(article.description || "");
         setContent(article.content);
         setCategory(article.category);
@@ -262,6 +264,7 @@ export default function EditArticlePage({
           slug: article.slug,
           summary: article.summary || "",
           description: article.description || "",
+          catchCopy: article.catchCopy || "",
           content: article.content,
           category: article.category,
           published: article.published,
